@@ -14,3 +14,14 @@ export const setSetting = (key: keyof Settings, value: unknown) =>
 
 export const onFullscreenChanged = (cb: (fullscreen: boolean) => void): Promise<UnlistenFn> =>
   listen<boolean>("fullscreen-changed", (e) => cb(e.payload));
+
+export interface AppWindow {
+  id: number;
+  title: string;
+  exe: string;
+  icon_png_base64: string | null;
+}
+
+export const listWindows = () => invoke<AppWindow[]>("list_windows");
+export const focusWindow = (id: number) => invoke<void>("focus_window", { id });
+export const onWindowsChanged = (cb: () => void): Promise<UnlistenFn> => listen("windows-changed", cb);

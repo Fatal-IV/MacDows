@@ -23,6 +23,19 @@
         "resizable": false,
         "shadow": false,
         "focus": false
+      },
+      {
+        "label": "dock",
+        "title": "MacDows Dock",
+        "width": 900,
+        "height": 120,
+        "decorations": false,
+        "transparent": true,
+        "alwaysOnTop": true,
+        "skipTaskbar": true,
+        "resizable": false,
+        "shadow": false,
+        "focus": false
       }
     ],
     "security": {

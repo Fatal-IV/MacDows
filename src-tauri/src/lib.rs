@@ -32,6 +32,16 @@ fn place_notch(app: &tauri::AppHandle) {
     let _ = win.set_position(PhysicalPosition::new(x, mon_pos.y));
 }
 
+fn place_dock(app: &tauri::AppHandle) {
+    let Some(win) = app.get_webview_window("dock") else { return };
+    let Ok(Some(monitor)) = win.primary_monitor() else { return };
+    let Ok(size) = win.outer_size() else { return };
+    let area = monitor.work_area();
+    let x = area.position.x + (area.size.width as i32 - size.width as i32) / 2;
+    let y = area.position.y + area.size.height as i32 - size.height as i32;
+    let _ = win.set_position(PhysicalPosition::new(x, y));
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
@@ -41,6 +51,7 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![get_settings, set_setting, windows_list::list_windows, windows_list::focus_window])
         .setup(|app| {
             place_notch(app.handle());
+            place_dock(app.handle());
             fullscreen::start(app.handle().clone());
             windows_list::start(app.handle().clone());
             Ok(())

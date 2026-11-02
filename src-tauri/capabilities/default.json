@@ -3,7 +3,8 @@
   "identifier": "default",
   "description": "Capability for the notch window",
   "windows": [
-    "notch"
+    "notch",
+    "dock"
   ],
   "permissions": [
     "core:default",
