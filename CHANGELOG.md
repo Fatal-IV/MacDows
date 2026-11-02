@@ -19,6 +19,7 @@ First public release. A notch at the top of the screen and a dock at the bottom,
 - **Visibility modes** for the notch and the dock, set separately: *Fixed* (default, always visible except in fullscreen), *Smart* (hides when a window covers it, shows when you point at it) and *Peek* (appears when the cursor reaches the screen edge). Both bars are shown for a few seconds after launch so you can see the app started.
 - **Settings window** opened from the tray icon: visibility modes and language.
 - **Tray icon** with *Settings* and *Quit*.
+- **Single instance**: starting MacDows again does not open a second copy; it opens the Settings window of the running one.
 - **Languages**: English and Turkish. Missing translations fall back to English.
 - **Settings file** at `%APPDATA%\MacDows\settings.json`. A broken or empty file never stops the app: it starts with defaults and keeps the broken file as `settings.json.bad`.
 - **Automatic updates** from GitHub Releases, with signed update packages.

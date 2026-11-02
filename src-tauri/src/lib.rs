@@ -85,6 +85,8 @@ fn place_dock(app: &tauri::AppHandle) {
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
+        // Must be the first plugin: a second launch opens Settings in the running app and exits.
+        .plugin(tauri_plugin_single_instance::init(|app, _args, _cwd| open_settings(app)))
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_updater::Builder::new().build())
         .manage(AppSettings(Mutex::new(settings::load())))
