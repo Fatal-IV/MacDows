@@ -1,4 +1,5 @@
 mod i18n;
+mod taskbar;
 mod taskbar_plan;
 mod updates;
 mod visibility;
@@ -93,7 +94,7 @@ pub fn run() {
         .plugin(tauri_plugin_updater::Builder::new().build())
         .manage(AppSettings(Mutex::new(settings::load())))
         .manage(updates::UpdateState::default())
-        .invoke_handler(tauri::generate_handler![get_settings, set_setting, windows_list::list_windows, windows_list::focus_window, media::get_media, media::media_toggle, media::media_next, media::media_prev, updates::get_update_status, updates::check_for_update, updates::install_update])
+        .invoke_handler(tauri::generate_handler![get_settings, set_setting, windows_list::list_windows, windows_list::focus_window, media::get_media, media::media_toggle, media::media_next, media::media_prev, updates::get_update_status, updates::check_for_update, updates::install_update, taskbar::get_system_status, taskbar::shell_action])
         .setup(|app| {
             for label in ["notch", "dock"] {
                 if let Some(hwnd) = app.get_webview_window(label).and_then(|w| w.hwnd().ok()) {
