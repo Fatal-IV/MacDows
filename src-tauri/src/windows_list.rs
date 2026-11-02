@@ -192,9 +192,25 @@ pub fn enumerate() -> Vec<AppWindow> {
     out
 }
 
+/// Keeps dock order stable: windows stay where they first appeared, new ones go to the end,
+/// closed ones are forgotten. Windows reports windows in z-order, which would reshuffle the dock.
+pub fn order_stable(known: &mut Vec<isize>, current: Vec<AppWindow>) -> Vec<AppWindow> {
+    known.retain(|id| current.iter().any(|w| w.id == *id));
+    for w in &current {
+        if !known.contains(&w.id) {
+            known.push(w.id);
+        }
+    }
+    let mut out = current;
+    out.sort_by_key(|w| known.iter().position(|id| *id == w.id));
+    out
+}
+
+static ORDER: std::sync::Mutex<Vec<isize>> = std::sync::Mutex::new(Vec::new());
+
 #[tauri::command]
 pub fn list_windows() -> Vec<AppWindow> {
-    enumerate()
+    order_stable(&mut ORDER.lock().unwrap(), enumerate())
 }
 
 #[tauri::command]
@@ -278,5 +294,40 @@ mod tests {
     #[test]
     fn invisible_window_is_rejected() {
         assert!(!is_listable(0, 0, false, "Hidden"));
+    }
+
+    fn win(id: isize) -> AppWindow {
+        AppWindow { id, title: format!("w{id}"), exe: String::new(), icon_png_base64: None }
+    }
+
+    fn ids(v: &[AppWindow]) -> Vec<isize> {
+        v.iter().map(|w| w.id).collect()
+    }
+
+    #[test]
+    fn new_windows_are_appended_in_first_seen_order() {
+        let mut known = Vec::new();
+        let out = order_stable(&mut known, vec![win(3), win(1)]);
+        assert_eq!(ids(&out), vec![3, 1]);
+        let out = order_stable(&mut known, vec![win(3), win(1), win(2)]);
+        assert_eq!(ids(&out), vec![3, 1, 2]);
+    }
+
+    #[test]
+    fn z_order_changes_do_not_reorder() {
+        let mut known = Vec::new();
+        order_stable(&mut known, vec![win(1), win(2), win(3)]);
+        let out = order_stable(&mut known, vec![win(3), win(1), win(2)]);
+        assert_eq!(ids(&out), vec![1, 2, 3]);
+    }
+
+    #[test]
+    fn closed_windows_are_forgotten_and_reopened_go_to_the_end() {
+        let mut known = Vec::new();
+        order_stable(&mut known, vec![win(1), win(2), win(3)]);
+        let out = order_stable(&mut known, vec![win(1), win(3)]);
+        assert_eq!(ids(&out), vec![1, 3]);
+        let out = order_stable(&mut known, vec![win(2), win(1), win(3)]);
+        assert_eq!(ids(&out), vec![1, 3, 2]);
     }
 }
