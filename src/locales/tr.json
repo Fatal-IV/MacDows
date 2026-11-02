@@ -13,5 +13,22 @@
   "vis.smart": "Akıllı",
   "vis.peek": "Peek",
   "lang.en": "English",
-  "lang.tr": "Türkçe"
+  "lang.tr": "Türkçe",
+  "update.title": "Güncellemeler",
+  "update.version": "Kurulu sürüm",
+  "update.idle": "Henüz denetlenmedi.",
+  "update.checking": "Denetleniyor…",
+  "update.upToDate": "MacDows güncel.",
+  "update.available": "{v} sürümü hazır.",
+  "update.installing": "Güncelleme kuruluyor…",
+  "update.checkNow": "Şimdi denetle",
+  "update.install": "Güncelle ve yeniden başlat",
+  "update.auto": "Güncellemeleri otomatik denetle",
+  "update.notes": "Yenilikler",
+  "update.error.check_failed": "Güncellemeler denetlenemedi. Bağlantınızı kontrol edip yeniden deneyin.",
+  "update.error.download_failed": "Güncelleme indirilemedi.",
+  "update.error.verify_failed": "Güncelleme doğrulanamadı ve kurulmadı.",
+  "update.error.install_failed": "Güncelleme kurulamadı.",
+  "update.error.no_update": "Artık hazır bir güncelleme yok.",
+  "update.error.busy": "Bir güncelleme zaten sürüyor."
 }

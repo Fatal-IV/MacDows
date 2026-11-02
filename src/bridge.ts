@@ -6,6 +6,8 @@ export interface Settings {
   language: string;
   notch_visibility: Visibility;
   dock_visibility: Visibility;
+  check_updates: boolean;
+  last_update_check: number | null;
 }
 
 export const getSettings = () => invoke<Settings>("get_settings");

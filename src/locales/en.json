@@ -13,5 +13,22 @@
   "vis.smart": "Smart",
   "vis.peek": "Peek",
   "lang.en": "English",
-  "lang.tr": "Türkçe"
+  "lang.tr": "Türkçe",
+  "update.title": "Updates",
+  "update.version": "Installed version",
+  "update.idle": "Not checked yet.",
+  "update.checking": "Checking…",
+  "update.upToDate": "MacDows is up to date.",
+  "update.available": "Version {v} is available.",
+  "update.installing": "Installing the update…",
+  "update.checkNow": "Check now",
+  "update.install": "Update and restart",
+  "update.auto": "Check for updates automatically",
+  "update.notes": "What is new",
+  "update.error.check_failed": "Could not check for updates. Check your connection and try again.",
+  "update.error.download_failed": "The update could not be downloaded.",
+  "update.error.verify_failed": "The update could not be verified and was not installed.",
+  "update.error.install_failed": "Installing the update failed.",
+  "update.error.no_update": "No update is available any more.",
+  "update.error.busy": "An update is already in progress."
 }

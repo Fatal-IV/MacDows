@@ -20,3 +20,33 @@
   font-size: 14px;
 }
 .settings .help { margin: 0; font-size: 12px; line-height: 1.5; opacity: 0.6; }
+
+.settings { overflow-y: auto; box-sizing: border-box; }
+.settings .updates {
+  margin-top: 4px;
+  padding-top: 16px;
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.settings .updates h2 { margin: 0; font-size: 16px; font-weight: 600; }
+.settings .updates .row { display: flex; justify-content: space-between; font-size: 13px; }
+.settings .updates .status { margin: 0; font-size: 13px; opacity: 0.85; }
+.settings .updates .status.bad { color: #ff7a6b; opacity: 1; }
+.settings .updates .notes { background: #1e1e22; border-radius: 8px; padding: 10px 12px; }
+.settings .updates .notes-title { font-size: 12px; opacity: 0.6; margin-bottom: 6px; }
+.settings .updates pre { margin: 0; font: inherit; font-size: 12px; line-height: 1.5; white-space: pre-wrap; word-break: break-word; max-height: 110px; overflow-y: auto; }
+.settings .updates .buttons { display: flex; gap: 10px; }
+.settings .updates button {
+  background: #1e1e22;
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 8px;
+  padding: 8px 14px;
+  font-size: 13px;
+  cursor: pointer;
+}
+.settings .updates button.primary { background: #0067c0; border-color: #0067c0; }
+.settings .updates button:disabled { opacity: 0.5; cursor: default; }
+.settings .updates .check { flex-direction: row; align-items: center; gap: 8px; font-size: 13px; }
