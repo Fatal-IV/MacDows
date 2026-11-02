@@ -61,6 +61,22 @@ fn exe_of(hwnd: HWND) -> (u32, String) {
     (pid, if ok { String::from_utf16_lossy(&buf[..len as usize]) } else { String::new() })
 }
 
+/// Handles of the notch and dock windows, which must never appear as dock icons.
+static BARS: std::sync::Mutex<Vec<isize>> = std::sync::Mutex::new(Vec::new());
+
+pub fn is_bar_window(id: isize, bars: &[isize]) -> bool {
+    bars.contains(&id)
+}
+
+/// Registers a window (notch or dock) as hidden from the dock list. Other MacDows windows,
+/// such as Settings, are listed like any app.
+pub fn register_bar(hwnd: isize) {
+    let mut bars = BARS.lock().unwrap();
+    if !bars.contains(&hwnd) {
+        bars.push(hwnd);
+    }
+}
+
 /// Store (MSIX) apps live under `WindowsApps`; the shell returns a generic icon for their exe
 /// instead of failing, so the window's own icon is the better source.
 pub fn prefer_window_icon(exe: &str) -> bool {
@@ -183,8 +199,8 @@ unsafe extern "system" fn collect(hwnd: HWND, lparam: LPARAM) -> BOOL {
     if matches!(class_of(hwnd).as_str(), "Progman" | "WorkerW" | "Shell_TrayWnd" | "Shell_SecondaryTrayWnd") {
         return BOOL(1);
     }
-    let (pid, exe) = exe_of(hwnd);
-    if pid == GetCurrentProcessId() {
+    let (_, exe) = exe_of(hwnd);
+    if is_bar_window(hwnd.0 as isize, &BARS.lock().unwrap()) {
         return BOOL(1);
     }
     let icon = if prefer_window_icon(&exe) {
@@ -339,6 +355,15 @@ mod tests {
     #[test]
     fn invisible_window_is_rejected() {
         assert!(!is_listable(0, 0, false, "Hidden"));
+    }
+
+    #[test]
+    fn only_registered_bars_are_hidden_from_the_dock() {
+        let bars = [11isize, 22];
+        assert!(is_bar_window(11, &bars));
+        assert!(is_bar_window(22, &bars));
+        assert!(!is_bar_window(33, &bars));
+        assert!(!is_bar_window(11, &[]));
     }
 
     #[test]

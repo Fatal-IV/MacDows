@@ -90,6 +90,11 @@ pub fn run() {
         .manage(AppSettings(Mutex::new(settings::load())))
         .invoke_handler(tauri::generate_handler![get_settings, set_setting, windows_list::list_windows, windows_list::focus_window, media::get_media, media::media_toggle, media::media_next, media::media_prev])
         .setup(|app| {
+            for label in ["notch", "dock"] {
+                if let Some(hwnd) = app.get_webview_window(label).and_then(|w| w.hwnd().ok()) {
+                    windows_list::register_bar(hwnd.0 as isize);
+                }
+            }
             build_tray(app.handle())?;
             place_notch(app.handle());
             place_dock(app.handle());
