@@ -67,3 +67,5 @@ html, body, #root {
   box-shadow: 0 0 6px rgba(76, 194, 255, 0.8);
   pointer-events: none;
 }
+
+.pill-battery { margin-left: 6px; opacity: 0.7; font-weight: 500; }

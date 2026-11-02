@@ -30,5 +30,11 @@
   "update.error.verify_failed": "Güncelleme doğrulanamadı ve kurulmadı.",
   "update.error.install_failed": "Güncelleme kurulamadı.",
   "update.error.no_update": "Artık hazır bir güncelleme yok.",
-  "update.error.busy": "Bir güncelleme zaten sürüyor."
+  "update.error.busy": "Bir güncelleme zaten sürüyor.",
+  "settings.replaceTaskbar": "Windows görev çubuğunu değiştir",
+  "settings.replaceTaskbarHelp": "Windows görev çubuğunu gizler, yerine dock kullanılır. MacDows’tan çıkınca ya da bunu kapatınca her zaman geri gelir.",
+  "settings.startWithWindows": "Windows ile başlat",
+  "system.notifications": "Bildirimler ve takvim",
+  "system.quickSettings": "Hızlı ayarlar",
+  "system.hiddenIcons": "Gizli simgeler"
 }

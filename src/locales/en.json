@@ -30,5 +30,11 @@
   "update.error.verify_failed": "The update could not be verified and was not installed.",
   "update.error.install_failed": "Installing the update failed.",
   "update.error.no_update": "No update is available any more.",
-  "update.error.busy": "An update is already in progress."
+  "update.error.busy": "An update is already in progress.",
+  "settings.replaceTaskbar": "Replace the Windows taskbar",
+  "settings.replaceTaskbarHelp": "Hides the Windows taskbar and uses the dock instead. It always comes back when you quit MacDows or turn this off.",
+  "settings.startWithWindows": "Start with Windows",
+  "system.notifications": "Notifications and calendar",
+  "system.quickSettings": "Quick settings",
+  "system.hiddenIcons": "Hidden icons"
 }

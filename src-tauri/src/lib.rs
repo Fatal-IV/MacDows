@@ -117,7 +117,7 @@ fn open_settings(app: &AppHandle) {
     }
     let _ = WebviewWindowBuilder::new(app, "settings", WebviewUrl::App("index.html".into()))
         .title("MacDows")
-        .inner_size(440.0, 660.0)
+        .inner_size(440.0, 760.0)
         .resizable(false)
         .center()
         .build();

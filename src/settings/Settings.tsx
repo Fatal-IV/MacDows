@@ -59,6 +59,16 @@ export default function Settings() {
         </select>
       </label>
 
+      <label className="check">
+        <input type="checkbox" checked={s.replace_taskbar} onChange={(e) => setSetting("replace_taskbar", e.target.checked)} />
+        <span>{t("settings.replaceTaskbar")}</span>
+      </label>
+      <p className="help">{t("settings.replaceTaskbarHelp")}</p>
+      <label className="check">
+        <input type="checkbox" checked={s.start_with_windows} onChange={(e) => setSetting("start_with_windows", e.target.checked)} />
+        <span>{t("settings.startWithWindows")}</span>
+      </label>
+
       <section className="updates">
         <h2>{t("update.title")}</h2>
         <div className="row">

@@ -68,3 +68,27 @@
 }
 
 .dock-empty { color: rgba(255, 255, 255, 0.6); font-size: 12px; padding: 14px 8px; }
+
+.dock-sep {
+  align-self: center;
+  width: 1px;
+  height: 28px;
+  margin: 0 4px;
+  background: rgba(255, 255, 255, 0.18);
+}
+
+.dock-system {
+  align-self: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: 0;
+  border-radius: 12px;
+  background: transparent;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: default;
+}
+.dock-system:hover { background: rgba(255, 255, 255, 0.12); }

@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { getMedia, mediaNext, mediaPrev, mediaToggle, onMediaChanged, type MediaInfo } from "../bridge";
 import { useT } from "../i18n";
 import { useUpdateStatus } from "../updates";
+import { useSystemStatus } from "../system";
 import "./Notch.css";
 
 const COLLAPSED = { width: 170, height: 32 };
@@ -11,6 +12,7 @@ const EXPANDED = { width: 420, height: 130 };
 export default function Notch() {
   const t = useT();
   const update = useUpdateStatus();
+  const system = useSystemStatus();
   const [open, setOpen] = useState(false);
   const [now, setNow] = useState(new Date());
   const [media, setMedia] = useState<MediaInfo | null>(null);
@@ -54,6 +56,7 @@ export default function Notch() {
           transition={{ duration: 0.12 }}
         >
           {time}
+          {system?.battery_percent != null && <span className="pill-battery">{system.battery_percent}%</span>}
         </motion.div>
         <motion.div
           className="content"

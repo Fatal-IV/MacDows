@@ -8,6 +8,9 @@ export interface Settings {
   dock_visibility: Visibility;
   check_updates: boolean;
   last_update_check: number | null;
+  replace_taskbar: boolean;
+  taskbar_notice_shown: boolean;
+  start_with_windows: boolean;
 }
 
 export const getSettings = () => invoke<Settings>("get_settings");

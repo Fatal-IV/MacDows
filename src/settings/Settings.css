@@ -50,3 +50,5 @@
 .settings .updates button.primary { background: #0067c0; border-color: #0067c0; }
 .settings .updates button:disabled { opacity: 0.5; cursor: default; }
 .settings .updates .check { flex-direction: row; align-items: center; gap: 8px; font-size: 13px; }
+
+.settings > .check { flex-direction: row; align-items: center; gap: 8px; font-size: 13px; }
