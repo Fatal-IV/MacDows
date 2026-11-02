@@ -1,51 +1,39 @@
 import { useState } from "react";
-import reactLogo from "./assets/react.svg";
-import { invoke } from "@tauri-apps/api/core";
+import { motion } from "framer-motion";
 import "./App.css";
 
-function App() {
-  const [greetMsg, setGreetMsg] = useState("");
-  const [name, setName] = useState("");
+const COLLAPSED = { width: 170, height: 32 };
+const EXPANDED = { width: 420, height: 130 };
 
-  async function greet() {
-    // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
-    setGreetMsg(await invoke("greet", { name }));
-  }
+export default function App() {
+  const [open, setOpen] = useState(false);
+  const size = open ? EXPANDED : COLLAPSED;
 
   return (
-    <main className="container">
-      <h1>Welcome to Tauri + React</h1>
-
-      <div className="row">
-        <a href="https://vite.dev" target="_blank">
-          <img src="/vite.svg" className="logo vite" alt="Vite logo" />
-        </a>
-        <a href="https://tauri.app" target="_blank">
-          <img src="/tauri.svg" className="logo tauri" alt="Tauri logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <p>Click on the Tauri, Vite, and React logos to learn more.</p>
-
-      <form
-        className="row"
-        onSubmit={(e) => {
-          e.preventDefault();
-          greet();
+    <div className="stage">
+      <motion.div
+        className="notch"
+        initial={false}
+        animate={{
+          width: size.width,
+          height: size.height,
+          borderBottomLeftRadius: open ? 32 : 16,
+          borderBottomRightRadius: open ? 32 : 16,
         }}
+        transition={{ type: "spring", stiffness: 380, damping: 30, mass: 0.8 }}
+        onHoverStart={() => setOpen(true)}
+        onHoverEnd={() => setOpen(false)}
       >
-        <input
-          id="greet-input"
-          onChange={(e) => setName(e.currentTarget.value)}
-          placeholder="Enter a name..."
-        />
-        <button type="submit">Greet</button>
-      </form>
-      <p>{greetMsg}</p>
-    </main>
+        <motion.div
+          className="content"
+          initial={false}
+          animate={{ opacity: open ? 1 : 0, y: open ? 0 : -6 }}
+          transition={{ duration: 0.18, delay: open ? 0.08 : 0 }}
+        >
+          <div className="title">Nothing playing</div>
+          <div className="sub">Media controls coming soon</div>
+        </motion.div>
+      </motion.div>
+    </div>
   );
 }
-
-export default App;

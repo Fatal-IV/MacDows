@@ -12,9 +12,17 @@
   "app": {
     "windows": [
       {
-        "title": "MacDows",
-        "width": 800,
-        "height": 600
+        "label": "notch",
+        "title": "MacDows Notch",
+        "width": 460,
+        "height": 150,
+        "decorations": false,
+        "transparent": true,
+        "alwaysOnTop": true,
+        "skipTaskbar": true,
+        "resizable": false,
+        "shadow": false,
+        "focus": false
       }
     ],
     "security": {
