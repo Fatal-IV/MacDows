@@ -65,6 +65,11 @@ pub fn guard_should_restore(parent_alive: bool, state: Option<&TaskbarState>) ->
     !parent_alive && state.map_or(false, |s| s.hidden_by_macdows)
 }
 
+/// After a restore (or when the owner is gone) a hidden taskbar window is a bug: nobody owns that state any more.
+pub fn needs_final_show(state: Option<&TaskbarState>, window_hidden: bool) -> bool {
+    state.is_none() && window_hidden
+}
+
 /// Win+B then Enter presses the first tray item; it is the chevron only if the chevron existed.
 pub fn hidden_icons_available(state: &TaskbarState, taskbar_hidden: bool) -> bool {
     state.chevron_present && taskbar_hidden
@@ -183,6 +188,10 @@ pub fn restore(backend: &impl Backend, store: &impl Store) {
     }
     if let Some(on) = plan.set_autohide {
         backend.set_autohide(on);
+    }
+    // Changing auto-hide makes Explorer re-lay the taskbar out, which can hide the window again.
+    if plan.show_window && backend.window_hidden() {
+        backend.show_window();
     }
     if plan.clear_state {
         store.clear();
@@ -471,5 +480,75 @@ mod watchdog_tests {
         assert!(!watchdog_should_rehide(false, Some(&hidden()), true), "the setting is off");
         assert!(!watchdog_should_rehide(true, None, true), "no state means we are not hiding anything");
         assert!(!watchdog_should_rehide(true, Some(&hidden()), false), "already hidden");
+    }
+}
+
+#[cfg(test)]
+mod final_visibility_tests {
+    use super::*;
+    use std::cell::Cell;
+
+    /// Explorer re-lays the taskbar out when auto-hide changes and can hide the window again.
+    struct MovesTheWindowAway {
+        hidden: Cell<bool>,
+        autohide: Cell<bool>,
+        shows: Cell<u32>,
+    }
+
+    impl Backend for MovesTheWindowAway {
+        fn autohide(&self) -> bool {
+            self.autohide.get()
+        }
+        fn set_autohide(&self, on: bool) {
+            if self.autohide.get() && !on {
+                self.hidden.set(true); // the Explorer re-layout hides it
+            }
+            self.autohide.set(on);
+        }
+        fn hide_window(&self) {
+            self.hidden.set(true);
+        }
+        fn show_window(&self) {
+            self.shows.set(self.shows.get() + 1);
+            self.hidden.set(false);
+        }
+        fn window_hidden(&self) -> bool {
+            self.hidden.get()
+        }
+        fn chevron_present(&self) -> bool {
+            true
+        }
+    }
+
+    struct MemStore(std::cell::RefCell<Option<TaskbarState>>);
+    impl Store for MemStore {
+        fn load(&self) -> Option<TaskbarState> {
+            self.0.borrow().clone()
+        }
+        fn save(&self, s: &TaskbarState) -> std::io::Result<()> {
+            *self.0.borrow_mut() = Some(s.clone());
+            Ok(())
+        }
+        fn clear(&self) {
+            *self.0.borrow_mut() = None;
+        }
+    }
+
+    #[test]
+    fn restore_ends_with_a_visible_taskbar_even_if_explorer_hides_it_again() {
+        let backend = MovesTheWindowAway { hidden: Cell::new(true), autohide: Cell::new(true), shows: Cell::new(0) };
+        let store = MemStore(std::cell::RefCell::new(Some(TaskbarState { version: 1, hidden_by_macdows: true, was_autohide: false, chevron_present: true, app_pid: 7 })));
+        restore(&backend, &store);
+        assert!(!backend.hidden.get(), "the taskbar must be visible after a restore");
+        assert!(!backend.autohide.get());
+        assert!(backend.shows.get() >= 2, "it was shown again after the auto-hide change hid it");
+    }
+
+    #[test]
+    fn an_ownerless_hidden_taskbar_must_be_shown() {
+        assert!(needs_final_show(None, true));
+        assert!(!needs_final_show(None, false));
+        let state = TaskbarState { version: 1, hidden_by_macdows: true, was_autohide: false, chevron_present: true, app_pid: 9 };
+        assert!(!needs_final_show(Some(&state), true), "a newer MacDows instance owns it");
     }
 }

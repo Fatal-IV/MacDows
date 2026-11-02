@@ -177,6 +177,16 @@ pub fn start_watchdog(setting_on: impl Fn() -> bool + Send + 'static) {
 /// Puts the taskbar back to the state recorded before MacDows touched it (used by the exit hook, the CLI flag and the guard).
 pub fn restore_now() {
     crate::taskbar_plan::restore(&WinBackend, &FileStore::default());
+    settle_visible();
+}
+
+/// A second look a moment later: the installer, the exit hook and the guard can restore at the same time and
+/// Explorer may undo one of them. With no owner left, a hidden taskbar is shown again.
+fn settle_visible() {
+    std::thread::sleep(Duration::from_millis(1500));
+    if crate::taskbar_plan::needs_final_show(FileStore::default().load().as_ref(), WinBackend.window_hidden()) {
+        WinBackend.show_window();
+    }
 }
 
 /// Hides the taskbar for this process. Returns false when the state could not be saved (nothing was hidden).
@@ -324,6 +334,9 @@ pub fn guard_main(parent_pid: u32) {
     let ours = state.as_ref().map_or(false, |s| crate::taskbar_plan::state_belongs_to(s, parent_pid));
     if ours && crate::taskbar_plan::guard_should_restore(false, state.as_ref()) {
         restore_now();
+    } else {
+        // The app's own exit hook may already have cleared the state and been cut short by the installer.
+        settle_visible();
     }
 }
 
