@@ -22,9 +22,10 @@ First public release. A notch at the top of the screen and a dock at the bottom,
 - **Single instance**: starting MacDows again does not open a second copy; it opens the Settings window of the running one.
 - **Languages**: English and Turkish. Missing translations fall back to English.
 - **Settings file** at `%APPDATA%\MacDows\settings.json`. A broken or empty file never stops the app: it starts with defaults and keeps the broken file as `settings.json.bad`.
-- **Automatic updates** from GitHub Releases, with signed update packages.
+- **Signed releases**: every release is built by GitHub Actions and the update packages are signed, which prepares automatic updates. The app does not check for updates yet.
 
 ### Known limitations
+- No in-app update check yet: install new versions from the Releases page until it is added.
 - Primary monitor only.
 - The Windows taskbar stays visible. Hiding or replacing it is planned for a later version.
 - The notch shows only the time and media; calendar, system monitor, clipboard history, launcher and notifications are planned.
