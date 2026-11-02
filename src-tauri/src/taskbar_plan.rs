@@ -97,6 +97,58 @@ pub fn run_value(exe: &str) -> String {
     format!("\"{exe}\"")
 }
 
+/// The Windows side of the taskbar. The real implementation is `taskbar::WinBackend`.
+pub trait Backend {
+    fn autohide(&self) -> bool;
+    fn set_autohide(&self, on: bool);
+    fn hide_window(&self);
+    fn show_window(&self);
+    fn window_hidden(&self) -> bool;
+    /// Must be read while the taskbar is still visible.
+    fn chevron_present(&self) -> bool;
+}
+
+/// Where the state lives. The real implementation is `taskbar::FileStore`.
+pub trait Store {
+    fn load(&self) -> Option<TaskbarState>;
+    fn save(&self, state: &TaskbarState) -> std::io::Result<()>;
+    fn clear(&self);
+}
+
+#[derive(Debug, PartialEq, Eq)]
+pub enum HideError {
+    StateNotSaved,
+}
+
+/// Saves the state first; if that fails nothing is touched. Order: auto-hide, then the window.
+pub fn hide(backend: &impl Backend, store: &impl Store, pid: u32) -> Result<(), HideError> {
+    let existing = store.load();
+    let plan = plan_hide(existing.as_ref(), backend.autohide(), backend.chevron_present(), pid);
+    store.save(&plan.state_to_save).map_err(|_| HideError::StateNotSaved)?;
+    if plan.set_autohide {
+        backend.set_autohide(true);
+    }
+    if plan.hide_window {
+        backend.hide_window();
+    }
+    Ok(())
+}
+
+/// Order: show the window, then put the stored auto-hide value back.
+pub fn restore(backend: &impl Backend, store: &impl Store) {
+    let state = store.load();
+    let plan = plan_restore(state.as_ref(), backend.window_hidden());
+    if plan.show_window {
+        backend.show_window();
+    }
+    if let Some(on) = plan.set_autohide {
+        backend.set_autohide(on);
+    }
+    if plan.clear_state {
+        store.clear();
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -179,5 +231,133 @@ mod tests {
     #[test]
     fn the_autostart_value_is_the_quoted_path() {
         assert_eq!(run_value(r"C:\A B\macdows.exe"), r#""C:\A B\macdows.exe""#);
+    }
+}
+
+#[cfg(test)]
+mod orchestration_tests {
+    use super::*;
+    use std::cell::{Cell, RefCell};
+    use std::rc::Rc;
+
+    type Log = Rc<RefCell<Vec<String>>>;
+
+    struct FakeBackend {
+        autohide: Cell<bool>,
+        hidden: Cell<bool>,
+        chevron: bool,
+        log: Log,
+    }
+
+    impl Backend for FakeBackend {
+        fn autohide(&self) -> bool {
+            self.autohide.get()
+        }
+        fn set_autohide(&self, on: bool) {
+            self.log.borrow_mut().push(format!("set_autohide({on})"));
+            self.autohide.set(on);
+        }
+        fn hide_window(&self) {
+            self.log.borrow_mut().push("hide_window".into());
+            self.hidden.set(true);
+        }
+        fn show_window(&self) {
+            self.log.borrow_mut().push("show_window".into());
+            self.hidden.set(false);
+        }
+        fn window_hidden(&self) -> bool {
+            self.hidden.get()
+        }
+        fn chevron_present(&self) -> bool {
+            self.chevron
+        }
+    }
+
+    struct FakeStore {
+        state: RefCell<Option<TaskbarState>>,
+        fail_save: bool,
+        log: Log,
+    }
+
+    impl Store for FakeStore {
+        fn load(&self) -> Option<TaskbarState> {
+            self.state.borrow().clone()
+        }
+        fn save(&self, s: &TaskbarState) -> std::io::Result<()> {
+            if self.fail_save {
+                self.log.borrow_mut().push("save-failed".into());
+                return Err(std::io::Error::other("disk full"));
+            }
+            self.log.borrow_mut().push("save".into());
+            *self.state.borrow_mut() = Some(s.clone());
+            Ok(())
+        }
+        fn clear(&self) {
+            self.log.borrow_mut().push("clear".into());
+            *self.state.borrow_mut() = None;
+        }
+    }
+
+    fn rig(autohide: bool, fail_save: bool, state: Option<TaskbarState>) -> (FakeBackend, FakeStore, Log) {
+        let log: Log = Rc::new(RefCell::new(Vec::new()));
+        let backend = FakeBackend { autohide: Cell::new(autohide), hidden: Cell::new(false), chevron: true, log: log.clone() };
+        let store = FakeStore { state: RefCell::new(state), fail_save, log: log.clone() };
+        (backend, store, log)
+    }
+
+    #[test]
+    fn the_state_is_saved_before_anything_is_hidden() {
+        let (b, s, log) = rig(false, false, None);
+        hide(&b, &s, 7).unwrap();
+        assert_eq!(*log.borrow(), vec!["save", "set_autohide(true)", "hide_window"]);
+    }
+
+    #[test]
+    fn nothing_is_hidden_when_the_state_cannot_be_saved() {
+        let (b, s, log) = rig(false, true, None);
+        assert_eq!(hide(&b, &s, 7), Err(HideError::StateNotSaved));
+        assert_eq!(*log.borrow(), vec!["save-failed"]);
+        assert!(!b.hidden.get());
+    }
+
+    #[test]
+    fn hide_then_restore_returns_to_auto_hide_off() {
+        let (b, s, _) = rig(false, false, None);
+        hide(&b, &s, 7).unwrap();
+        assert!(b.hidden.get() && b.autohide.get());
+        restore(&b, &s);
+        assert!(!b.hidden.get());
+        assert!(!b.autohide.get());
+        assert_eq!(s.load(), None);
+    }
+
+    #[test]
+    fn hide_then_restore_returns_to_auto_hide_on_when_it_was_on() {
+        let (b, s, _) = rig(true, false, None);
+        hide(&b, &s, 7).unwrap();
+        restore(&b, &s);
+        assert!(!b.hidden.get());
+        assert!(b.autohide.get(), "the user had auto-hide on before MacDows");
+    }
+
+    #[test]
+    fn hiding_again_after_a_crash_keeps_the_first_original() {
+        let (b, s, _) = rig(false, false, None);
+        hide(&b, &s, 7).unwrap();
+        // The app crashed and restarted: the taskbar is already in our modified state.
+        hide(&b, &s, 8).unwrap();
+        assert!(!s.load().unwrap().was_autohide);
+        assert_eq!(s.load().unwrap().app_pid, 8);
+        restore(&b, &s);
+        assert!(!b.autohide.get());
+    }
+
+    #[test]
+    fn restore_without_state_shows_the_window_and_leaves_auto_hide_alone() {
+        let (b, s, log) = rig(true, false, None);
+        b.hidden.set(true);
+        restore(&b, &s);
+        assert_eq!(*log.borrow(), vec!["show_window"]);
+        assert!(b.autohide.get());
     }
 }
