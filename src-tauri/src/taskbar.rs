@@ -340,6 +340,52 @@ pub fn start_guard() -> bool {
         .is_ok()
 }
 
+// ---------------------------------------------------------------------------------------------
+// Process, autostart and notice helpers
+// ---------------------------------------------------------------------------------------------
+/// Whether a process with this id is still running.
+pub fn pid_alive(pid: u32) -> bool {
+    use windows::Win32::Foundation::CloseHandle;
+    use windows::Win32::System::Threading::{GetExitCodeProcess, OpenProcess, PROCESS_QUERY_LIMITED_INFORMATION};
+    const STILL_ACTIVE: u32 = 259;
+    unsafe {
+        let Ok(handle) = OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, false, pid) else { return false };
+        let mut code = 0u32;
+        let ok = GetExitCodeProcess(handle, &mut code).is_ok();
+        let _ = CloseHandle(handle);
+        ok && code == STILL_ACTIVE
+    }
+}
+
+/// Adds or removes the "start with Windows" entry. Debug builds never touch the registry.
+pub fn set_autostart(on: bool) {
+    if cfg!(debug_assertions) {
+        return;
+    }
+    use winreg::enums::{HKEY_CURRENT_USER, KEY_SET_VALUE};
+    use winreg::RegKey;
+    let Ok(key) = RegKey::predef(HKEY_CURRENT_USER).open_subkey_with_flags(r"Software\Microsoft\Windows\CurrentVersion\Run", KEY_SET_VALUE) else {
+        return;
+    };
+    if on {
+        if let Ok(exe) = std::env::current_exe() {
+            let _ = key.set_value("MacDows", &crate::taskbar_plan::run_value(&exe.to_string_lossy()));
+        }
+    } else {
+        let _ = key.delete_value("MacDows");
+    }
+}
+
+/// A plain native message box (blocks until OK). Used for the one-time notice.
+pub fn show_notice(title: &str, text: &str) {
+    use windows::Win32::UI::WindowsAndMessaging::{MessageBoxW, MB_ICONINFORMATION, MB_OK};
+    let wide = |s: &str| s.encode_utf16().chain(std::iter::once(0)).collect::<Vec<u16>>();
+    let (t, m) = (wide(title), wide(text));
+    unsafe {
+        MessageBoxW(None, PCWSTR(m.as_ptr()), PCWSTR(t.as_ptr()), MB_OK | MB_ICONINFORMATION);
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

@@ -108,6 +108,18 @@ pub fn guard_needs_refresh(source_len: u64, copy_len: Option<u64>) -> bool {
     copy_len != Some(source_len)
 }
 
+/// At every start: a state that says "hidden by MacDows" while its app is gone means a crash happened and the
+/// guard could not restore; restore before anything else.
+pub fn needs_stale_restore(state: Option<&TaskbarState>, app_alive: bool) -> bool {
+    state.map_or(false, |s| s.hidden_by_macdows) && !app_alive
+}
+
+/// Release builds follow the setting. A debug build (developer running `tauri dev`) only touches the
+/// taskbar when `MACDOWS_REPLACE_TASKBAR` is set, so editing the code never hides the developer's taskbar.
+pub fn should_replace_now(setting: bool, debug_build: bool, env_opt_in: bool) -> bool {
+    setting && (!debug_build || env_opt_in)
+}
+
 /// The Windows side of the taskbar. The real implementation is `taskbar::WinBackend`.
 pub trait Backend {
     fn autohide(&self) -> bool;
@@ -389,5 +401,30 @@ mod guard_owner_tests {
         assert!(guard_needs_refresh(1000, None));
         assert!(guard_needs_refresh(1000, Some(999)));
         assert!(!guard_needs_refresh(1000, Some(1000)));
+    }
+}
+
+#[cfg(test)]
+mod wiring_tests {
+    use super::*;
+
+    fn hidden(pid: u32) -> TaskbarState {
+        TaskbarState { version: 1, hidden_by_macdows: true, was_autohide: false, chevron_present: true, app_pid: pid }
+    }
+
+    #[test]
+    fn a_hidden_state_whose_app_is_gone_must_be_restored_at_start() {
+        assert!(needs_stale_restore(Some(&hidden(7)), false));
+        assert!(!needs_stale_restore(Some(&hidden(7)), true));
+        assert!(!needs_stale_restore(None, false));
+    }
+
+    #[test]
+    fn debug_builds_touch_the_taskbar_only_with_an_explicit_opt_in() {
+        assert!(should_replace_now(true, false, false), "release builds follow the setting");
+        assert!(!should_replace_now(false, false, true));
+        assert!(!should_replace_now(true, true, false), "a developer running `tauri dev` keeps the taskbar");
+        assert!(should_replace_now(true, true, true));
+        assert!(!should_replace_now(false, true, true));
     }
 }

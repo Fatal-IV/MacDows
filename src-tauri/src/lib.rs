@@ -24,12 +24,89 @@ fn get_settings(state: State<AppSettings>) -> settings::Settings {
 fn set_setting(app: AppHandle, state: State<AppSettings>, key: String, value: serde_json::Value) -> Result<settings::Settings, String> {
     let mut guard = state.0.lock().unwrap();
     let mut json = serde_json::to_value(&*guard).map_err(|e| e.to_string())?;
-    json.as_object_mut().ok_or("settings not an object")?.insert(key, value);
+    json.as_object_mut().ok_or("settings not an object")?.insert(key.clone(), value);
     let updated: settings::Settings = serde_json::from_value(json).map_err(|e| e.to_string())?;
     settings::save(&updated).map_err(|e| e.to_string())?;
     *guard = updated.clone();
+    drop(guard);
     let _ = app.emit("settings-changed", updated.clone());
+    match key.as_str() {
+        "replace_taskbar" => apply_replace_taskbar(&app, updated.replace_taskbar),
+        "start_with_windows" => taskbar::set_autostart(updated.start_with_windows),
+        _ => {}
+    }
     Ok(updated)
+}
+
+/// Hides or restores the Windows taskbar off the UI thread, then moves the dock to the new work area.
+fn apply_replace_taskbar(app: &AppHandle, enabled: bool) {
+    let app = app.clone();
+    std::thread::spawn(move || {
+        if enabled {
+            if taskbar::hide_now() {
+                taskbar::start_guard();
+            }
+        } else {
+            taskbar::restore_now();
+        }
+        // The work area changes a moment after the taskbar does.
+        std::thread::sleep(std::time::Duration::from_millis(1500));
+        place_dock(&app);
+    });
+}
+
+/// Turns the setting off from outside the Settings window (tray menu) and restores the taskbar.
+fn disable_replace_taskbar(app: &AppHandle) {
+    let state = app.state::<AppSettings>();
+    let updated = {
+        let mut guard = state.0.lock().unwrap();
+        guard.replace_taskbar = false;
+        let _ = settings::save(&guard);
+        guard.clone()
+    };
+    let _ = app.emit("settings-changed", updated);
+    apply_replace_taskbar(app, false);
+}
+
+/// First-run notice (once), then hide. Also hides again whenever Explorer restarts.
+fn start_taskbar_takeover(app: &AppHandle) {
+    use taskbar_plan::Store;
+    let (replace, notice_shown, lang, autostart) = {
+        let s = app.state::<AppSettings>();
+        let g = s.0.lock().unwrap();
+        (g.replace_taskbar, g.taskbar_notice_shown, g.language.clone(), g.start_with_windows)
+    };
+    taskbar::set_autostart(autostart);
+    // A crash can leave the taskbar hidden when even the guard was killed: put it back before anything else.
+    let state = taskbar::FileStore::default().load();
+    let alive = state.as_ref().map_or(false, |s| taskbar::pid_alive(s.app_pid));
+    if taskbar_plan::needs_stale_restore(state.as_ref(), alive) {
+        taskbar::restore_now();
+    }
+    if !taskbar_plan::should_replace_now(replace, cfg!(debug_assertions), std::env::var_os("MACDOWS_REPLACE_TASKBAR").is_some()) {
+        return;
+    }
+    let handle = app.clone();
+    std::thread::spawn(move || {
+        if !notice_shown {
+            let (title, text) = i18n::taskbar_notice(&lang);
+            taskbar::show_notice(title, text);
+            let s = handle.state::<AppSettings>();
+            let mut g = s.0.lock().unwrap();
+            g.taskbar_notice_shown = true;
+            let _ = settings::save(&g);
+        }
+        apply_replace_taskbar(&handle, true);
+    });
+    let handle = app.clone();
+    taskbar::watch_taskbar_created(move || {
+        let still_on = handle.state::<AppSettings>().0.lock().unwrap().replace_taskbar;
+        if still_on {
+            taskbar::hide_now();
+            std::thread::sleep(std::time::Duration::from_millis(1500));
+            place_dock(&handle);
+        }
+    });
 }
 
 fn open_settings(app: &AppHandle) {
@@ -51,7 +128,8 @@ fn build_tray(app: &AppHandle) -> tauri::Result<()> {
     let (settings_label, quit_label) = i18n::tray_labels(&lang);
     let settings_item = MenuItem::with_id(app, "settings", settings_label, true, None::<&str>)?;
     let quit_item = MenuItem::with_id(app, "quit", quit_label, true, None::<&str>)?;
-    let menu = Menu::with_items(app, &[&settings_item, &quit_item])?;
+    let restore_item = MenuItem::with_id(app, "restore_taskbar", i18n::tray_restore_label(&lang), true, None::<&str>)?;
+    let menu = Menu::with_items(app, &[&settings_item, &restore_item, &quit_item])?;
     let mut builder = TrayIconBuilder::new().menu(&menu).tooltip("MacDows");
     if let Some(icon) = app.default_window_icon() {
         builder = builder.icon(icon.clone());
@@ -59,6 +137,7 @@ fn build_tray(app: &AppHandle) -> tauri::Result<()> {
     builder
         .on_menu_event(|app, event| match event.id().as_ref() {
             "settings" => open_settings(app),
+            "restore_taskbar" => disable_replace_taskbar(app),
             "quit" => app.exit(0),
             _ => {}
         })
@@ -124,8 +203,15 @@ pub fn run() {
             media::start(app.handle().clone());
             visibility::start(app.handle().clone());
             updates::start(app.handle().clone());
+            start_taskbar_takeover(app.handle());
             Ok(())
         })
-        .run(tauri::generate_context!())
-        .expect("error while running tauri application");
+        .build(tauri::generate_context!())
+        .expect("error while building tauri application")
+        .run(|_app, event| {
+            // Normal exit (tray Quit, update, shutdown): give the taskbar back. A crash is covered by the guard.
+            if let tauri::RunEvent::Exit = event {
+                taskbar::restore_now();
+            }
+        });
 }
