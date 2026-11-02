@@ -1,0 +1,11 @@
+[package]
+name = "macdows-setup"
+version = "0.1.0"
+description = "MacDows installer"
+authors = ["Fatal-IV"]
+edition = "2021"
+license = "MIT"
+
+[lib]
+name = "macdows_setup_lib"
+crate-type = ["rlib"]
