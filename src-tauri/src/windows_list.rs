@@ -61,6 +61,12 @@ fn exe_of(hwnd: HWND) -> (u32, String) {
     (pid, if ok { String::from_utf16_lossy(&buf[..len as usize]) } else { String::new() })
 }
 
+/// Store (MSIX) apps live under `WindowsApps`; the shell returns a generic icon for their exe
+/// instead of failing, so the window's own icon is the better source.
+pub fn prefer_window_icon(exe: &str) -> bool {
+    exe.to_ascii_lowercase().contains(r"\windowsapps\")
+}
+
 fn icon_png_base64(exe: &str) -> Option<String> {
     if exe.is_empty() {
         return None;
@@ -181,7 +187,11 @@ unsafe extern "system" fn collect(hwnd: HWND, lparam: LPARAM) -> BOOL {
     if pid == GetCurrentProcessId() {
         return BOOL(1);
     }
-    let icon = icon_png_base64(&exe).or_else(|| window_icon_png_base64(hwnd));
+    let icon = if prefer_window_icon(&exe) {
+        window_icon_png_base64(hwnd).or_else(|| icon_png_base64(&exe))
+    } else {
+        icon_png_base64(&exe).or_else(|| window_icon_png_base64(hwnd))
+    };
     out.push(AppWindow { id: hwnd.0 as isize, title, exe, icon_png_base64: icon });
     BOOL(1)
 }
@@ -329,6 +339,18 @@ mod tests {
     #[test]
     fn invisible_window_is_rejected() {
         assert!(!is_listable(0, 0, false, "Hidden"));
+    }
+
+    #[test]
+    fn store_apps_prefer_the_window_icon() {
+        assert!(prefer_window_icon(r"C:\Program Files\WindowsApps\5319275A.WhatsAppDesktop_x64\WhatsApp.Root.exe"));
+        assert!(prefer_window_icon(r"c:\program files\windowsapps\Foo\foo.exe"));
+    }
+
+    #[test]
+    fn regular_apps_prefer_the_exe_icon() {
+        assert!(!prefer_window_icon(r"C:\Program Files\Mozilla Firefox\firefox.exe"));
+        assert!(!prefer_window_icon(""));
     }
 
     fn win(id: isize) -> AppWindow {
