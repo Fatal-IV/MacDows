@@ -5,7 +5,7 @@ use std::sync::OnceLock;
 use tauri::{AppHandle, Emitter};
 use windows::core::{PCWSTR, PWSTR};
 use windows::core::BOOL;
-use windows::Win32::Foundation::{CloseHandle, HWND, LPARAM};
+use windows::Win32::Foundation::{CloseHandle, HWND, LPARAM, WPARAM};
 use windows::Win32::Graphics::Dwm::{DwmGetWindowAttribute, DWMWA_CLOAKED};
 use windows::Win32::Graphics::Gdi::{DeleteObject, GetDC, GetDIBits, ReleaseDC, BITMAPINFO, BITMAPINFOHEADER, BI_RGB, DIB_RGB_COLORS};
 use windows::Win32::Storage::FileSystem::FILE_FLAGS_AND_ATTRIBUTES;
@@ -65,7 +65,7 @@ fn icon_png_base64(exe: &str) -> Option<String> {
     if exe.is_empty() {
         return None;
     }
-    unsafe {
+    let hicon = unsafe {
         let wide: Vec<u16> = exe.encode_utf16().chain(std::iter::once(0)).collect();
         let mut info = SHFILEINFOW::default();
         SHGetFileInfoW(
@@ -75,11 +75,47 @@ fn icon_png_base64(exe: &str) -> Option<String> {
             std::mem::size_of::<SHFILEINFOW>() as u32,
             SHGFI_ICON | SHGFI_LARGEICON,
         );
-        if info.hIcon.is_invalid() {
-            return None;
+        info.hIcon
+    };
+    if hicon.is_invalid() {
+        return None;
+    }
+    let result = hicon_to_png_base64(hicon);
+    unsafe {
+        let _ = DestroyIcon(hicon);
+    }
+    result
+}
+
+/// Icon the window itself provides. Needed for Store (MSIX) apps, whose exe icon cannot be read
+/// from `Program Files\WindowsApps`. The handles are shared with the window, so they are not destroyed.
+fn window_icon_png_base64(hwnd: HWND) -> Option<String> {
+    let handle = unsafe {
+        let mut found = 0usize;
+        for kind in [1usize /* ICON_BIG */, 2 /* ICON_SMALL2 */] {
+            let mut out = 0usize;
+            let ok = SendMessageTimeoutW(hwnd, WM_GETICON, WPARAM(kind), LPARAM(0), SMTO_ABORTIFHUNG, 100, Some(&mut out));
+            if ok.0 != 0 && out != 0 {
+                found = out;
+                break;
+            }
         }
+        if found == 0 {
+            found = GetClassLongPtrW(hwnd, GCLP_HICON);
+        }
+        found
+    };
+    if handle == 0 {
+        return None;
+    }
+    hicon_to_png_base64(HICON(handle as *mut _))
+}
+
+/// Converts an icon handle to a base64 PNG. Does not destroy the handle.
+fn hicon_to_png_base64(hicon: HICON) -> Option<String> {
+    unsafe {
         let mut ii = ICONINFO::default();
-        let got = GetIconInfo(info.hIcon, &mut ii).is_ok();
+        let got = GetIconInfo(hicon, &mut ii).is_ok();
         let mut result = None;
         if got && !ii.hbmColor.is_invalid() {
             let mut bmi = BITMAPINFO::default();
@@ -124,7 +160,6 @@ fn icon_png_base64(exe: &str) -> Option<String> {
         if !ii.hbmMask.is_invalid() {
             let _ = DeleteObject(ii.hbmMask.into());
         }
-        let _ = DestroyIcon(info.hIcon);
         result
     }
 }
@@ -146,7 +181,7 @@ unsafe extern "system" fn collect(hwnd: HWND, lparam: LPARAM) -> BOOL {
     if pid == GetCurrentProcessId() {
         return BOOL(1);
     }
-    let icon = icon_png_base64(&exe);
+    let icon = icon_png_base64(&exe).or_else(|| window_icon_png_base64(hwnd));
     out.push(AppWindow { id: hwnd.0 as isize, title, exe, icon_png_base64: icon });
     BOOL(1)
 }
