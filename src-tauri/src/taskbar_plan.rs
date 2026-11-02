@@ -97,6 +97,17 @@ pub fn run_value(exe: &str) -> String {
     format!("\"{exe}\"")
 }
 
+/// A guard may only undo the state that its own app wrote, so an old guard never undoes a newer instance.
+pub fn state_belongs_to(state: &TaskbarState, pid: u32) -> bool {
+    state.app_pid == pid
+}
+
+/// The guard is a copy of macdows.exe under another name (the installer ends macdows.exe by name on
+/// update and uninstall). It is copied again only when missing or of a different size.
+pub fn guard_needs_refresh(source_len: u64, copy_len: Option<u64>) -> bool {
+    copy_len != Some(source_len)
+}
+
 /// The Windows side of the taskbar. The real implementation is `taskbar::WinBackend`.
 pub trait Backend {
     fn autohide(&self) -> bool;
@@ -359,5 +370,24 @@ mod orchestration_tests {
         restore(&b, &s);
         assert_eq!(*log.borrow(), vec!["show_window"]);
         assert!(b.autohide.get());
+    }
+}
+
+#[cfg(test)]
+mod guard_owner_tests {
+    use super::*;
+
+    #[test]
+    fn a_guard_only_restores_the_state_its_own_app_wrote() {
+        let state = TaskbarState { version: 1, hidden_by_macdows: true, was_autohide: false, chevron_present: true, app_pid: 8 };
+        assert!(state_belongs_to(&state, 8));
+        assert!(!state_belongs_to(&state, 7), "an old guard must not undo a newer instance");
+    }
+
+    #[test]
+    fn the_guard_copy_is_refreshed_only_when_missing_or_a_different_size() {
+        assert!(guard_needs_refresh(1000, None));
+        assert!(guard_needs_refresh(1000, Some(999)));
+        assert!(!guard_needs_refresh(1000, Some(1000)));
     }
 }

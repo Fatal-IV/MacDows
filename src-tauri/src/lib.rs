@@ -1,4 +1,5 @@
 mod i18n;
+mod cli;
 mod taskbar;
 mod taskbar_plan;
 mod updates;
@@ -87,6 +88,20 @@ fn place_dock(app: &tauri::AppHandle) {
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
+    let args: Vec<String> = std::env::args().skip(1).collect();
+    let refs: Vec<&str> = args.iter().map(String::as_str).collect();
+    match cli::parse(&refs) {
+        cli::Cli::RestoreTaskbar => {
+            taskbar::restore_now();
+            return;
+        }
+        cli::Cli::Guard(pid) => {
+            taskbar::guard_main(pid);
+            return;
+        }
+        cli::Cli::Normal => {}
+    }
+
     tauri::Builder::default()
         // Must be the first plugin: a second launch opens Settings in the running app and exits.
         .plugin(tauri_plugin_single_instance::init(|app, _args, _cwd| open_settings(app)))

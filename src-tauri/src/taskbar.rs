@@ -282,6 +282,64 @@ pub fn watch_taskbar_created(callback: impl Fn() + Send + Sync + 'static) {
     });
 }
 
+// ---------------------------------------------------------------------------------------------
+// Guard
+// ---------------------------------------------------------------------------------------------
+const CREATE_NO_WINDOW: u32 = 0x0800_0000;
+const DETACHED_PROCESS: u32 = 0x0000_0008;
+const CREATE_NEW_PROCESS_GROUP: u32 = 0x0000_0200;
+
+fn guard_exe_path() -> PathBuf {
+    let base = std::env::var_os("APPDATA").map(PathBuf::from).unwrap_or_else(std::env::temp_dir);
+    base.join("MacDows").join("guard").join("macdows-guard.exe")
+}
+
+/// Runs inside the guard process (`macdows-guard.exe --guard <pid>`): waits for the app to end, then restores.
+pub fn guard_main(parent_pid: u32) {
+    use windows::Win32::Foundation::CloseHandle;
+    use windows::Win32::System::Threading::{OpenProcess, WaitForSingleObject, INFINITE, PROCESS_SYNCHRONIZE};
+    unsafe {
+        if let Ok(handle) = OpenProcess(PROCESS_SYNCHRONIZE, false, parent_pid) {
+            WaitForSingleObject(handle, INFINITE);
+            let _ = CloseHandle(handle);
+        }
+    }
+    let state = FileStore::default().load();
+    let ours = state.as_ref().map_or(false, |s| crate::taskbar_plan::state_belongs_to(s, parent_pid));
+    if ours && crate::taskbar_plan::guard_should_restore(false, state.as_ref()) {
+        restore_now();
+    }
+}
+
+/// Starts the guard for this process. Returns false when it could not be started (the exit hook and the
+/// next-start check still restore the taskbar).
+pub fn start_guard() -> bool {
+    use std::os::windows::process::CommandExt;
+    let Ok(me) = std::env::current_exe() else { return false };
+    let dest = guard_exe_path();
+    let source_len = std::fs::metadata(&me).map(|m| m.len()).unwrap_or(0);
+    let copy_len = std::fs::metadata(&dest).ok().map(|m| m.len());
+    if crate::taskbar_plan::guard_needs_refresh(source_len, copy_len) {
+        if let Some(dir) = dest.parent() {
+            let _ = std::fs::create_dir_all(dir);
+        }
+        let fresh = dest.with_extension("exe.new");
+        if std::fs::copy(&me, &fresh).is_ok() {
+            // Fails while an older guard still runs from the old file; the old copy then stays, which is fine.
+            let _ = std::fs::rename(&fresh, &dest);
+            let _ = std::fs::remove_file(&fresh);
+        }
+    }
+    if !dest.exists() {
+        return false;
+    }
+    std::process::Command::new(&dest)
+        .args(["--guard", &std::process::id().to_string()])
+        .creation_flags(CREATE_NO_WINDOW | DETACHED_PROCESS | CREATE_NEW_PROCESS_GROUP)
+        .spawn()
+        .is_ok()
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
