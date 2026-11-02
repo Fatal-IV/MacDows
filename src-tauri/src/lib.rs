@@ -1,4 +1,5 @@
 mod i18n;
+mod taskbar_plan;
 mod updates;
 mod visibility;
 mod media;

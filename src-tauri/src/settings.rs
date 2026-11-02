@@ -19,6 +19,12 @@ pub struct Settings {
     pub check_updates: bool,
     /// Unix seconds of the last finished check.
     pub last_update_check: Option<u64>,
+    /// Hide the Windows taskbar and take its place.
+    pub replace_taskbar: bool,
+    /// The one-time explanation before the first hide was shown.
+    pub taskbar_notice_shown: bool,
+    /// Start MacDows when Windows starts.
+    pub start_with_windows: bool,
 }
 
 impl Default for Settings {
@@ -29,6 +35,9 @@ impl Default for Settings {
             dock_visibility: Visibility::Fixed,
             check_updates: true,
             last_update_check: None,
+            replace_taskbar: true,
+            taskbar_notice_shown: false,
+            start_with_windows: true,
         }
     }
 }
@@ -99,6 +108,9 @@ mod tests {
             dock_visibility: Visibility::Fixed,
             check_updates: false,
             last_update_check: Some(1_700_000_000),
+            replace_taskbar: false,
+            taskbar_notice_shown: true,
+            start_with_windows: false,
         };
         let json = serde_json::to_string(&s).unwrap();
         assert_eq!(Settings::from_json(&json), s);
@@ -109,6 +121,16 @@ mod tests {
         let s = Settings::default();
         assert!(s.check_updates);
         assert_eq!(s.last_update_check, None);
+    }
+
+    #[test]
+    fn taskbar_fields_default_to_replace_notice_pending_and_autostart() {
+        let s = Settings::default();
+        assert!(s.replace_taskbar);
+        assert!(!s.taskbar_notice_shown);
+        assert!(s.start_with_windows);
+        let old = Settings::from_json(r#"{"language":"tr"}"#);
+        assert!(old.replace_taskbar && !old.taskbar_notice_shown && old.start_with_windows);
     }
 
     #[test]
