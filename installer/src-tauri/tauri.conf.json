@@ -14,8 +14,8 @@
       {
         "label": "setup",
         "title": "MacDows Setup",
-        "width": 592,
-        "height": 412,
+        "width": 560,
+        "height": 380,
         "decorations": false,
         "transparent": true,
         "resizable": false,
@@ -23,7 +23,9 @@
         "center": true
       }
     ],
-    "security": { "csp": null }
+    "security": {
+      "csp": null
+    }
   },
   "bundle": {
     "active": false,
