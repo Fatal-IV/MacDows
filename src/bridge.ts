@@ -25,3 +25,18 @@ export interface AppWindow {
 export const listWindows = () => invoke<AppWindow[]>("list_windows");
 export const focusWindow = (id: number) => invoke<void>("focus_window", { id });
 export const onWindowsChanged = (cb: () => void): Promise<UnlistenFn> => listen("windows-changed", cb);
+
+export interface MediaInfo {
+  title: string;
+  artist: string;
+  playing: boolean;
+  artwork_png_base64: string | null;
+  artwork_mime: string;
+}
+
+export const getMedia = () => invoke<MediaInfo | null>("get_media");
+export const mediaToggle = () => invoke<void>("media_toggle");
+export const mediaNext = () => invoke<void>("media_next");
+export const mediaPrev = () => invoke<void>("media_prev");
+export const onMediaChanged = (cb: (m: MediaInfo | null) => void): Promise<UnlistenFn> =>
+  listen<MediaInfo | null>("media-changed", (e) => cb(e.payload));

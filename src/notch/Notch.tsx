@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
+import { getMedia, mediaNext, mediaPrev, mediaToggle, onMediaChanged, type MediaInfo } from "../bridge";
 import "./Notch.css";
 
 const COLLAPSED = { width: 170, height: 32 };
@@ -8,10 +9,21 @@ const EXPANDED = { width: 420, height: 130 };
 export default function Notch() {
   const [open, setOpen] = useState(false);
   const [now, setNow] = useState(new Date());
+  const [media, setMedia] = useState<MediaInfo | null>(null);
+
   useEffect(() => {
     const id = setInterval(() => setNow(new Date()), 1000 * 15);
     return () => clearInterval(id);
   }, []);
+
+  useEffect(() => {
+    getMedia().then(setMedia).catch(() => setMedia(null));
+    const un = onMediaChanged(setMedia);
+    return () => {
+      un.then((f) => f());
+    };
+  }, []);
+
   const time = new Intl.DateTimeFormat(undefined, { hour: "2-digit", minute: "2-digit" }).format(now);
   const size = open ? EXPANDED : COLLAPSED;
 
@@ -44,8 +56,29 @@ export default function Notch() {
           animate={{ opacity: open ? 1 : 0, y: open ? 0 : -6 }}
           transition={{ duration: 0.18, delay: open ? 0.08 : 0 }}
         >
-          <div className="title">{time}</div>
-          <div className="sub">Nothing playing</div>
+          {media ? (
+            <div className="media">
+              {media.artwork_png_base64 ? (
+                <img className="art" src={`data:${media.artwork_mime};base64,${media.artwork_png_base64}`} alt="" draggable={false} />
+              ) : (
+                <div className="art art-empty">♪</div>
+              )}
+              <div className="meta">
+                <div className="title">{media.title}</div>
+                <div className="sub">{media.artist || time}</div>
+                <div className="controls">
+                  <button onClick={mediaPrev} aria-label="Previous">⏮</button>
+                  <button onClick={mediaToggle} aria-label="Play or pause">{media.playing ? "⏸" : "▶"}</button>
+                  <button onClick={mediaNext} aria-label="Next">⏭</button>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="meta">
+              <div className="title">{time}</div>
+              <div className="sub">Nothing playing</div>
+            </div>
+          )}
         </motion.div>
       </motion.div>
     </div>
