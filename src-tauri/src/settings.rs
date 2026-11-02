@@ -15,6 +15,10 @@ pub struct Settings {
     pub language: String,
     pub notch_visibility: Visibility,
     pub dock_visibility: Visibility,
+    /// Look for new releases by itself (the Check now button always works).
+    pub check_updates: bool,
+    /// Unix seconds of the last finished check.
+    pub last_update_check: Option<u64>,
 }
 
 impl Default for Settings {
@@ -23,6 +27,8 @@ impl Default for Settings {
             language: "en".into(),
             notch_visibility: Visibility::Fixed,
             dock_visibility: Visibility::Fixed,
+            check_updates: true,
+            last_update_check: None,
         }
     }
 }
@@ -87,8 +93,30 @@ mod tests {
 
     #[test]
     fn roundtrip_keeps_values() {
-        let s = Settings { language: "tr".into(), notch_visibility: Visibility::Peek, dock_visibility: Visibility::Fixed };
+        let s = Settings {
+            language: "tr".into(),
+            notch_visibility: Visibility::Peek,
+            dock_visibility: Visibility::Fixed,
+            check_updates: false,
+            last_update_check: Some(1_700_000_000),
+        };
         let json = serde_json::to_string(&s).unwrap();
         assert_eq!(Settings::from_json(&json), s);
+    }
+
+    #[test]
+    fn update_fields_default_to_checking_and_never_checked() {
+        let s = Settings::default();
+        assert!(s.check_updates);
+        assert_eq!(s.last_update_check, None);
+    }
+
+    #[test]
+    fn a_v010_settings_file_without_update_fields_still_loads() {
+        let s = Settings::from_json(r#"{"language":"tr","notch_visibility":"peek","dock_visibility":"fixed"}"#);
+        assert_eq!(s.language, "tr");
+        assert_eq!(s.notch_visibility, Visibility::Peek);
+        assert!(s.check_updates);
+        assert_eq!(s.last_update_check, None);
     }
 }

@@ -1,4 +1,5 @@
 mod i18n;
+mod updates;
 mod visibility;
 mod media;
 mod windows_list;
