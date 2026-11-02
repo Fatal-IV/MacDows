@@ -28,6 +28,18 @@ pub enum Decision {
     Newer,
 }
 
+impl Decision {
+    /// Stable names used by the UI.
+    pub fn as_str(self) -> &'static str {
+        match self {
+            Decision::Fresh => "fresh",
+            Decision::Reinstall => "reinstall",
+            Decision::Older => "older",
+            Decision::Newer => "newer",
+        }
+    }
+}
+
 fn parse_version(v: &str) -> Option<(u32, u32, u32)> {
     let mut parts = v.trim().split('.');
     let mut next = || parts.next().and_then(|p| p.parse::<u32>().ok());
@@ -141,5 +153,18 @@ mod tests {
     #[test]
     fn log_lines_are_timestamped_and_level_uppercased() {
         assert_eq!(log_line("12:00:00", "error", "boom"), "[12:00:00] ERROR boom");
+    }
+}
+
+#[cfg(test)]
+mod decision_name_tests {
+    use super::*;
+
+    #[test]
+    fn decision_names_are_stable_for_the_ui() {
+        assert_eq!(Decision::Fresh.as_str(), "fresh");
+        assert_eq!(Decision::Reinstall.as_str(), "reinstall");
+        assert_eq!(Decision::Older.as_str(), "older");
+        assert_eq!(Decision::Newer.as_str(), "newer");
     }
 }
