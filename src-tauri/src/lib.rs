@@ -52,6 +52,7 @@ fn apply_replace_taskbar(app: &AppHandle, enabled: bool) {
         // The work area changes a moment after the taskbar does.
         std::thread::sleep(std::time::Duration::from_millis(1500));
         place_dock(&app);
+        let _ = app.emit("taskbar-changed", ());
     });
 }
 
@@ -105,8 +106,11 @@ fn start_taskbar_takeover(app: &AppHandle) {
             taskbar::hide_now();
             std::thread::sleep(std::time::Duration::from_millis(1500));
             place_dock(&handle);
+            let _ = handle.emit("taskbar-changed", ());
         }
     });
+    let handle = app.clone();
+    taskbar::start_watchdog(move || handle.state::<AppSettings>().0.lock().unwrap().replace_taskbar);
 }
 
 fn open_settings(app: &AppHandle) {

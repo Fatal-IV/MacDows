@@ -129,7 +129,12 @@ impl Backend for WinBackend {
     fn set_autohide(&self, on: bool) {
         if let Some(t) = tray_window() {
             let current = appbar_state(t);
-            set_appbar_state(t, if on { current | ABS_AUTOHIDE } else { current & !ABS_AUTOHIDE });
+            let wanted = if on { current | ABS_AUTOHIDE } else { current & !ABS_AUTOHIDE };
+            if wanted != current {
+                set_appbar_state(t, wanted);
+                // Explorer re-lays the taskbar out after a state change; hiding the window too early can be undone.
+                std::thread::sleep(Duration::from_millis(800));
+            }
         }
     }
 
@@ -156,6 +161,17 @@ impl Backend for WinBackend {
     fn chevron_present(&self) -> bool {
         tray_window().map_or(false, chevron_present_uia)
     }
+}
+
+/// While the setting is on, hides the taskbar again whenever Explorer shows it. Checks every 2 seconds.
+pub fn start_watchdog(setting_on: impl Fn() -> bool + Send + 'static) {
+    std::thread::spawn(move || loop {
+        std::thread::sleep(Duration::from_secs(2));
+        let visible = !WinBackend.window_hidden();
+        if visible && crate::taskbar_plan::watchdog_should_rehide(setting_on(), FileStore::default().load().as_ref(), visible) {
+            WinBackend.hide_window();
+        }
+    });
 }
 
 /// Puts the taskbar back to the state recorded before MacDows touched it (used by the exit hook, the CLI flag and the guard).

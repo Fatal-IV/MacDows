@@ -88,8 +88,25 @@ pub fn key_steps(action: ShellAction) -> Vec<KeyStep> {
     match action {
         ShellAction::Notifications => vec![KeyStep::Chord { win: true, key: 0x4E }],
         ShellAction::QuickSettings => vec![KeyStep::Chord { win: true, key: 0x41 }],
-        ShellAction::HiddenIcons => vec![KeyStep::Chord { win: true, key: 0x42 }, KeyStep::Wait { ms: 700 }, KeyStep::Chord { win: false, key: 0x0D }],
+        ShellAction::HiddenIcons => {
+            // Win+B focuses the last focused tray item, not necessarily the "show hidden icons" chevron. The chevron is
+            // always the leftmost item, so walking Left far enough reaches it from anywhere.
+            let mut steps = vec![KeyStep::Chord { win: true, key: 0x42 }, KeyStep::Wait { ms: 700 }];
+            for _ in 0..16 {
+                steps.push(KeyStep::Chord { win: false, key: 0x25 });
+                steps.push(KeyStep::Wait { ms: 40 });
+            }
+            steps.push(KeyStep::Wait { ms: 200 });
+            steps.push(KeyStep::Chord { win: false, key: 0x0D });
+            steps
+        }
     }
+}
+
+/// Explorer can show the taskbar again after we hid it (quick changes, restarts). While the setting is on and the
+/// state says we hid it, a visible taskbar is hidden again.
+pub fn watchdog_should_rehide(setting_on: bool, state: Option<&TaskbarState>, window_visible: bool) -> bool {
+    setting_on && window_visible && state.map_or(false, |s| s.hidden_by_macdows)
 }
 
 /// Value of the autostart registry entry: the exe path in double quotes.
@@ -245,10 +262,21 @@ mod tests {
     fn shell_buttons_send_the_documented_shortcuts() {
         assert_eq!(key_steps(ShellAction::Notifications), vec![KeyStep::Chord { win: true, key: 0x4E }]);
         assert_eq!(key_steps(ShellAction::QuickSettings), vec![KeyStep::Chord { win: true, key: 0x41 }]);
-        assert_eq!(
-            key_steps(ShellAction::HiddenIcons),
-            vec![KeyStep::Chord { win: true, key: 0x42 }, KeyStep::Wait { ms: 700 }, KeyStep::Chord { win: false, key: 0x0D }]
-        );
+    }
+
+    #[test]
+    fn hidden_icons_walk_left_to_the_chevron_before_pressing_enter() {
+        // Win+B focuses the LAST focused tray item, not the chevron; Left x16 always ends on the leftmost item (the chevron).
+        let steps = key_steps(ShellAction::HiddenIcons);
+        assert_eq!(steps[0], KeyStep::Chord { win: true, key: 0x42 });
+        assert_eq!(steps[1], KeyStep::Wait { ms: 700 });
+        let lefts = steps.iter().filter(|s| matches!(s, KeyStep::Chord { win: false, key: 0x25 })).count();
+        assert_eq!(lefts, 16);
+        assert_eq!(*steps.last().unwrap(), KeyStep::Chord { win: false, key: 0x0D });
+        assert!(!steps.iter().any(|s| matches!(s, KeyStep::Chord { key: 0x1B, .. })), "Esc must never be sent");
+        let enter_at = steps.iter().position(|s| matches!(s, KeyStep::Chord { win: false, key: 0x0D })).unwrap();
+        let last_left_at = steps.iter().rposition(|s| matches!(s, KeyStep::Chord { win: false, key: 0x25 })).unwrap();
+        assert!(last_left_at < enter_at, "all Left presses come before Enter");
     }
 
     #[test]
@@ -426,5 +454,22 @@ mod wiring_tests {
         assert!(!should_replace_now(true, true, false), "a developer running `tauri dev` keeps the taskbar");
         assert!(should_replace_now(true, true, true));
         assert!(!should_replace_now(false, true, true));
+    }
+}
+
+#[cfg(test)]
+mod watchdog_tests {
+    use super::*;
+
+    fn hidden() -> TaskbarState {
+        TaskbarState { version: 1, hidden_by_macdows: true, was_autohide: false, chevron_present: true, app_pid: 7 }
+    }
+
+    #[test]
+    fn the_watchdog_hides_a_taskbar_that_reappeared_only_while_we_own_the_state() {
+        assert!(watchdog_should_rehide(true, Some(&hidden()), true));
+        assert!(!watchdog_should_rehide(false, Some(&hidden()), true), "the setting is off");
+        assert!(!watchdog_should_rehide(true, None, true), "no state means we are not hiding anything");
+        assert!(!watchdog_should_rehide(true, Some(&hidden()), false), "already hidden");
     }
 }
