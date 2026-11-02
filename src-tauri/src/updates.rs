@@ -59,6 +59,199 @@ pub fn after_check(prev: &UpdateStatus, outcome: CheckOutcome, user_initiated: b
     }
 }
 
+// ---------------------------------------------------------------------------------------------
+// Effects. Error messages sent to the UI are stable codes (`check_failed`, `download_failed`,
+// `verify_failed`, `install_failed`, `no_update`, `busy`); the UI shows the localized sentence and
+// the technical detail goes to the log.
+// ---------------------------------------------------------------------------------------------
+use std::sync::Mutex;
+use std::time::{Duration, SystemTime, UNIX_EPOCH};
+use tauri::{AppHandle, Emitter, Manager};
+use tauri_plugin_updater::UpdaterExt;
+
+/// How often the background thread wakes up to ask `should_check`.
+const POLL_SECS: u64 = 1800;
+
+pub struct UpdateState(pub Mutex<UpdateStatus>);
+
+impl Default for UpdateState {
+    fn default() -> Self {
+        UpdateState(Mutex::new(UpdateStatus::Idle))
+    }
+}
+
+/// Moves to `Checking` unless a check or install is already running.
+pub fn begin_check(state: &Mutex<UpdateStatus>) -> bool {
+    let mut status = state.lock().unwrap();
+    if !can_start(&status) {
+        return false;
+    }
+    *status = UpdateStatus::Checking;
+    true
+}
+
+/// Moves to `Installing` only from `Available`; a second install can never start.
+pub fn begin_install(state: &Mutex<UpdateStatus>) -> bool {
+    let mut status = state.lock().unwrap();
+    if !matches!(*status, UpdateStatus::Available { .. }) {
+        return false;
+    }
+    *status = UpdateStatus::Installing { percent: None };
+    true
+}
+
+pub fn classify_install_error(error: &tauri_plugin_updater::Error) -> &'static str {
+    use tauri_plugin_updater::Error::*;
+    match error {
+        Minisign(_) | Base64(_) | SignatureUtf8(_) | SignedVersionMismatch { .. } | MissingSignedVersion => "verify_failed",
+        Reqwest(_) | Network(_) => "download_failed",
+        _ => "install_failed",
+    }
+}
+
+fn now_secs() -> u64 {
+    SystemTime::now().duration_since(UNIX_EPOCH).map(|d| d.as_secs()).unwrap_or(0)
+}
+
+fn log(message: &str) {
+    use std::io::Write;
+    let base = std::env::var_os("APPDATA").map(std::path::PathBuf::from).unwrap_or_else(std::env::temp_dir);
+    let dir = base.join("MacDows").join("logs");
+    let _ = std::fs::create_dir_all(&dir);
+    if let Ok(mut file) = std::fs::OpenOptions::new().create(true).append(true).open(dir.join("updates.log")) {
+        let _ = writeln!(file, "[{}] {message}", now_secs());
+    }
+}
+
+fn publish(app: &AppHandle, status: UpdateStatus) -> UpdateStatus {
+    *app.state::<UpdateState>().0.lock().unwrap() = status.clone();
+    let _ = app.emit("update-status", status.clone());
+    status
+}
+
+fn build_updater(app: &AppHandle) -> Result<tauri_plugin_updater::Updater, String> {
+    #[allow(unused_mut)]
+    let mut builder = app.updater_builder();
+    // Debug builds only: point the check at a local fake release (the plugin refuses http in release builds anyway).
+    #[cfg(debug_assertions)]
+    if let Ok(endpoint) = std::env::var("MACDOWS_UPDATE_ENDPOINT") {
+        let url: tauri::Url = endpoint.parse().map_err(|e| format!("bad MACDOWS_UPDATE_ENDPOINT: {e}"))?;
+        builder = builder.endpoints(vec![url]).map_err(|e| e.to_string())?;
+    }
+    builder.build().map_err(|e| e.to_string())
+}
+
+fn remember_check(app: &AppHandle, now: u64) {
+    let settings = app.state::<crate::AppSettings>();
+    let mut guard = settings.0.lock().unwrap();
+    guard.last_update_check = Some(now);
+    let _ = crate::settings::save(&guard);
+}
+
+/// Runs one check. `user_initiated` decides whether a failure becomes visible.
+pub async fn run_check(app: &AppHandle, user_initiated: bool) -> UpdateStatus {
+    let state = app.state::<UpdateState>();
+    // The status before the check is what a silent failure falls back to.
+    let previous = state.0.lock().unwrap().clone();
+    if !begin_check(&state.0) {
+        return previous;
+    }
+    let _ = app.emit("update-status", UpdateStatus::Checking);
+    let outcome = match build_updater(app) {
+        Err(e) => {
+            log(&format!("check: could not build the updater: {e}"));
+            CheckOutcome::Failed("check_failed".into())
+        }
+        Ok(updater) => match updater.check().await {
+            Ok(Some(update)) => CheckOutcome::Available { version: update.version.clone(), notes: update.body.clone().unwrap_or_default() },
+            Ok(None) => CheckOutcome::UpToDate,
+            Err(e) => {
+                log(&format!("check failed: {e}"));
+                CheckOutcome::Failed("check_failed".into())
+            }
+        },
+    };
+    let now = now_secs();
+    if !matches!(outcome, CheckOutcome::Failed(_)) {
+        remember_check(app, now);
+    }
+    publish(app, after_check(&previous, outcome, user_initiated, now))
+}
+
+async fn download_and_install(app: &AppHandle) -> Result<(), &'static str> {
+    let updater = build_updater(app).map_err(|e| {
+        log(&format!("install: could not build the updater: {e}"));
+        "check_failed"
+    })?;
+    let update = match updater.check().await {
+        Ok(Some(update)) => update,
+        Ok(None) => return Err("no_update"),
+        Err(e) => {
+            log(&format!("install: re-check failed: {e}"));
+            return Err("check_failed");
+        }
+    };
+    let mut downloaded: u64 = 0;
+    update
+        .download_and_install(
+            |chunk, total| {
+                downloaded += chunk as u64;
+                let percent = total.filter(|t| *t > 0).map(|t| ((downloaded * 100) / t).min(100) as u8);
+                publish(app, UpdateStatus::Installing { percent });
+            },
+            || log("download finished, installing"),
+        )
+        .await
+        .map_err(|e| {
+            log(&format!("install failed: {e}"));
+            classify_install_error(&e)
+        })
+}
+
+#[tauri::command]
+pub fn get_update_status(state: tauri::State<UpdateState>) -> UpdateStatus {
+    state.0.lock().unwrap().clone()
+}
+
+#[tauri::command]
+pub async fn check_for_update(app: AppHandle) -> UpdateStatus {
+    run_check(&app, true).await
+}
+
+/// Installs the update that is `Available`. On success the NSIS package ends this process itself.
+#[tauri::command]
+pub async fn install_update(app: AppHandle) -> Result<(), String> {
+    if !begin_install(&app.state::<UpdateState>().0) {
+        return Err("busy".into());
+    }
+    publish(&app, UpdateStatus::Installing { percent: None });
+    match download_and_install(&app).await {
+        Ok(()) => Ok(()),
+        Err(code) => {
+            publish(&app, UpdateStatus::Error { message: code.to_string(), during: "install".into() });
+            Err(code.to_string())
+        }
+    }
+}
+
+/// Background checks: first one `FIRST_CHECK_DELAY_SECS` after launch, then whenever `should_check` says so.
+pub fn start(app: AppHandle) {
+    std::thread::spawn(move || {
+        std::thread::sleep(Duration::from_secs(FIRST_CHECK_DELAY_SECS));
+        loop {
+            let (enabled, last) = {
+                let settings = app.state::<crate::AppSettings>();
+                let guard = settings.0.lock().unwrap();
+                (guard.check_updates, guard.last_update_check)
+            };
+            if enabled && should_check(last, now_secs(), CHECK_INTERVAL_SECS) {
+                tauri::async_runtime::block_on(run_check(&app, false));
+            }
+            std::thread::sleep(Duration::from_secs(POLL_SECS));
+        }
+    });
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -127,5 +320,47 @@ mod tests {
             after_check(&prev, CheckOutcome::Failed("offline".into()), true, 99),
             UpdateStatus::Error { message: "offline".into(), during: "check".into() }
         );
+    }
+}
+
+#[cfg(test)]
+mod effect_tests {
+    use super::*;
+    use std::sync::Mutex;
+    use tauri_plugin_updater::Error;
+
+    fn available() -> UpdateStatus {
+        UpdateStatus::Available { version: "0.1.1".into(), notes: String::new() }
+    }
+
+    #[test]
+    fn install_starts_only_from_available_and_never_twice() {
+        let state = Mutex::new(available());
+        assert!(begin_install(&state));
+        assert_eq!(*state.lock().unwrap(), UpdateStatus::Installing { percent: None });
+        assert!(!begin_install(&state), "a second install must not start");
+        assert_eq!(*state.lock().unwrap(), UpdateStatus::Installing { percent: None });
+
+        let idle = Mutex::new(UpdateStatus::Idle);
+        assert!(!begin_install(&idle), "nothing to install when no update is known");
+        assert_eq!(*idle.lock().unwrap(), UpdateStatus::Idle);
+    }
+
+    #[test]
+    fn a_check_does_not_start_while_one_runs() {
+        let state = Mutex::new(UpdateStatus::Idle);
+        assert!(begin_check(&state));
+        assert_eq!(*state.lock().unwrap(), UpdateStatus::Checking);
+        assert!(!begin_check(&state));
+        let installing = Mutex::new(UpdateStatus::Installing { percent: Some(5) });
+        assert!(!begin_check(&installing));
+        assert_eq!(*installing.lock().unwrap(), UpdateStatus::Installing { percent: Some(5) });
+    }
+
+    #[test]
+    fn install_errors_are_classified_for_the_user() {
+        assert_eq!(classify_install_error(&Error::SignatureUtf8("x".into())), "verify_failed");
+        assert_eq!(classify_install_error(&Error::Network("x".into())), "download_failed");
+        assert_eq!(classify_install_error(&Error::EmptyEndpoints), "install_failed");
     }
 }

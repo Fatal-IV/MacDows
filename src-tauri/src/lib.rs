@@ -91,7 +91,8 @@ pub fn run() {
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_updater::Builder::new().build())
         .manage(AppSettings(Mutex::new(settings::load())))
-        .invoke_handler(tauri::generate_handler![get_settings, set_setting, windows_list::list_windows, windows_list::focus_window, media::get_media, media::media_toggle, media::media_next, media::media_prev])
+        .manage(updates::UpdateState::default())
+        .invoke_handler(tauri::generate_handler![get_settings, set_setting, windows_list::list_windows, windows_list::focus_window, media::get_media, media::media_toggle, media::media_next, media::media_prev, updates::get_update_status, updates::check_for_update, updates::install_update])
         .setup(|app| {
             for label in ["notch", "dock"] {
                 if let Some(hwnd) = app.get_webview_window(label).and_then(|w| w.hwnd().ok()) {
@@ -105,6 +106,7 @@ pub fn run() {
             windows_list::start(app.handle().clone());
             media::start(app.handle().clone());
             visibility::start(app.handle().clone());
+            updates::start(app.handle().clone());
             Ok(())
         })
         .run(tauri::generate_context!())
