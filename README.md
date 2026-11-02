@@ -19,6 +19,10 @@ Notes:
 - MacDows needs the WebView2 runtime. Windows 11 has it. If it is missing, the installer downloads and installs it first (internet required).
 - Uninstall from Windows Settings → Apps.
 
+## Updates
+
+MacDows checks for a new release a little after it starts and then every 12 hours. When there is one, a small blue dot appears on the notch and **Settings → Updates** shows what is new. Nothing is installed until you press **Update and restart**. Updates are verified with the MacDows signing key. You can turn the automatic check off in the same card.
+
 ## Develop
 
 ```
