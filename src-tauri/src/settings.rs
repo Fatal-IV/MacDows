@@ -21,8 +21,8 @@ impl Default for Settings {
     fn default() -> Self {
         Settings {
             language: "en".into(),
-            notch_visibility: Visibility::Smart,
-            dock_visibility: Visibility::Smart,
+            notch_visibility: Visibility::Fixed,
+            dock_visibility: Visibility::Fixed,
         }
     }
 }
@@ -70,8 +70,8 @@ mod tests {
     fn empty_string_gives_defaults() {
         let s = Settings::from_json("");
         assert_eq!(s.language, "en");
-        assert_eq!(s.notch_visibility, Visibility::Smart);
-        assert_eq!(s.dock_visibility, Visibility::Smart);
+        assert_eq!(s.notch_visibility, Visibility::Fixed);
+        assert_eq!(s.dock_visibility, Visibility::Fixed);
     }
 
     #[test]

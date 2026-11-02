@@ -21,10 +21,11 @@ pub fn covers_monitor(win: Rect, monitor: Rect) -> bool {
     win.left <= monitor.left && win.top <= monitor.top && win.right >= monitor.right && win.bottom >= monitor.bottom
 }
 
-/// Fixed never hides. Smart/Peek hide on fullscreen, and when the state is unknown.
+/// A known fullscreen app hides every mode. When the state is unknown, Fixed stays visible
+/// while Smart and Peek hide.
 pub fn should_hide(vis: Visibility, fullscreen: Option<bool>) -> bool {
     match vis {
-        Visibility::Fixed => false,
+        Visibility::Fixed => fullscreen == Some(true),
         _ => fullscreen.unwrap_or(true),
     }
 }
@@ -123,8 +124,9 @@ mod tests {
     }
 
     #[test]
-    fn fixed_mode_never_hides() {
-        assert!(!should_hide(Visibility::Fixed, Some(true)));
+    fn fixed_mode_hides_only_for_known_fullscreen() {
+        assert!(should_hide(Visibility::Fixed, Some(true)));
+        assert!(!should_hide(Visibility::Fixed, Some(false)));
         assert!(!should_hide(Visibility::Fixed, None));
     }
 

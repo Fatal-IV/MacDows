@@ -38,7 +38,7 @@ Single Tauri 2 app, multiple frameless transparent always-on-top windows
   v0.1 content: clock, media panel (SMTC: artwork, title, play/pause/next/prev).
   Panels are pluggable components.
 - Dock: running and pinned apps, click to focus, hover magnify, running indicator.
-- Settings: visibility mode (Fixed/Smart/Peek), monitor selection, taskbar hiding (v0.2),
+- Settings: visibility mode (Fixed/Smart/Peek). Default is Fixed: always visible, hidden only while an app is fullscreen (video, game). Smart (hide when overlapped) and Peek (reveal at screen edge) are opt-in. All modes hide for a fullscreen app, monitor selection, taskbar hiding (v0.2),
   language (tr/en), updates.
 
 ## Data flow

@@ -66,7 +66,7 @@ fn reveal_band(label: &str, w: Rect) -> Rect {
 }
 
 /// Applies visibility modes to the `notch` and `dock` windows. Cursor and window geometry are
-/// sampled every 100 ms, and every 500 ms when both bars are Fixed.
+/// sampled every 100 ms, and every 250 ms when both bars are Fixed.
 pub fn start(app: AppHandle) {
     std::thread::spawn(move || {
         let mut shown: [Option<bool>; 2] = [None, None];
@@ -74,7 +74,7 @@ pub fn start(app: AppHandle) {
         loop {
             let s = app.state::<AppSettings>().0.lock().unwrap().clone();
             let both_fixed = s.notch_visibility == Visibility::Fixed && s.dock_visibility == Visibility::Fixed;
-            std::thread::sleep(Duration::from_millis(if both_fixed { 500 } else { 100 }));
+            std::thread::sleep(Duration::from_millis(if both_fixed { 250 } else { 100 }));
             let fs = fullscreen::state();
             let cur = cursor();
             let needs_overlap = s.notch_visibility == Visibility::Smart || s.dock_visibility == Visibility::Smart;
@@ -113,9 +113,10 @@ mod tests {
     }
 
     #[test]
-    fn fixed_is_always_visible() {
-        assert!(is_visible(inp(Fixed, Some(true), true, false)));
+    fn fixed_is_visible_unless_fullscreen() {
+        assert!(is_visible(inp(Fixed, Some(false), true, false)));
         assert!(is_visible(inp(Fixed, None, true, false)));
+        assert!(!is_visible(inp(Fixed, Some(true), false, true)));
     }
 
     #[test]
