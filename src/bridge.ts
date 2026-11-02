@@ -40,3 +40,6 @@ export const mediaNext = () => invoke<void>("media_next");
 export const mediaPrev = () => invoke<void>("media_prev");
 export const onMediaChanged = (cb: (m: MediaInfo | null) => void): Promise<UnlistenFn> =>
   listen<MediaInfo | null>("media-changed", (e) => cb(e.payload));
+
+export const onSettingsChanged = (cb: (s: Settings) => void): Promise<UnlistenFn> =>
+  listen<Settings>("settings-changed", (e) => cb(e.payload));

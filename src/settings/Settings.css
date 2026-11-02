@@ -1,0 +1,22 @@
+.settings {
+  box-sizing: border-box;
+  padding: 24px;
+  background: #121214;
+  color: #fff;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  user-select: none;
+}
+.settings h1 { margin: 0 0 4px; font-size: 20px; font-weight: 600; }
+.settings label { display: flex; flex-direction: column; gap: 6px; font-size: 13px; opacity: 0.95; }
+.settings select {
+  background: #1e1e22;
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 8px;
+  padding: 8px 10px;
+  font-size: 14px;
+}
+.settings .help { margin: 0; font-size: 12px; line-height: 1.5; opacity: 0.6; }

@@ -1,9 +1,11 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { focusWindow, listWindows, onWindowsChanged, type AppWindow } from "../bridge";
+import { useT } from "../i18n";
 import "./Dock.css";
 
 export default function Dock() {
+  const t = useT();
   const [windows, setWindows] = useState<AppWindow[]>([]);
 
   useEffect(() => {
@@ -18,7 +20,7 @@ export default function Dock() {
   return (
     <div className="dock-stage">
       <motion.div className="dock" layout>
-        {windows.length === 0 && <div className="dock-empty">No open apps</div>}
+        {windows.length === 0 && <div className="dock-empty">{t("dock.noApps")}</div>}
         {windows.map((w) => (
           <motion.button
             key={w.id}

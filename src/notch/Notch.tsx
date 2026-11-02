@@ -1,12 +1,14 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { getMedia, mediaNext, mediaPrev, mediaToggle, onMediaChanged, type MediaInfo } from "../bridge";
+import { useT } from "../i18n";
 import "./Notch.css";
 
 const COLLAPSED = { width: 170, height: 32 };
 const EXPANDED = { width: 420, height: 130 };
 
 export default function Notch() {
+  const t = useT();
   const [open, setOpen] = useState(false);
   const [now, setNow] = useState(new Date());
   const [media, setMedia] = useState<MediaInfo | null>(null);
@@ -67,16 +69,16 @@ export default function Notch() {
                 <div className="title">{media.title}</div>
                 <div className="sub">{media.artist || time}</div>
                 <div className="controls">
-                  <button onClick={mediaPrev} aria-label="Previous">⏮</button>
-                  <button onClick={mediaToggle} aria-label="Play or pause">{media.playing ? "⏸" : "▶"}</button>
-                  <button onClick={mediaNext} aria-label="Next">⏭</button>
+                  <button onClick={mediaPrev} aria-label={t("media.previous")}>⏮</button>
+                  <button onClick={mediaToggle} aria-label={t("media.playPause")}>{media.playing ? "⏸" : "▶"}</button>
+                  <button onClick={mediaNext} aria-label={t("media.next")}>⏭</button>
                 </div>
               </div>
             </div>
           ) : (
             <div className="meta">
               <div className="title">{time}</div>
-              <div className="sub">Nothing playing</div>
+              <div className="sub">{t("notch.nothingPlaying")}</div>
             </div>
           )}
         </motion.div>

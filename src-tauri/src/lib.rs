@@ -1,10 +1,13 @@
+mod i18n;
 mod visibility;
 mod media;
 mod windows_list;
 mod fullscreen;
 mod settings;
 use std::sync::Mutex;
-use tauri::{Manager, PhysicalPosition, State};
+use tauri::menu::{Menu, MenuItem};
+use tauri::tray::TrayIconBuilder;
+use tauri::{AppHandle, Emitter, Manager, PhysicalPosition, State, WebviewUrl, WebviewWindowBuilder};
 
 pub struct AppSettings(Mutex<settings::Settings>);
 
@@ -14,14 +17,49 @@ fn get_settings(state: State<AppSettings>) -> settings::Settings {
 }
 
 #[tauri::command]
-fn set_setting(state: State<AppSettings>, key: String, value: serde_json::Value) -> Result<settings::Settings, String> {
+fn set_setting(app: AppHandle, state: State<AppSettings>, key: String, value: serde_json::Value) -> Result<settings::Settings, String> {
     let mut guard = state.0.lock().unwrap();
     let mut json = serde_json::to_value(&*guard).map_err(|e| e.to_string())?;
     json.as_object_mut().ok_or("settings not an object")?.insert(key, value);
     let updated: settings::Settings = serde_json::from_value(json).map_err(|e| e.to_string())?;
     settings::save(&updated).map_err(|e| e.to_string())?;
     *guard = updated.clone();
+    let _ = app.emit("settings-changed", updated.clone());
     Ok(updated)
+}
+
+fn open_settings(app: &AppHandle) {
+    if let Some(w) = app.get_webview_window("settings") {
+        let _ = w.show();
+        let _ = w.set_focus();
+        return;
+    }
+    let _ = WebviewWindowBuilder::new(app, "settings", WebviewUrl::App("index.html".into()))
+        .title("MacDows")
+        .inner_size(440.0, 400.0)
+        .resizable(false)
+        .center()
+        .build();
+}
+
+fn build_tray(app: &AppHandle) -> tauri::Result<()> {
+    let lang = app.state::<AppSettings>().0.lock().unwrap().language.clone();
+    let (settings_label, quit_label) = i18n::tray_labels(&lang);
+    let settings_item = MenuItem::with_id(app, "settings", settings_label, true, None::<&str>)?;
+    let quit_item = MenuItem::with_id(app, "quit", quit_label, true, None::<&str>)?;
+    let menu = Menu::with_items(app, &[&settings_item, &quit_item])?;
+    let mut builder = TrayIconBuilder::new().menu(&menu).tooltip("MacDows");
+    if let Some(icon) = app.default_window_icon() {
+        builder = builder.icon(icon.clone());
+    }
+    builder
+        .on_menu_event(|app, event| match event.id().as_ref() {
+            "settings" => open_settings(app),
+            "quit" => app.exit(0),
+            _ => {}
+        })
+        .build(app)?;
+    Ok(())
 }
 
 fn place_notch(app: &tauri::AppHandle) {
@@ -52,6 +90,7 @@ pub fn run() {
         .manage(AppSettings(Mutex::new(settings::load())))
         .invoke_handler(tauri::generate_handler![get_settings, set_setting, windows_list::list_windows, windows_list::focus_window, media::get_media, media::media_toggle, media::media_next, media::media_prev])
         .setup(|app| {
+            build_tray(app.handle())?;
             place_notch(app.handle());
             place_dock(app.handle());
             fullscreen::start(app.handle().clone());

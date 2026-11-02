@@ -1,0 +1,17 @@
+{
+  "notch.nothingPlaying": "Çalan bir şey yok",
+  "dock.noApps": "Açık uygulama yok",
+  "media.previous": "Önceki",
+  "media.playPause": "Oynat veya duraklat",
+  "media.next": "Sonraki",
+  "settings.title": "Ayarlar",
+  "settings.notch": "Notch görünürlüğü",
+  "settings.dock": "Dock görünürlüğü",
+  "settings.language": "Dil",
+  "settings.visibilityHelp": "Sabit: her zaman görünür. Akıllı: bir pencere üstünü kaplarsa gizlenir. Peek: ekran kenarına gelince çıkar. Tüm modlar tam ekran uygulamalarda gizlenir.",
+  "vis.fixed": "Sabit",
+  "vis.smart": "Akıllı",
+  "vis.peek": "Peek",
+  "lang.en": "English",
+  "lang.tr": "Türkçe"
+}

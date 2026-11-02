@@ -1,0 +1,17 @@
+{
+  "notch.nothingPlaying": "Nothing playing",
+  "dock.noApps": "No open apps",
+  "media.previous": "Previous",
+  "media.playPause": "Play or pause",
+  "media.next": "Next",
+  "settings.title": "Settings",
+  "settings.notch": "Notch visibility",
+  "settings.dock": "Dock visibility",
+  "settings.language": "Language",
+  "settings.visibilityHelp": "Fixed: always visible. Smart: hides when a window covers it. Peek: appears at the screen edge. Every mode hides for fullscreen apps.",
+  "vis.fixed": "Fixed",
+  "vis.smart": "Smart",
+  "vis.peek": "Peek",
+  "lang.en": "English",
+  "lang.tr": "Türkçe"
+}
