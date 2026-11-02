@@ -70,6 +70,7 @@ fn reveal_band(label: &str, w: Rect) -> Rect {
 pub fn start(app: AppHandle) {
     std::thread::spawn(move || {
         let mut shown: [Option<bool>; 2] = [None, None];
+        let started = std::time::Instant::now();
         loop {
             let s = app.state::<AppSettings>().0.lock().unwrap().clone();
             let both_fixed = s.notch_visibility == Visibility::Fixed && s.dock_visibility == Visibility::Fixed;
@@ -87,7 +88,9 @@ pub fn start(app: AppHandle) {
                 let near = cur.map(|(x, y)| point_in_rect(x, y, zone)).unwrap_or(false);
                 let probe = overlap_probe(label, r);
                 let overlapped = others.iter().any(|o| rect_intersects(*o, probe));
-                let want = is_visible(Inputs { vis, fullscreen: fs, overlapped, cursor_near: near });
+                // Show the bars for a few seconds after launch so the user sees the app started.
+                let grace = started.elapsed() < Duration::from_secs(4) && fs != Some(true);
+                let want = grace || is_visible(Inputs { vis, fullscreen: fs, overlapped, cursor_near: near });
                 if shown[i] != Some(want) {
                     unsafe {
                         let _ = ShowWindow(hwnd, if want { SW_SHOWNOACTIVATE } else { SW_HIDE });
