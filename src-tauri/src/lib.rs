@@ -1,3 +1,4 @@
+mod fullscreen;
 mod settings;
 use std::sync::Mutex;
 use tauri::{Manager, PhysicalPosition, State};
@@ -39,6 +40,7 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![get_settings, set_setting])
         .setup(|app| {
             place_notch(app.handle());
+            fullscreen::start(app.handle().clone());
             Ok(())
         })
         .run(tauri::generate_context!())
