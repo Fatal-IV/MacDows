@@ -25,7 +25,7 @@ export default function Dock() {
             className="dock-item"
             title={w.title}
             layout
-            whileHover={{ scale: 1.35, y: -8 }}
+            whileHover={{ scale: 1.25, y: -6 }}
             whileTap={{ scale: 1.1 }}
             transition={{ type: "spring", stiffness: 400, damping: 22 }}
             onClick={() => focusWindow(w.id)}
