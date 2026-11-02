@@ -1,4 +1,5 @@
 pub mod install;
+pub mod launcher;
 pub mod logic;
 
 pub fn run() {
