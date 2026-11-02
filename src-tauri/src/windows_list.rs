@@ -151,6 +151,39 @@ unsafe extern "system" fn collect(hwnd: HWND, lparam: LPARAM) -> BOOL {
     BOOL(1)
 }
 
+unsafe extern "system" fn collect_rects(hwnd: HWND, lparam: LPARAM) -> BOOL {
+    let out = &mut *(lparam.0 as *mut Vec<crate::fullscreen::Rect>);
+    let style = GetWindowLongW(hwnd, GWL_STYLE) as u32;
+    let ex = GetWindowLongW(hwnd, GWL_EXSTYLE) as u32;
+    let mut cloaked = 0u32;
+    let _ = DwmGetWindowAttribute(hwnd, DWMWA_CLOAKED, &mut cloaked as *mut _ as *mut _, 4);
+    if !is_listable(style, ex, cloaked != 0, &title_of(hwnd)) || IsIconic(hwnd).as_bool() {
+        return BOOL(1);
+    }
+    if matches!(class_of(hwnd).as_str(), "Progman" | "WorkerW" | "Shell_TrayWnd" | "Shell_SecondaryTrayWnd") {
+        return BOOL(1);
+    }
+    let mut pid = 0u32;
+    GetWindowThreadProcessId(hwnd, Some(&mut pid));
+    if pid == GetCurrentProcessId() {
+        return BOOL(1);
+    }
+    let mut r = windows::Win32::Foundation::RECT::default();
+    if GetWindowRect(hwnd, &mut r).is_ok() {
+        out.push(crate::fullscreen::Rect { left: r.left, top: r.top, right: r.right, bottom: r.bottom });
+    }
+    BOOL(1)
+}
+
+/// Rectangles of visible, non-minimized app windows (no icon work), for overlap checks.
+pub fn visible_rects() -> Vec<crate::fullscreen::Rect> {
+    let mut out: Vec<crate::fullscreen::Rect> = Vec::new();
+    unsafe {
+        let _ = EnumWindows(Some(collect_rects), LPARAM(&mut out as *mut _ as isize));
+    }
+    out
+}
+
 pub fn enumerate() -> Vec<AppWindow> {
     let mut out: Vec<AppWindow> = Vec::new();
     unsafe {

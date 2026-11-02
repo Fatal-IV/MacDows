@@ -62,7 +62,23 @@ fn probe() -> Option<bool> {
     }
 }
 
-unsafe extern "system" fn on_event(_: HWINEVENTHOOK, _: u32, _: HWND, _: i32, _: i32, _: u32, _: u32) {
+/// Current state: Some(true/false) when known, None before the first probe or if probing failed.
+pub fn state() -> Option<bool> {
+    match LAST.load(std::sync::atomic::Ordering::Relaxed) {
+        1 => Some(true),
+        0 => Some(false),
+        _ => None,
+    }
+}
+
+unsafe extern "system" fn on_event(_: HWINEVENTHOOK, _: u32, _: HWND, id_object: i32, _: i32, _: u32, _: u32) {
+    if id_object != 0 {
+        return; // only OBJID_WINDOW
+    }
+    update();
+}
+
+fn update() {
     let state = probe();
     let code = match state { Some(true) => 1, Some(false) => 0, None => 2 };
     if LAST.swap(code, std::sync::atomic::Ordering::Relaxed) == code {
@@ -76,6 +92,7 @@ unsafe extern "system" fn on_event(_: HWINEVENTHOOK, _: u32, _: HWND, _: i32, _:
 /// Starts an event-driven watcher (no polling): foreground change and foreground-window move/resize.
 pub fn start(app: AppHandle) {
     let _ = APP.set(app);
+    update();
     std::thread::spawn(|| unsafe {
         let _ = SetWinEventHook(EVENT_SYSTEM_FOREGROUND, EVENT_SYSTEM_FOREGROUND, None, Some(on_event), 0, 0, WINEVENT_OUTOFCONTEXT);
         let _ = SetWinEventHook(EVENT_OBJECT_LOCATIONCHANGE, EVENT_OBJECT_LOCATIONCHANGE, None, Some(on_event), 0, 0, WINEVENT_OUTOFCONTEXT);

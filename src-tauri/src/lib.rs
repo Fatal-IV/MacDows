@@ -1,3 +1,4 @@
+mod visibility;
 mod media;
 mod windows_list;
 mod fullscreen;
@@ -5,7 +6,7 @@ mod settings;
 use std::sync::Mutex;
 use tauri::{Manager, PhysicalPosition, State};
 
-struct AppSettings(Mutex<settings::Settings>);
+pub struct AppSettings(Mutex<settings::Settings>);
 
 #[tauri::command]
 fn get_settings(state: State<AppSettings>) -> settings::Settings {
@@ -56,6 +57,7 @@ pub fn run() {
             fullscreen::start(app.handle().clone());
             windows_list::start(app.handle().clone());
             media::start(app.handle().clone());
+            visibility::start(app.handle().clone());
             Ok(())
         })
         .run(tauri::generate_context!())
