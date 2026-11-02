@@ -21,3 +21,16 @@ Checked on the work PC (Windows 11) before any installer code depends on them.
 
 ## Not verified
 A PC without WebView2, no internet, upgrade over an older version, SmartScreen behavior.
+
+## End-to-end run of the built installer (2026-11-02, this PC, Windows 11, Turkish UI)
+- `node scripts/build-installer.mjs` built the app and the installer; `installer/dist/MacDows-Setup.exe` is **5.34 MB** (target 15 MB). The embedded NSIS package was built after the logo change, so the installed `macdows.exe` carries the new icon (checked by extracting the exe icon).
+- Real window opened in Turkish (system locale), 700x475 px on screen at this PC's display scale. Screens captured: Ready, Working (stage bar 60%), Done, and "already installed" on a second run (buttons "Yeniden kur" and "MacDows'u aç").
+- "Kur" (via UI Automation, no mouse movement): the install took about 2 s, exit code 0, uninstall key created with `DisplayVersion` 0.1.0 and `InstallLocation` `"C:\Users\fatal\AppData\Local\MacDows"` (quoted). Log `%LOCALAPPDATA%\MacDows-Setup\setup.log` had one line per stage (preparing 15, installing 60, finishing 95, done 100).
+- "MacDows'u aç": `macdows.exe` started from the installed path, the installer window and process ended.
+- Uninstall (`uninstall.exe /S`): exit 0, key and folder removed, `settings.json` kept, installer temp folder removed.
+
+## Not verified (cannot be done here)
+- A PC without WebView2 (the download path was exercised only with `MACDOWS_FORCE_NO_WEBVIEW2=1`, which downloads the 1.9 MB bootstrapper and deletes it; a real install of WebView2 was not run).
+- No internet during the WebView2 step; upgrade over an older version; running the installer while MacDows is open through the installer window (NSIS itself was shown to end a running app in the first test).
+- A very short console flash from a hidden child process cannot be ruled out by screenshots; all child processes are started with the no-window flag.
+- SmartScreen behavior of the unsigned installer; the GitHub Actions release step (never run).
