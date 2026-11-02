@@ -1,0 +1,40 @@
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+      - run: bun install --frozen-lockfile
+      - name: Check tag matches version
+        shell: bash
+        run: |
+          V="${GITHUB_REF_NAME#v}"
+          C=$(node -p "require('./src-tauri/tauri.conf.json').version")
+          [ "$V" = "$C" ] || { echo "Tag $V != tauri.conf.json $C"; exit 1; }
+      - name: Extract release notes
+        shell: bash
+        run: node scripts/extract-notes.mjs "${GITHUB_REF_NAME#v}" > release-notes.md
+      - uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ""
+        with:
+          tagName: ${{ github.ref_name }}
+          releaseName: MacDows ${{ github.ref_name }}
+          releaseBodyPath: release-notes.md
+          releaseDraft: false
+          prerelease: false
