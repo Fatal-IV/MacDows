@@ -38,3 +38,11 @@ jobs:
           releaseBodyPath: release-notes.md
           releaseDraft: false
           prerelease: false
+      - name: Build the branded installer
+        shell: bash
+        run: node scripts/build-installer.mjs --skip-app
+      - name: Add the installer and checksums to the release
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh release upload "$GITHUB_REF_NAME" installer/dist/MacDows-Setup.exe installer/dist/SHA256SUMS.txt --clobber

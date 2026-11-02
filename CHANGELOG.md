@@ -5,6 +5,11 @@ Format: [Keep a Changelog](https://keepachangelog.com/), versioning: [SemVer](ht
 
 ## [Unreleased]
 
+### Added
+- **MacDows logo**: a violet tile with a notch (equalizer bars) on top, a gradient "M" in the middle and a dock with three dots at the bottom. It replaces the placeholder icons in the tray, the window and the installer. Small versions (24 and 16 px) are simplified so they stay readable.
+- **Branded installer** `MacDows-Setup.exe`: one window with a single Install button, a progress bar and an Open button, in English or Turkish. It installs MacDows for the current user (no administrator prompt) and installs WebView2 first if the PC does not have it (needs internet).
+- Every release now also carries `MacDows-Setup.exe` and a `SHA256SUMS.txt` to verify the download.
+
 ## [0.1.0] - 2026-11-02
 
 First public release. A notch at the top of the screen and a dock at the bottom, as an extra layer on top of the Windows taskbar. The taskbar itself is not touched in this version.
