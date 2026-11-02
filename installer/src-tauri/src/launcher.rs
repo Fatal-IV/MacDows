@@ -46,9 +46,16 @@ pub fn show_message(title: &str, text: &str, error: bool) {
     }
 }
 
+/// Windows tools are started by absolute path. A bare name would be searched in the installer's own folder
+/// first, so a `curl.exe` planted next to it (for example in Downloads) would run instead of the real one.
+pub fn system_tool(name: &str) -> PathBuf {
+    let root = std::env::var_os("SystemRoot").map(PathBuf::from).unwrap_or_else(|| PathBuf::from(r"C:\Windows"));
+    root.join("System32").join(name)
+}
+
 fn download(target: &Path) -> Result<(), String> {
     // curl.exe ships with Windows 10 and 11 (System32), follows the fwlink redirect and needs no extra crate.
-    let status = Command::new("curl.exe")
+    let status = Command::new(system_tool("curl.exe"))
         .args(download_args(BOOTSTRAPPER_URL, target))
         .creation_flags(CREATE_NO_WINDOW)
         .status()
@@ -131,6 +138,13 @@ mod tests {
         std::env::set_var("MACDOWS_FORCE_NO_WEBVIEW2", "1");
         assert!(ensure_webview2(Lang::En).is_ok());
         assert!(!std::env::temp_dir().join("MicrosoftEdgeWebview2Setup.exe").exists());
+    }
+
+    #[test]
+    fn system_tools_are_started_by_absolute_system32_path() {
+        let curl = system_tool("curl.exe");
+        assert!(curl.is_absolute(), "{curl:?} must be absolute so a planted curl.exe next to the installer is never used");
+        assert!(curl.to_string_lossy().to_lowercase().ends_with(r"system32\curl.exe"));
     }
 
     #[test]
