@@ -75,21 +75,43 @@ fn dir() -> PathBuf {
     std::env::var_os("APPDATA").map(PathBuf::from).unwrap_or_else(std::env::temp_dir).join("MacDows")
 }
 
+fn shelf_file() -> PathBuf {
+    dir().join("shelf.json")
+}
+
+/// The shelf file is encrypted for the current Windows user (see `secure_store`). A plain file from an earlier
+/// version is still read, and is written back encrypted by the next `save`.
+fn read_stored() -> Option<Stored> {
+    let bytes = std::fs::read(shelf_file()).ok()?;
+    let plain = if crate::secure_store::is_sealed(&bytes) { crate::secure_store::open(&bytes)? } else { bytes };
+    serde_json::from_slice(&plain).ok()
+}
+
 fn load() -> Vec<String> {
-    let Some(stored) = std::fs::read_to_string(dir().join("shelf.json")).ok().and_then(|t| serde_json::from_str::<Stored>(&t).ok()) else { return Vec::new() };
+    let Some(stored) = read_stored() else { return Vec::new() };
     if same_session(&stored.session, &current_session()) {
+        // Converts an old plain file right away.
+        if !std::fs::read(shelf_file()).map(|b| crate::secure_store::is_sealed(&b)).unwrap_or(true) {
+            save(&stored.paths);
+        }
         return stored.paths;
     }
     // The old session is over: forget its files and their icons.
-    let _ = std::fs::remove_file(dir().join("shelf.json"));
+    let _ = std::fs::remove_file(shelf_file());
     let _ = std::fs::remove_dir_all(dir().join("shelf-icons"));
     Vec::new()
 }
 
 fn save(paths: &[String]) {
     let _ = std::fs::create_dir_all(dir());
-    if let Ok(text) = serde_json::to_string(&Stored { session: current_session(), paths: paths.to_vec() }) {
-        let _ = std::fs::write(dir().join("shelf.json"), text);
+    // Never written in plain text: if Windows cannot encrypt, the file is removed instead.
+    match serde_json::to_vec(&Stored { session: current_session(), paths: paths.to_vec() }).ok().and_then(|plain| crate::secure_store::seal(&plain)) {
+        Some(sealed) => {
+            let _ = std::fs::write(shelf_file(), sealed);
+        }
+        None => {
+            let _ = std::fs::remove_file(shelf_file());
+        }
     }
 }
 
