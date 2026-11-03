@@ -132,5 +132,8 @@
   "bt.failed": "Could not connect. Try Windows settings.",
   "common.back": "Back",
   "common.more": "Details",
-  "history.countLabel": "notifications"
+  "history.countLabel": "notifications",
+  "quick.airplane": "Airplane mode",
+  "quick.accessibility": "Accessibility",
+  "quick.hotspot": "Mobile hotspot"
 }

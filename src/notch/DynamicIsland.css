@@ -550,3 +550,11 @@ img { -webkit-user-drag: none; user-select: none; }
 .history .shelf-head { gap: 10px; padding-right: 34px; }
 .history .shelf-title { flex: 1; }
 .history-count { font-size: 11px; opacity: 0.6; }
+
+/* Row under the sliders: three round switches, accessibility | lock, MacDows settings, Windows settings. */
+.shortcut.on { background: #fff; color: #000; }
+.shortcut:disabled { opacity: 0.4; cursor: default; }
+.shortcut.busy { opacity: 0.6; }
+.shortcut-sep { flex: none; align-self: center; width: 1px; height: 22px; background: rgba(255, 255, 255, 0.28); }
+.quick-tiles { grid-template-rows: 1fr 1fr; }
+.quick-tiles .glass-tile:nth-child(3) { grid-column: 1 / -1; }

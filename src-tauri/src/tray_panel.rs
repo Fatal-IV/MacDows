@@ -53,6 +53,17 @@ impl Drop for Busy {
     }
 }
 
+/// Why the hidden-icons panel did not open, for `%APPDATA%\MacDows\logs	ray.log`.
+fn trace(msg: &str) {
+    use std::io::Write;
+    let dir = std::env::var_os("APPDATA").map(std::path::PathBuf::from).unwrap_or_else(std::env::temp_dir).join("MacDows").join("logs");
+    let _ = std::fs::create_dir_all(&dir);
+    if let Ok(mut f) = std::fs::OpenOptions::new().create(true).append(true).open(dir.join("tray.log")) {
+        let secs = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map(|d| d.as_secs()).unwrap_or(0);
+        let _ = writeln!(f, "[{secs}] {msg}");
+    }
+}
+
 fn class_name(hwnd: HWND) -> String {
     let mut buf = [0u16; 128];
     let len = unsafe { GetClassNameW(hwnd, &mut buf) }.max(0) as usize;
@@ -179,8 +190,12 @@ fn open_flyout(automation: &IUIAutomation) -> Option<(HWND, Invisible)> {
     // The window survives its first use: make it transparent before it is shown so it never flashes.
     let mut early = find_overflow(false).map(Invisible::apply);
     {
-        let tray = TrayShown::new()?;
+        let Some(tray) = TrayShown::new() else {
+            trace("the taskbar window (Shell_TrayWnd) was not found");
+            return None;
+        };
         if !press_chevron(automation, tray.hwnd) {
+            trace("the hidden-icons chevron was not found or could not be pressed");
             return None;
         }
         let started = Instant::now();
@@ -194,6 +209,7 @@ fn open_flyout(automation: &IUIAutomation) -> Option<(HWND, Invisible)> {
             std::thread::sleep(Duration::from_millis(8));
         }
     }
+    trace("the overflow flyout did not appear within 3 seconds");
     None
 }
 
@@ -365,6 +381,9 @@ pub fn collect() -> Option<Vec<TrayItem>> {
     let previous = unsafe { GetForegroundWindow() };
     let (hwnd, guard) = open_flyout(&automation)?;
     let raw = read_items(&automation, hwnd);
+    if raw.is_empty() {
+        trace("the flyout opened but no icons were found in it");
+    }
     let frame = capture(hwnd);
     // Close first, then make it opaque again: the other way round leaves it visible for a moment.
     close_flyout(hwnd, previous);
@@ -424,6 +443,34 @@ pub fn last_items() -> Vec<TrayItem> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    /// Live check against the real taskbar: `cargo test --lib live_collect -- --ignored --nocapture`.
+    #[test]
+    #[ignore]
+    fn live_dump_tray() {
+        let automation = automation().expect("uia");
+        let tray = TrayShown::new().expect("tray");
+        std::thread::sleep(Duration::from_millis(2000));
+        unsafe {
+            let mut r = RECT::default();
+            let _ = GetWindowRect(tray.hwnd, &mut r);
+            println!("tray visible={} rect=({},{},{},{}) was_hidden={}", IsWindowVisible(tray.hwnd).as_bool(), r.left, r.top, r.right, r.bottom, tray.was_hidden);
+            let root = automation.ElementFromHandle(tray.hwnd).expect("root");
+            let all = root.FindAll(TreeScope_Descendants, &automation.CreateTrueCondition().unwrap()).expect("all");
+            println!("elements: {}", all.Length().unwrap_or(0));
+            for i in 0..all.Length().unwrap_or(0) {
+                let el = all.GetElement(i).unwrap();
+                println!("{} | {} | {}", el.CurrentAutomationId().map(|s| s.to_string()).unwrap_or_default(), el.CurrentName().map(|s| s.to_string()).unwrap_or_default(), el.CurrentClassName().map(|s| s.to_string()).unwrap_or_default());
+            }
+        }
+    }
+
+    #[test]
+    #[ignore]
+    fn live_collect() {
+        let items = collect();
+        println!("collect -> {:?}", items.as_ref().map(|v| v.iter().map(|i| i.name.clone()).collect::<Vec<_>>()));
+    }
 
     #[test]
     fn the_background_becomes_transparent_and_the_icon_keeps_its_color() {

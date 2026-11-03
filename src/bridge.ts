@@ -64,12 +64,14 @@ export interface QuickSettings {
   bluetooth: QuickTile;
   dnd: QuickTile;
   battery_saver: QuickTile;
+  airplane: QuickTile;
+  hotspot: QuickTile;
 }
 export type QuickKey = keyof QuickSettings;
 export const getQuickSettings = () => invoke<QuickSettings>("get_quick_settings");
 export const setQuickSetting = (key: QuickKey, on: boolean) => invoke<QuickSettings>("set_quick_setting", { key, on });
 
-export type QuickShortcut = "screenshot" | "settings" | "task_manager" | "calculator" | "lock" | "bluetooth_settings" | "wifi_settings";
+export type QuickShortcut = "screenshot" | "settings" | "task_manager" | "calculator" | "lock" | "bluetooth_settings" | "wifi_settings" | "accessibility";
 export const openMacdowsSettings = () => invoke<void>("open_macdows_settings");
 export const quickLaunch = (id: QuickShortcut) => invoke<void>("quick_launch", { id });
 

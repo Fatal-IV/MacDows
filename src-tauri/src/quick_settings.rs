@@ -10,6 +10,8 @@ use std::os::windows::process::CommandExt;
 use std::process::Command;
 use windows::core::w;
 use windows::Devices::Radios::{Radio, RadioAccessStatus, RadioKind, RadioState};
+use windows::Networking::Connectivity::NetworkInformation;
+use windows::Networking::NetworkOperators::{NetworkOperatorTetheringManager, TetheringOperationStatus, TetheringOperationalState};
 use windows::Win32::Foundation::ERROR_SUCCESS;
 use windows::Win32::System::Power::{GetSystemPowerStatus, SYSTEM_POWER_STATUS};
 use windows::Win32::System::Registry::{RegGetValueW, RegSetKeyValueW, HKEY_CURRENT_USER, REG_DWORD, RRF_RT_REG_DWORD};
@@ -29,6 +31,8 @@ pub struct QuickSettings {
     pub bluetooth: Tile,
     pub dnd: Tile,
     pub battery_saver: Tile,
+    pub airplane: Tile,
+    pub hotspot: Tile,
 }
 
 /// The last `0x…` number in `powercfg /query` output. The text around it is localized, the number is not;
@@ -120,12 +124,60 @@ fn set_saver(on: bool) -> Result<(), String> {
     Ok(())
 }
 
+/// Airplane mode counts as on when none of the radios is on. It is switched through the radios themselves, so
+/// it affects Wi-Fi and Bluetooth (and any other radio Windows lists) the way the real airplane mode does.
+pub fn airplane_on(states: &[bool]) -> bool {
+    !states.is_empty() && states.iter().all(|on| !on)
+}
+
+fn airplane_tile() -> Tile {
+    let Ok(radios) = Radio::GetRadiosAsync().and_then(|op| op.get()) else { return Tile::default() };
+    let states: Vec<bool> = radios.into_iter().map(|r| r.State().ok() == Some(RadioState::On)).collect();
+    Tile { available: !states.is_empty(), on: airplane_on(&states) }
+}
+
+fn set_airplane(on: bool) -> Result<(), String> {
+    let access = Radio::RequestAccessAsync().and_then(|op| op.get()).map_err(|e| e.message())?;
+    if access != RadioAccessStatus::Allowed {
+        return Err("Windows did not allow changing the radios".into());
+    }
+    let radios = Radio::GetRadiosAsync().and_then(|op| op.get()).map_err(|e| e.message())?;
+    for radio in radios {
+        let state = if on { RadioState::Off } else { RadioState::On };
+        radio.SetStateAsync(state).and_then(|op| op.get()).map_err(|e| e.message())?;
+    }
+    Ok(())
+}
+
+fn hotspot_manager() -> Option<NetworkOperatorTetheringManager> {
+    let profile = NetworkInformation::GetInternetConnectionProfile().ok()?;
+    NetworkOperatorTetheringManager::CreateFromConnectionProfile(&profile).ok()
+}
+
+fn hotspot_tile() -> Tile {
+    match hotspot_manager() {
+        Some(m) => Tile { available: true, on: m.TetheringOperationalState().ok() == Some(TetheringOperationalState::On) },
+        None => Tile::default(),
+    }
+}
+
+fn set_hotspot(on: bool) -> Result<(), String> {
+    let manager = hotspot_manager().ok_or("no internet connection to share")?;
+    let result = if on { manager.StartTetheringAsync() } else { manager.StopTetheringAsync() }.and_then(|op| op.get()).map_err(|e| e.message())?;
+    match result.Status() {
+        Ok(TetheringOperationStatus::Success) => Ok(()),
+        other => Err(format!("hotspot: {other:?}")),
+    }
+}
+
 fn read_all() -> QuickSettings {
     QuickSettings {
         wifi: radio_tile(RadioKind::WiFi),
         bluetooth: radio_tile(RadioKind::Bluetooth),
         dnd: Tile { available: true, on: !banners_on() },
         battery_saver: saver_tile(),
+        airplane: airplane_tile(),
+        hotspot: hotspot_tile(),
     }
 }
 
@@ -182,6 +234,7 @@ pub fn launch_plan(id: &str) -> Option<(&'static str, &'static [&'static str])> 
         "lock" => Some(("rundll32.exe", &["user32.dll,LockWorkStation"])),
         "bluetooth_settings" => Some(("explorer.exe", &["ms-settings:bluetooth"])),
         "wifi_settings" => Some(("explorer.exe", &["ms-settings:network-wifi"])),
+        "accessibility" => Some(("explorer.exe", &["ms-settings:easeofaccess"])),
         _ => None,
     }
 }
@@ -206,6 +259,8 @@ pub async fn set_quick_setting(key: String, on: bool) -> Result<QuickSettings, S
             "bluetooth" => set_radio(RadioKind::Bluetooth, on)?,
             "dnd" => set_banners(!on)?,
             "battery_saver" => set_saver(on)?,
+            "airplane" => set_airplane(on)?,
+            "hotspot" => set_hotspot(on)?,
             _ => return Err(format!("unknown quick setting: {key}")),
         }
         Ok(read_all())
@@ -227,10 +282,17 @@ mod tests {
 
     #[test]
     fn every_shortcut_has_a_launch_plan() {
-        for id in ["screenshot", "settings", "task_manager", "calculator", "lock", "bluetooth_settings", "wifi_settings"] {
+        for id in ["screenshot", "settings", "task_manager", "calculator", "lock", "bluetooth_settings", "wifi_settings", "accessibility"] {
             assert!(launch_plan(id).is_some(), "{id}");
         }
         assert!(launch_plan("format_c").is_none());
+    }
+
+    #[test]
+    fn airplane_mode_means_every_radio_is_off() {
+        assert!(airplane_on(&[false, false]));
+        assert!(!airplane_on(&[false, true]));
+        assert!(!airplane_on(&[]), "no radios: not available, so not on");
     }
 
     #[test]

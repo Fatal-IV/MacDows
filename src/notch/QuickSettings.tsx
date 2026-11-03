@@ -10,7 +10,7 @@ const svg = (children: ReactNode, size = 22) => (
   </svg>
 );
 
-const ICONS: Record<QuickKey, ReactNode> = {
+const ICONS: Partial<Record<QuickKey, ReactNode>> = {
   wifi: svg(
     <>
       <path d="M2.5 9.2a14 14 0 0 1 19 0" />
@@ -37,10 +37,16 @@ const ORDER: { key: QuickKey; label: string }[] = [
   { key: "wifi", label: "quick.wifi" },
   { key: "bluetooth", label: "quick.bluetooth" },
   { key: "dnd", label: "quick.dnd" },
-  { key: "battery_saver", label: "quick.saver" },
 ];
 
-export function QuickSettingsScreen({ onOpenShelf, onOpenHistory }: { onOpenShelf: () => void; onOpenHistory: () => void }) {
+/** Round switches in the row under the sliders. */
+const SWITCHES: { key: QuickKey; label: string }[] = [
+  { key: "battery_saver", label: "quick.saver" },
+  { key: "airplane", label: "quick.airplane" },
+  { key: "hotspot", label: "quick.hotspot" },
+];
+
+export function QuickSettingsScreen() {
   const t = useT();
   const [state, setState] = useState<QuickSettings | null>(null);
   const [busy, setBusy] = useState<QuickKey | null>(null);
@@ -105,6 +111,19 @@ export function QuickSettingsScreen({ onOpenShelf, onOpenHistory }: { onOpenShel
         <GlassSlider label="quick.volume" icon={SPEAKER} read={() => getVolume().then((v) => (v ? Math.round(v.level * 100) : null))} write={(p) => setVolume(p / 100).then(() => {})} />
       </div>
       <div className="quick-shortcuts">
+        {SWITCHES.map(({ key, label }) => {
+          const tile = state?.[key];
+          const on = !!tile?.on && !!tile?.available;
+          return (
+            <button key={key} className={`shortcut${on ? " on" : ""}${busy === key ? " busy" : ""}`} disabled={!tile || !tile.available} title={`${t(label)}: ${on ? t("quick.on") : t("quick.off")}`} aria-label={t(label)} aria-pressed={on} onClick={() => toggle(key)}>
+              {SWITCH_ICONS[key]}
+            </button>
+          );
+        })}
+        <button className="shortcut" title={t("quick.accessibility")} aria-label={t("quick.accessibility")} onClick={() => quickLaunch("accessibility").catch(() => {})}>
+          {ACCESSIBILITY}
+        </button>
+        <span className="shortcut-sep" />
         {SHORTCUTS.map(({ id, label, icon }) => (
           <button key={id} className="shortcut" title={t(label)} aria-label={t(label)} onClick={() => quickLaunch(id).catch(() => {})}>
             {icon}
@@ -113,22 +132,24 @@ export function QuickSettingsScreen({ onOpenShelf, onOpenHistory }: { onOpenShel
         <button className="shortcut" title={t("quick.macdows")} aria-label={t("quick.macdows")} onClick={() => openMacdowsSettings().catch(() => {})}>
           {svg(<><path d="M4 7h9M17 7h3M4 17h3M11 17h9" /><circle cx="15" cy="7" r="2" /><circle cx="9" cy="17" r="2" /></>, 17)}
         </button>
-        <button className="shortcut" title={t("quick.history")} aria-label={t("quick.history")} onClick={onOpenHistory}>
-          {svg(<><path d="M6 16.5V11a6 6 0 0 1 12 0v5.5l1.5 1.5h-15z" /><path d="M10 20.5a2 2 0 0 0 4 0" /></>, 17)}
-        </button>
-        <button className="shortcut" title={t("quick.shelf")} aria-label={t("quick.shelf")} onClick={onOpenShelf}>
-          {svg(<><path d="M4 8.5V18a1.5 1.5 0 0 0 1.5 1.5h13A1.5 1.5 0 0 0 20 18V8.5" /><path d="M3 5.5h18v3H3z" /><path d="M10 12.5h4" /></>, 17)}
+        <button className="shortcut" title={t("quick.settings")} aria-label={t("quick.settings")} onClick={() => quickLaunch("settings").catch(() => {})}>
+          {GEAR}
         </button>
       </div>
     </div>
   );
 }
 
+const GEAR = svg(<><circle cx="12" cy="12" r="3" /><path d="M12 2.8v2.6M12 18.6v2.6M2.8 12h2.6M18.6 12h2.6M5.5 5.5l1.8 1.8M16.7 16.7l1.8 1.8M18.5 5.5l-1.8 1.8M7.3 16.7l-1.8 1.8" /></>, 17);
+const ACCESSIBILITY = svg(<><circle cx="12" cy="4.6" r="1.7" /><path d="M5 8.5l7 1.4 7-1.4M12 9.9v4.2M12 14.1l-3 6M12 14.1l3 6" /></>, 17);
+
+const SWITCH_ICONS: Record<string, ReactNode> = {
+  battery_saver: svg(<><rect x="3" y="7" width="16" height="10" rx="2.4" /><path d="M21.5 10.4v3.2" /><path d="M11.4 9.4c-2 .2-3.3 1.6-3.3 3.1 0 1.2.9 2.1 2.1 2.1 1.9 0 2.9-1.9 2.9-3.7" /></>, 17),
+  airplane: svg(<path d="M21 15.5v-1.8l-8-5V4.2a1.5 1.5 0 0 0-3 0v4.5l-8 5v1.8l8-2.3V18l-2 1.5V21l3.5-1 3.5 1v-1.5L13 18v-4.8l8 2.3Z" />, 17),
+  hotspot: svg(<><circle cx="12" cy="12" r="1.6" fill="currentColor" stroke="none" /><path d="M8.6 8.6a4.8 4.8 0 0 0 0 6.8M15.4 8.6a4.8 4.8 0 0 1 0 6.8M5.6 5.6a9 9 0 0 0 0 12.8M18.4 5.6a9 9 0 0 1 0 12.8" /></>, 17),
+};
+
 const SHORTCUTS: { id: QuickShortcut; label: string; icon: ReactNode }[] = [
-  { id: "screenshot", label: "quick.screenshot", icon: svg(<><path d="M7 3v14h14" /><path d="M3 7h14v14" /></>, 17) },
-  { id: "settings", label: "quick.settings", icon: svg(<><circle cx="12" cy="12" r="3" /><path d="M12 2.8v2.6M12 18.6v2.6M2.8 12h2.6M18.6 12h2.6M5.5 5.5l1.8 1.8M16.7 16.7l1.8 1.8M18.5 5.5l-1.8 1.8M7.3 16.7l-1.8 1.8" /></>, 17) },
-  { id: "task_manager", label: "quick.taskManager", icon: svg(<path d="M3 12h4l2.5-6 4 12 2.5-6H21" />, 17) },
-  { id: "calculator", label: "quick.calculator", icon: svg(<><rect x="5" y="3" width="14" height="18" rx="2.5" /><path d="M8.5 7.5h7M9 12h.01M12 12h.01M15 12h.01M9 16h.01M12 16h.01M15 16h.01" /></>, 17) },
   { id: "lock", label: "quick.lock", icon: svg(<><rect x="5" y="11" width="14" height="9.5" rx="2.5" /><path d="M8 11V8a4 4 0 0 1 8 0v3" /></>, 17) },
 ];
 

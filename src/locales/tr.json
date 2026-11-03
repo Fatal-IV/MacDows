@@ -132,5 +132,8 @@
   "bt.failed": "Bağlanılamadı. Windows ayarlarından deneyin.",
   "common.back": "Geri",
   "common.more": "Ayrıntılar",
-  "history.countLabel": "bildirim"
+  "history.countLabel": "bildirim",
+  "quick.airplane": "Uçak modu",
+  "quick.accessibility": "Erişilebilirlik",
+  "quick.hotspot": "Mobil etkin nokta"
 }

@@ -566,16 +566,7 @@ export default function Notch() {
             </motion.div>
           ) : quick ? (
             <motion.div key="quick" className="tools-wrap" initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.98, transition: { duration: 0.1 } }} transition={{ type: "spring", stiffness: 500, damping: 30 }}>
-              <QuickSettingsScreen
-                onOpenShelf={() => {
-                  setQuick(false);
-                  setShelfOpen(true);
-                }}
-                onOpenHistory={() => {
-                  setQuick(false);
-                  setHistoryOpen(true);
-                }}
-              />
+              <QuickSettingsScreen />
               <button
                 className="corner-arrow"
                 onClick={(e) => {
