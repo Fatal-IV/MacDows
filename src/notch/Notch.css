@@ -416,3 +416,6 @@ img { -webkit-user-drag: none; user-select: none; }
 .cal-head { margin-bottom: 4px; }
 .cal-grid { row-gap: 2px; }
 .cal-day { height: 19px; line-height: 19px; }
+
+/* More air between the calendar rows */
+.cal-grid { row-gap: 5px; }

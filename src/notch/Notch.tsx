@@ -374,7 +374,7 @@ export default function Notch() {
   const battery = system?.battery_percent ?? null;
 
   const width = !ready ? 34 : tools ? 440 : musicOpen ? 340 : isMusic ? 200 : hovered ? (battery != null ? 200 : 170) : hasMedia ? 170 : 140;
-  const height = !ready ? 34 : tools ? 224 : musicOpen ? (media!.duration_ms > 0 ? 126 : 108) : 36;
+  const height = !ready ? 34 : tools ? 236 : musicOpen ? (media!.duration_ms > 0 ? 126 : 108) : 36;
 
   return (
     <div className="screen" style={{ zoom: scale }}>
