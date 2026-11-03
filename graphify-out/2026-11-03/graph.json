@@ -82,17 +82,30 @@
       "source_location": "L19"
     },
     {
-      "id": "src_notch_tools_pomodoro",
-      "label": "Pomodoro",
+      "id": "src_notch_tools_timer",
+      "label": "Timer",
       "_callable": true,
       "_callable_class": true,
       "_origin": "ast",
       "community": 2,
       "community_name": "Notch.tsx",
       "file_type": "code",
-      "norm_label": "pomodoro",
+      "norm_label": "timer",
       "source_file": "src/notch/Tools.tsx",
-      "source_location": "L8"
+      "source_location": "L7"
+    },
+    {
+      "id": "src_notch_tools_timermode",
+      "label": "TimerMode",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 2,
+      "community_name": "Notch.tsx",
+      "file_type": "code",
+      "norm_label": "timermode",
+      "source_file": "src/notch/Tools.tsx",
+      "source_location": "L5"
     },
     {
       "id": "src_bridge_focuswindow",
@@ -263,6 +276,18 @@
       "source_location": "L10"
     },
     {
+      "id": "src_i18n_uselocale",
+      "label": "useLocale()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 2,
+      "community_name": "Notch.tsx",
+      "file_type": "code",
+      "norm_label": "uselocale()",
+      "source_file": "src/i18n.ts",
+      "source_location": "L34"
+    },
+    {
       "id": "src_i18n_usesettings",
       "label": "useSettings()",
       "_callable": true,
@@ -404,43 +429,43 @@
       "file_type": "code",
       "norm_label": "calendar()",
       "source_file": "src/notch/Tools.tsx",
-      "source_location": "L59"
+      "source_location": "L94"
     },
     {
-      "id": "src_notch_tools_length",
-      "label": "length()",
+      "id": "src_notch_tools_clock",
+      "label": "clock()",
       "_callable": true,
       "_origin": "ast",
       "community": 2,
       "community_name": "Notch.tsx",
       "file_type": "code",
-      "norm_label": "length()",
+      "norm_label": "clock()",
       "source_file": "src/notch/Tools.tsx",
-      "source_location": "L17"
+      "source_location": "L28"
     },
     {
-      "id": "src_notch_tools_mmss",
-      "label": "mmss()",
+      "id": "src_notch_tools_parseduration",
+      "label": "parseDuration()",
       "_callable": true,
       "_origin": "ast",
       "community": 2,
       "community_name": "Notch.tsx",
       "file_type": "code",
-      "norm_label": "mmss()",
+      "norm_label": "parseduration()",
       "source_file": "src/notch/Tools.tsx",
-      "source_location": "L87"
+      "source_location": "L20"
     },
     {
-      "id": "src_notch_tools_pomodoroview",
-      "label": "PomodoroView()",
+      "id": "src_notch_tools_timerview",
+      "label": "TimerView()",
       "_callable": true,
       "_origin": "ast",
       "community": 2,
       "community_name": "Notch.tsx",
       "file_type": "code",
-      "norm_label": "pomodoroview()",
+      "norm_label": "timerview()",
       "source_file": "src/notch/Tools.tsx",
-      "source_location": "L89"
+      "source_location": "L126"
     },
     {
       "id": "src_notch_tools_toolspanel",
@@ -452,19 +477,19 @@
       "file_type": "code",
       "norm_label": "toolspanel()",
       "source_file": "src/notch/Tools.tsx",
-      "source_location": "L106"
+      "source_location": "L161"
     },
     {
-      "id": "src_notch_tools_usepomodoro",
-      "label": "usePomodoro()",
+      "id": "src_notch_tools_usetimer",
+      "label": "useTimer()",
       "_callable": true,
       "_origin": "ast",
       "community": 2,
       "community_name": "Notch.tsx",
       "file_type": "code",
-      "norm_label": "usepomodoro()",
+      "norm_label": "usetimer()",
       "source_file": "src/notch/Tools.tsx",
-      "source_location": "L20"
+      "source_location": "L37"
     },
     {
       "id": "src_settings_settings_settings",
@@ -1119,17 +1144,6 @@
       "source_location": "L331"
     },
     {
-      "id": "src_tauri_src_windows_list_visible_rects",
-      "label": "visible_rects()",
-      "_origin": "ast",
-      "community": 0,
-      "community_name": "windows_list.rs",
-      "file_type": "code",
-      "norm_label": "visible_rects()",
-      "source_file": "src-tauri/src/windows_list.rs",
-      "source_location": "L240"
-    },
-    {
       "id": "src_tauri_src_windows_list_win",
       "label": "win()",
       "_origin": "ast",
@@ -1414,6 +1428,17 @@
       "norm_label": "update()",
       "source_file": "src-tauri/src/fullscreen.rs",
       "source_location": "L82"
+    },
+    {
+      "id": "src_tauri_src_windows_list_visible_rects",
+      "label": "visible_rects()",
+      "_origin": "ast",
+      "community": 1,
+      "community_name": "fullscreen.rs",
+      "file_type": "code",
+      "norm_label": "visible_rects()",
+      "source_file": "src-tauri/src/windows_list.rs",
+      "source_location": "L240"
     },
     {
       "id": "atomicu32",
@@ -3047,6 +3072,17 @@
       "source_location": "L1"
     },
     {
+      "id": "src_notch_tools_presets",
+      "label": "PRESETS",
+      "_origin": "ast",
+      "community": 2,
+      "community_name": "Notch.tsx",
+      "file_type": "code",
+      "norm_label": "presets",
+      "source_file": "src/notch/Tools.tsx",
+      "source_location": "L124"
+    },
+    {
       "id": "src_settings_settings",
       "label": "Settings.tsx",
       "_origin": "ast",
@@ -3894,6 +3930,17 @@
       "source_location": "L47"
     },
     {
+      "id": "src_tauri_tauri_conf_bundle_windows",
+      "label": "windows",
+      "_origin": "ast",
+      "community": 5,
+      "community_name": "tauri.conf.json",
+      "file_type": "code",
+      "norm_label": "windows",
+      "source_file": "src-tauri/tauri.conf.json",
+      "source_location": "L58"
+    },
+    {
       "id": "src_tauri_tauri_conf_identifier",
       "label": "identifier",
       "_origin": "ast",
@@ -3905,6 +3952,28 @@
       "source_location": "L5"
     },
     {
+      "id": "src_tauri_tauri_conf_nsis_installerhooks",
+      "label": "installerHooks",
+      "_origin": "ast",
+      "community": 5,
+      "community_name": "tauri.conf.json",
+      "file_type": "code",
+      "norm_label": "installerhooks",
+      "source_file": "src-tauri/tauri.conf.json",
+      "source_location": "L61"
+    },
+    {
+      "id": "src_tauri_tauri_conf_nsis_installmode",
+      "label": "installMode",
+      "_origin": "ast",
+      "community": 5,
+      "community_name": "tauri.conf.json",
+      "file_type": "code",
+      "norm_label": "installmode",
+      "source_file": "src-tauri/tauri.conf.json",
+      "source_location": "L60"
+    },
+    {
       "id": "src_tauri_tauri_conf_plugins",
       "label": "plugins",
       "_origin": "ast",
@@ -3913,7 +3982,7 @@
       "file_type": "code",
       "norm_label": "plugins",
       "source_file": "src-tauri/tauri.conf.json",
-      "source_location": "L59"
+      "source_location": "L65"
     },
     {
       "id": "src_tauri_tauri_conf_plugins_updater",
@@ -3924,7 +3993,7 @@
       "file_type": "code",
       "norm_label": "updater",
       "source_file": "src-tauri/tauri.conf.json",
-      "source_location": "L60"
+      "source_location": "L66"
     },
     {
       "id": "src_tauri_tauri_conf_productname",
@@ -3968,7 +4037,7 @@
       "file_type": "code",
       "norm_label": "endpoints",
       "source_file": "src-tauri/tauri.conf.json",
-      "source_location": "L62"
+      "source_location": "L68"
     },
     {
       "id": "src_tauri_tauri_conf_updater_pubkey",
@@ -3979,7 +4048,7 @@
       "file_type": "code",
       "norm_label": "pubkey",
       "source_file": "src-tauri/tauri.conf.json",
-      "source_location": "L61"
+      "source_location": "L67"
     },
     {
       "id": "src_tauri_tauri_conf_updater_windows",
@@ -3990,7 +4059,7 @@
       "file_type": "code",
       "norm_label": "windows",
       "source_file": "src-tauri/tauri.conf.json",
-      "source_location": "L65"
+      "source_location": "L71"
     },
     {
       "id": "src_tauri_tauri_conf_version",
@@ -4012,7 +4081,18 @@
       "file_type": "code",
       "norm_label": "installmode",
       "source_file": "src-tauri/tauri.conf.json",
-      "source_location": "L66"
+      "source_location": "L72"
+    },
+    {
+      "id": "src_tauri_tauri_conf_windows_nsis",
+      "label": "nsis",
+      "_origin": "ast",
+      "community": 5,
+      "community_name": "tauri.conf.json",
+      "file_type": "code",
+      "norm_label": "nsis",
+      "source_file": "src-tauri/tauri.conf.json",
+      "source_location": "L59"
     },
     {
       "id": "src_tauri_src_i18n",
@@ -4700,6 +4780,18 @@
       "type": "external"
     },
     {
+      "id": "foundation",
+      "label": "foundation",
+      "_origin": "semantic",
+      "community": 1,
+      "community_name": "fullscreen.rs",
+      "external": true,
+      "file_type": "concept",
+      "norm_label": "foundation",
+      "source_file": "",
+      "type": "external"
+    },
+    {
       "id": "gdi",
       "label": "gdi",
       "_origin": "semantic",
@@ -4708,6 +4800,18 @@
       "external": true,
       "file_type": "concept",
       "norm_label": "gdi",
+      "source_file": "",
+      "type": "external"
+    },
+    {
+      "id": "windowsandmessaging",
+      "label": "windowsandmessaging",
+      "_origin": "semantic",
+      "community": 1,
+      "community_name": "fullscreen.rs",
+      "external": true,
+      "file_type": "concept",
+      "norm_label": "windowsandmessaging",
       "source_file": "",
       "type": "external"
     },
@@ -4844,18 +4948,6 @@
       "type": "external"
     },
     {
-      "id": "foundation",
-      "label": "foundation",
-      "_origin": "semantic",
-      "community": 18,
-      "community_name": "visibility.rs",
-      "external": true,
-      "file_type": "concept",
-      "norm_label": "foundation",
-      "source_file": "",
-      "type": "external"
-    },
-    {
       "id": "pwstr",
       "label": "pwstr",
       "_origin": "semantic",
@@ -4876,18 +4968,6 @@
       "external": true,
       "file_type": "concept",
       "norm_label": "threading",
-      "source_file": "",
-      "type": "external"
-    },
-    {
-      "id": "windowsandmessaging",
-      "label": "windowsandmessaging",
-      "_origin": "semantic",
-      "community": 18,
-      "community_name": "visibility.rs",
-      "external": true,
-      "file_type": "concept",
-      "norm_label": "windowsandmessaging",
       "source_file": "",
       "type": "external"
     },
@@ -4914,6 +4994,78 @@
       "source_location": null
     },
     {
+      "id": "src_appearance_surfaces",
+      "label": "src_appearance_surfaces",
+      "_origin": "semantic",
+      "community": 2,
+      "community_name": "Notch.tsx",
+      "external": true,
+      "file_type": "concept",
+      "norm_label": "src_appearance_surfaces",
+      "source_file": "",
+      "type": "external"
+    },
+    {
+      "id": "src_appearance_surfaceshape",
+      "label": "src_appearance_surfaceshape",
+      "_origin": "semantic",
+      "community": 2,
+      "community_name": "Notch.tsx",
+      "external": true,
+      "file_type": "concept",
+      "norm_label": "src_appearance_surfaceshape",
+      "source_file": "",
+      "type": "external"
+    },
+    {
+      "id": "src_appearance_surfaceshape_surfaceshape",
+      "label": "src_appearance_surfaceshape_surfaceshape",
+      "_origin": "semantic",
+      "community": 2,
+      "community_name": "Notch.tsx",
+      "external": true,
+      "file_type": "concept",
+      "norm_label": "src_appearance_surfaceshape_surfaceshape",
+      "source_file": "",
+      "type": "external"
+    },
+    {
+      "id": "src_appearance_theme",
+      "label": "src_appearance_theme",
+      "_origin": "semantic",
+      "community": 2,
+      "community_name": "Notch.tsx",
+      "external": true,
+      "file_type": "concept",
+      "norm_label": "src_appearance_theme",
+      "source_file": "",
+      "type": "external"
+    },
+    {
+      "id": "src_appearance_theme_inittheme",
+      "label": "src_appearance_theme_inittheme",
+      "_origin": "semantic",
+      "community": 2,
+      "community_name": "Notch.tsx",
+      "external": true,
+      "file_type": "concept",
+      "norm_label": "src_appearance_theme_inittheme",
+      "source_file": "",
+      "type": "external"
+    },
+    {
+      "id": "src_bridge_mediaseek",
+      "label": "src_bridge_mediaseek",
+      "_origin": "semantic",
+      "community": 2,
+      "community_name": "Notch.tsx",
+      "external": true,
+      "file_type": "concept",
+      "norm_label": "src_bridge_mediaseek",
+      "source_file": "",
+      "type": "external"
+    },
+    {
       "id": "src_locales_en",
       "label": "src_locales_en",
       "_origin": "semantic",
@@ -4934,6 +5086,126 @@
       "external": true,
       "file_type": "concept",
       "norm_label": "src_locales_tr",
+      "source_file": "",
+      "type": "external"
+    },
+    {
+      "id": "src_notch_icons",
+      "label": "src_notch_icons",
+      "_origin": "semantic",
+      "community": 2,
+      "community_name": "Notch.tsx",
+      "external": true,
+      "file_type": "concept",
+      "norm_label": "src_notch_icons",
+      "source_file": "",
+      "type": "external"
+    },
+    {
+      "id": "src_notch_icons_musicnoteicon",
+      "label": "src_notch_icons_musicnoteicon",
+      "_origin": "semantic",
+      "community": 2,
+      "community_name": "Notch.tsx",
+      "external": true,
+      "file_type": "concept",
+      "norm_label": "src_notch_icons_musicnoteicon",
+      "source_file": "",
+      "type": "external"
+    },
+    {
+      "id": "src_notch_icons_pauseicon",
+      "label": "src_notch_icons_pauseicon",
+      "_origin": "semantic",
+      "community": 2,
+      "community_name": "Notch.tsx",
+      "external": true,
+      "file_type": "concept",
+      "norm_label": "src_notch_icons_pauseicon",
+      "source_file": "",
+      "type": "external"
+    },
+    {
+      "id": "src_notch_icons_playicon",
+      "label": "src_notch_icons_playicon",
+      "_origin": "semantic",
+      "community": 2,
+      "community_name": "Notch.tsx",
+      "external": true,
+      "file_type": "concept",
+      "norm_label": "src_notch_icons_playicon",
+      "source_file": "",
+      "type": "external"
+    },
+    {
+      "id": "src_notch_icons_skipbackicon",
+      "label": "src_notch_icons_skipbackicon",
+      "_origin": "semantic",
+      "community": 2,
+      "community_name": "Notch.tsx",
+      "external": true,
+      "file_type": "concept",
+      "norm_label": "src_notch_icons_skipbackicon",
+      "source_file": "",
+      "type": "external"
+    },
+    {
+      "id": "src_notch_icons_skipforwardicon",
+      "label": "src_notch_icons_skipforwardicon",
+      "_origin": "semantic",
+      "community": 2,
+      "community_name": "Notch.tsx",
+      "external": true,
+      "file_type": "concept",
+      "norm_label": "src_notch_icons_skipforwardicon",
+      "source_file": "",
+      "type": "external"
+    },
+    {
+      "id": "src_system",
+      "label": "src_system",
+      "_origin": "semantic",
+      "community": 2,
+      "community_name": "Notch.tsx",
+      "external": true,
+      "file_type": "concept",
+      "norm_label": "src_system",
+      "source_file": "",
+      "type": "external"
+    },
+    {
+      "id": "src_system_usesystemstatus",
+      "label": "src_system_usesystemstatus",
+      "_origin": "semantic",
+      "community": 2,
+      "community_name": "Notch.tsx",
+      "external": true,
+      "file_type": "concept",
+      "norm_label": "src_system_usesystemstatus",
+      "source_file": "",
+      "type": "external"
+    },
+    {
+      "id": "src_updates",
+      "label": "src_updates",
+      "_origin": "semantic",
+      "community": 2,
+      "community_name": "Notch.tsx",
+      "external": true,
+      "file_type": "concept",
+      "norm_label": "src_updates",
+      "source_file": "",
+      "type": "external"
+    },
+    {
+      "id": "src_updates_useupdatestatus",
+      "label": "src_updates_useupdatestatus",
+      "_origin": "semantic",
+      "community": 2,
+      "community_name": "Notch.tsx",
+      "external": true,
+      "file_type": "concept",
+      "norm_label": "src_updates_useupdatestatus",
       "source_file": "",
       "type": "external"
     },
@@ -5225,182 +5497,6 @@
       "norm_label": "single instance: second launch opens settings",
       "source_file": "CHANGELOG.md",
       "source_location": null
-    },
-    {
-      "id": "src_appearance_surfaces",
-      "label": "src_appearance_surfaces",
-      "community": 2,
-      "community_name": "Notch.tsx",
-      "external": true,
-      "file_type": "concept",
-      "norm_label": "src_appearance_surfaces",
-      "source_file": "",
-      "type": "external"
-    },
-    {
-      "id": "src_appearance_surfaceshape",
-      "label": "src_appearance_surfaceshape",
-      "community": 2,
-      "community_name": "Notch.tsx",
-      "external": true,
-      "file_type": "concept",
-      "norm_label": "src_appearance_surfaceshape",
-      "source_file": "",
-      "type": "external"
-    },
-    {
-      "id": "src_appearance_surfaceshape_surfaceshape",
-      "label": "src_appearance_surfaceshape_surfaceshape",
-      "community": 2,
-      "community_name": "Notch.tsx",
-      "external": true,
-      "file_type": "concept",
-      "norm_label": "src_appearance_surfaceshape_surfaceshape",
-      "source_file": "",
-      "type": "external"
-    },
-    {
-      "id": "src_appearance_theme",
-      "label": "src_appearance_theme",
-      "community": 2,
-      "community_name": "Notch.tsx",
-      "external": true,
-      "file_type": "concept",
-      "norm_label": "src_appearance_theme",
-      "source_file": "",
-      "type": "external"
-    },
-    {
-      "id": "src_appearance_theme_inittheme",
-      "label": "src_appearance_theme_inittheme",
-      "community": 2,
-      "community_name": "Notch.tsx",
-      "external": true,
-      "file_type": "concept",
-      "norm_label": "src_appearance_theme_inittheme",
-      "source_file": "",
-      "type": "external"
-    },
-    {
-      "id": "src_bridge_mediaseek",
-      "label": "src_bridge_mediaseek",
-      "community": 2,
-      "community_name": "Notch.tsx",
-      "external": true,
-      "file_type": "concept",
-      "norm_label": "src_bridge_mediaseek",
-      "source_file": "",
-      "type": "external"
-    },
-    {
-      "id": "src_notch_icons",
-      "label": "src_notch_icons",
-      "community": 2,
-      "community_name": "Notch.tsx",
-      "external": true,
-      "file_type": "concept",
-      "norm_label": "src_notch_icons",
-      "source_file": "",
-      "type": "external"
-    },
-    {
-      "id": "src_notch_icons_musicnoteicon",
-      "label": "src_notch_icons_musicnoteicon",
-      "community": 2,
-      "community_name": "Notch.tsx",
-      "external": true,
-      "file_type": "concept",
-      "norm_label": "src_notch_icons_musicnoteicon",
-      "source_file": "",
-      "type": "external"
-    },
-    {
-      "id": "src_notch_icons_pauseicon",
-      "label": "src_notch_icons_pauseicon",
-      "community": 2,
-      "community_name": "Notch.tsx",
-      "external": true,
-      "file_type": "concept",
-      "norm_label": "src_notch_icons_pauseicon",
-      "source_file": "",
-      "type": "external"
-    },
-    {
-      "id": "src_notch_icons_playicon",
-      "label": "src_notch_icons_playicon",
-      "community": 2,
-      "community_name": "Notch.tsx",
-      "external": true,
-      "file_type": "concept",
-      "norm_label": "src_notch_icons_playicon",
-      "source_file": "",
-      "type": "external"
-    },
-    {
-      "id": "src_notch_icons_skipbackicon",
-      "label": "src_notch_icons_skipbackicon",
-      "community": 2,
-      "community_name": "Notch.tsx",
-      "external": true,
-      "file_type": "concept",
-      "norm_label": "src_notch_icons_skipbackicon",
-      "source_file": "",
-      "type": "external"
-    },
-    {
-      "id": "src_notch_icons_skipforwardicon",
-      "label": "src_notch_icons_skipforwardicon",
-      "community": 2,
-      "community_name": "Notch.tsx",
-      "external": true,
-      "file_type": "concept",
-      "norm_label": "src_notch_icons_skipforwardicon",
-      "source_file": "",
-      "type": "external"
-    },
-    {
-      "id": "src_system",
-      "label": "src_system",
-      "community": 2,
-      "community_name": "Notch.tsx",
-      "external": true,
-      "file_type": "concept",
-      "norm_label": "src_system",
-      "source_file": "",
-      "type": "external"
-    },
-    {
-      "id": "src_system_usesystemstatus",
-      "label": "src_system_usesystemstatus",
-      "community": 2,
-      "community_name": "Notch.tsx",
-      "external": true,
-      "file_type": "concept",
-      "norm_label": "src_system_usesystemstatus",
-      "source_file": "",
-      "type": "external"
-    },
-    {
-      "id": "src_updates",
-      "label": "src_updates",
-      "community": 2,
-      "community_name": "Notch.tsx",
-      "external": true,
-      "file_type": "concept",
-      "norm_label": "src_updates",
-      "source_file": "",
-      "type": "external"
-    },
-    {
-      "id": "src_updates_useupdatestatus",
-      "label": "src_updates_useupdatestatus",
-      "community": 2,
-      "community_name": "Notch.tsx",
-      "external": true,
-      "file_type": "concept",
-      "norm_label": "src_updates_useupdatestatus",
-      "source_file": "",
-      "type": "external"
     }
   ],
   "links": [
@@ -5450,6 +5546,18 @@
       "context": "call",
       "source_file": "src/dock/Dock.tsx",
       "source_location": "L8",
+      "weight": 1.0
+    },
+    {
+      "source": "src_i18n_uselocale",
+      "target": "src_i18n_usesettings",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "src/i18n.ts",
+      "source_location": "L35",
       "weight": 1.0
     },
     {
@@ -5514,7 +5622,7 @@
     },
     {
       "source": "src_notch_notch_notch",
-      "target": "src_notch_tools_usepomodoro",
+      "target": "src_notch_tools_usetimer",
       "relation": "calls",
       "_origin": "ast",
       "confidence": "EXTRACTED",
@@ -5581,7 +5689,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/notch/Notch.tsx",
-      "source_location": "L436",
+      "source_location": "L443",
       "weight": 1.0
     },
     {
@@ -5593,7 +5701,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/notch/Notch.tsx",
-      "source_location": "L459",
+      "source_location": "L466",
       "weight": 1.0
     },
     {
@@ -5605,7 +5713,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/notch/Notch.tsx",
-      "source_location": "L474",
+      "source_location": "L481",
       "weight": 1.0
     },
     {
@@ -5617,7 +5725,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/notch/Notch.tsx",
-      "source_location": "L477",
+      "source_location": "L484",
       "weight": 1.0
     },
     {
@@ -5629,7 +5737,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/notch/Notch.tsx",
-      "source_location": "L494",
+      "source_location": "L501",
       "weight": 1.0
     },
     {
@@ -5641,7 +5749,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/notch/Notch.tsx",
-      "source_location": "L529",
+      "source_location": "L536",
       "weight": 1.0
     },
     {
@@ -5653,7 +5761,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/notch/Notch.tsx",
-      "source_location": "L534",
+      "source_location": "L541",
       "weight": 1.0
     },
     {
@@ -5669,7 +5777,19 @@
       "weight": 1.0
     },
     {
-      "source": "src_notch_tools_pomodoroview",
+      "source": "src_notch_tools_calendar",
+      "target": "src_i18n_uselocale",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "src/notch/Tools.tsx",
+      "source_location": "L98",
+      "weight": 1.0
+    },
+    {
+      "source": "src_notch_tools_timerview",
       "target": "src_i18n_uset",
       "relation": "calls",
       "_origin": "ast",
@@ -5677,67 +5797,43 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/notch/Tools.tsx",
-      "source_location": "L90",
+      "source_location": "L127",
       "weight": 1.0
     },
     {
-      "source": "src_notch_tools_pomodoroview",
-      "target": "src_notch_tools_length",
+      "source": "src_notch_tools_timerview",
+      "target": "src_notch_tools_parseduration",
       "relation": "calls",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/notch/Tools.tsx",
-      "source_location": "L91",
+      "source_location": "L129",
       "weight": 1.0
     },
     {
-      "source": "src_notch_tools_pomodoroview",
-      "target": "src_notch_tools_mmss",
+      "source": "src_notch_tools_timerview",
+      "target": "src_notch_tools_clock",
       "relation": "calls",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/notch/Tools.tsx",
-      "source_location": "L95",
-      "weight": 1.0
-    },
-    {
-      "source": "src_notch_tools_toolspanel",
-      "target": "src_i18n_uset",
-      "relation": "calls",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "context": "call",
-      "source_file": "src/notch/Tools.tsx",
-      "source_location": "L107",
+      "source_location": "L141",
       "weight": 1.0
     },
     {
       "source": "src_notch_tools_toolspanel",
-      "target": "src_notch_tools_pomodoroview",
+      "target": "src_notch_tools_timerview",
       "relation": "calls",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "src/notch/Tools.tsx",
-      "source_location": "L116",
-      "weight": 1.0
-    },
-    {
-      "source": "src_notch_tools_usepomodoro",
-      "target": "src_notch_tools_length",
-      "relation": "calls",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "context": "call",
-      "source_file": "src/notch/Tools.tsx",
-      "source_location": "L34",
+      "source_location": "L165",
       "weight": 1.0
     },
     {
@@ -8274,7 +8370,7 @@
     },
     {
       "source": "src_notch_notch",
-      "target": "src_notch_tools_usepomodoro",
+      "target": "src_notch_tools_usetimer",
       "relation": "imports",
       "_origin": "ast",
       "confidence": "EXTRACTED",
@@ -8378,6 +8474,18 @@
       "context": "import",
       "source_file": "src/notch/Notch.tsx",
       "source_location": "L9",
+      "weight": 1.0
+    },
+    {
+      "source": "src_notch_tools",
+      "target": "src_i18n_uselocale",
+      "relation": "imports",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "src/notch/Tools.tsx",
+      "source_location": "L3",
       "weight": 1.0
     },
     {
@@ -10986,6 +11094,17 @@
     },
     {
       "source": "src_i18n",
+      "target": "src_i18n_uselocale",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/i18n.ts",
+      "source_location": "L34",
+      "weight": 1.0
+    },
+    {
+      "source": "src_i18n",
       "target": "src_i18n_dict",
       "relation": "contains",
       "_origin": "ast",
@@ -11113,7 +11232,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/notch/Notch.tsx",
-      "source_location": "L553",
+      "source_location": "L560",
       "weight": 1.0
     },
     {
@@ -11140,29 +11259,40 @@
     },
     {
       "source": "src_notch_tools",
+      "target": "src_notch_tools_presets",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/notch/Tools.tsx",
+      "source_location": "L124",
+      "weight": 1.0
+    },
+    {
+      "source": "src_notch_tools",
+      "target": "src_notch_tools_timerview",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/notch/Tools.tsx",
+      "source_location": "L126",
+      "weight": 1.0
+    },
+    {
+      "source": "src_notch_tools",
       "target": "src_notch_tools_toolspanel",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/notch/Tools.tsx",
-      "source_location": "L106",
+      "source_location": "L161",
       "weight": 1.0
     },
     {
       "source": "src_notch_tools",
-      "target": "src_notch_tools_length",
-      "relation": "contains",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "src/notch/Tools.tsx",
-      "source_location": "L17",
-      "weight": 1.0
-    },
-    {
-      "source": "src_notch_tools",
-      "target": "src_notch_tools_usepomodoro",
+      "target": "src_notch_tools_parseduration",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
@@ -11173,46 +11303,57 @@
     },
     {
       "source": "src_notch_tools",
+      "target": "src_notch_tools_clock",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/notch/Tools.tsx",
+      "source_location": "L28",
+      "weight": 1.0
+    },
+    {
+      "source": "src_notch_tools",
+      "target": "src_notch_tools_usetimer",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/notch/Tools.tsx",
+      "source_location": "L37",
+      "weight": 1.0
+    },
+    {
+      "source": "src_notch_tools",
+      "target": "src_notch_tools_timermode",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/notch/Tools.tsx",
+      "source_location": "L5",
+      "weight": 1.0
+    },
+    {
+      "source": "src_notch_tools",
+      "target": "src_notch_tools_timer",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/notch/Tools.tsx",
+      "source_location": "L7",
+      "weight": 1.0
+    },
+    {
+      "source": "src_notch_tools",
       "target": "src_notch_tools_calendar",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/notch/Tools.tsx",
-      "source_location": "L59",
-      "weight": 1.0
-    },
-    {
-      "source": "src_notch_tools",
-      "target": "src_notch_tools_pomodoro",
-      "relation": "contains",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "src/notch/Tools.tsx",
-      "source_location": "L8",
-      "weight": 1.0
-    },
-    {
-      "source": "src_notch_tools",
-      "target": "src_notch_tools_mmss",
-      "relation": "contains",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "src/notch/Tools.tsx",
-      "source_location": "L87",
-      "weight": 1.0
-    },
-    {
-      "source": "src_notch_tools",
-      "target": "src_notch_tools_pomodoroview",
-      "relation": "contains",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "src/notch/Tools.tsx",
-      "source_location": "L89",
+      "source_location": "L94",
       "weight": 1.0
     },
     {
@@ -13527,17 +13668,6 @@
     },
     {
       "source": "src_tauri_tauri_conf",
-      "target": "src_tauri_tauri_conf_plugins",
-      "relation": "contains",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "src-tauri/tauri.conf.json",
-      "source_location": "L59",
-      "weight": 1.0
-    },
-    {
-      "source": "src_tauri_tauri_conf",
       "target": "src_tauri_tauri_conf_build",
       "relation": "contains",
       "_origin": "ast",
@@ -13545,6 +13675,17 @@
       "confidence_score": 1.0,
       "source_file": "src-tauri/tauri.conf.json",
       "source_location": "L6",
+      "weight": 1.0
+    },
+    {
+      "source": "src_tauri_tauri_conf",
+      "target": "src_tauri_tauri_conf_plugins",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src-tauri/tauri.conf.json",
+      "source_location": "L65",
       "weight": 1.0
     },
     {
@@ -13669,6 +13810,28 @@
       "weight": 1.0
     },
     {
+      "source": "src_tauri_tauri_conf_bundle",
+      "target": "src_tauri_tauri_conf_bundle_windows",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src-tauri/tauri.conf.json",
+      "source_location": "L58",
+      "weight": 1.0
+    },
+    {
+      "source": "src_tauri_tauri_conf_bundle_windows",
+      "target": "src_tauri_tauri_conf_windows_nsis",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src-tauri/tauri.conf.json",
+      "source_location": "L59",
+      "weight": 1.0
+    },
+    {
       "source": "src_tauri_tauri_conf_plugins",
       "target": "src_tauri_tauri_conf_plugins_updater",
       "relation": "contains",
@@ -13676,7 +13839,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src-tauri/tauri.conf.json",
-      "source_location": "L60",
+      "source_location": "L66",
       "weight": 1.0
     },
     {
@@ -13687,7 +13850,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src-tauri/tauri.conf.json",
-      "source_location": "L61",
+      "source_location": "L67",
       "weight": 1.0
     },
     {
@@ -13698,7 +13861,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src-tauri/tauri.conf.json",
-      "source_location": "L62",
+      "source_location": "L68",
       "weight": 1.0
     },
     {
@@ -13709,7 +13872,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src-tauri/tauri.conf.json",
-      "source_location": "L65",
+      "source_location": "L71",
       "weight": 1.0
     },
     {
@@ -13720,7 +13883,29 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src-tauri/tauri.conf.json",
-      "source_location": "L66",
+      "source_location": "L72",
+      "weight": 1.0
+    },
+    {
+      "source": "src_tauri_tauri_conf_windows_nsis",
+      "target": "src_tauri_tauri_conf_nsis_installmode",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src-tauri/tauri.conf.json",
+      "source_location": "L60",
+      "weight": 1.0
+    },
+    {
+      "source": "src_tauri_tauri_conf_windows_nsis",
+      "target": "src_tauri_tauri_conf_nsis_installerhooks",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src-tauri/tauri.conf.json",
+      "source_location": "L61",
       "weight": 1.0
     },
     {
@@ -14464,5 +14649,5 @@
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "a43b8d173fd5ec0b5d1ccbaacc8b58e5fefac981"
+  "built_at_commit": "717b75a4dc0c1246892ca1730b307a0771fcbb9c"
 }

@@ -276,9 +276,9 @@
     "semantic_hash": ""
   },
   "src-tauri/tauri.conf.json": {
-    "mtime": 1793708253.176164,
-    "seen": 1793709180.8213189,
-    "ast_hash": "68c564452dbb9fe0ac812fd6ddd474f6",
+    "mtime": 1793711833.3064473,
+    "seen": 1793711839.4004457,
+    "ast_hash": "d0b0d9655b1b7120942adfa481b3a1c7",
     "semantic_hash": ""
   },
   "src/appearance/SurfaceShape.tsx": {
@@ -312,21 +312,21 @@
     "semantic_hash": ""
   },
   "src/i18n.ts": {
-    "mtime": 1793622981.866307,
-    "seen": 1793709180.8213236,
-    "ast_hash": "657fd304578d81c2fbcbfdb6db06f2b8",
+    "mtime": 1793710130.5727906,
+    "seen": 1793710133.2620053,
+    "ast_hash": "f1d5d6b80d59cb640253e17e33080706",
     "semantic_hash": ""
   },
   "src/locales/en.json": {
-    "mtime": 1793709495.3950708,
-    "seen": 1793709571.0394988,
-    "ast_hash": "4077c63aebbe3b516bfd80813adb2e49",
+    "mtime": 1793711833.3064473,
+    "seen": 1793711839.4004562,
+    "ast_hash": "05a48d898a7bceb77c6310dd66f76765",
     "semantic_hash": ""
   },
   "src/locales/tr.json": {
-    "mtime": 1793709495.396309,
-    "seen": 1793709571.0395007,
-    "ast_hash": "3c0d13a6cb4a6d63f31fb40d4c181d21",
+    "mtime": 1793711833.307448,
+    "seen": 1793711839.4004571,
+    "ast_hash": "77a53a17e3286342015627dce3456ddb",
     "semantic_hash": ""
   },
   "src/main.tsx": {
@@ -336,9 +336,9 @@
     "semantic_hash": ""
   },
   "src/notch/Notch.tsx": {
-    "mtime": 1793709876.676079,
-    "seen": 1793709879.3318129,
-    "ast_hash": "44563c30d9fb33c5424f54026e15e193",
+    "mtime": 1793711833.3054452,
+    "seen": 1793711839.4004598,
+    "ast_hash": "d98b53be596d6b7a4fa03cba4aacfa1b",
     "semantic_hash": ""
   },
   "src/notch/icons.tsx": {
@@ -678,9 +678,15 @@
     "semantic_hash": ""
   },
   "src/notch/Tools.tsx": {
-    "mtime": 1793709828.6264637,
-    "seen": 1793709835.9979126,
-    "ast_hash": "cddb99b86da671068334e780728d2842",
+    "mtime": 1793711822.2487297,
+    "seen": 1793711839.400461,
+    "ast_hash": "676609d4d679f3d130559887b2ebe9af",
+    "semantic_hash": ""
+  },
+  "Takvim.png": {
+    "mtime": 1793711756.2957249,
+    "seen": 1793711839.4005136,
+    "ast_hash": "a965f250d8cdb7f490ab334971b998ba",
     "semantic_hash": ""
   }
 }
