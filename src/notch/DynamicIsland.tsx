@@ -294,6 +294,11 @@ export default function Notch() {
     };
   }, []);
 
+  // Files may have moved since the shelf was last looked at.
+  useEffect(() => {
+    if (shelfOpen) getShelf().then(setShelf).catch(() => {});
+  }, [shelfOpen]);
+
   useEffect(() => {
     const un = onNotificationNew(setBanner);
     return () => {
