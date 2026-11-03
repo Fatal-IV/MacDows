@@ -273,6 +273,10 @@ pub fn shell_action(action: String) -> Result<(), String> {
         }
         other => return Err(format!("unknown action {other}")),
     };
+    // The click on the dock button already closed an open Start or Search; pressing the key again would reopen it.
+    if matches!(action, ShellAction::Start | ShellAction::Search) && crate::visibility::shell_menu_just_closed() {
+        return Ok(());
+    }
     // Off the UI thread: the hidden-icons shortcut waits between its keys.
     std::thread::spawn(move || run_steps(&key_steps(action)));
     Ok(())

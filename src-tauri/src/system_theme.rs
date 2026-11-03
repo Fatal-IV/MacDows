@@ -261,8 +261,9 @@ pub fn apply(light: bool, surface_hex: &str, tint: bool) {
 fn reload_start() {
     use std::os::windows::process::CommandExt;
     let system32 = PathBuf::from(std::env::var_os("SystemRoot").unwrap_or_else(|| "C:\\Windows".into())).join("System32");
+    // Search (SearchHost) reads the colors the same way, so it is restarted with Start.
     let _ = std::process::Command::new(system32.join("taskkill.exe"))
-        .args(["/F", "/IM", "StartMenuExperienceHost.exe"])
+        .args(["/F", "/IM", "StartMenuExperienceHost.exe", "/IM", "SearchHost.exe"])
         .creation_flags(0x0800_0000)
         .output();
 }

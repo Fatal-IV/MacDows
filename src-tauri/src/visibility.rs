@@ -43,6 +43,19 @@ pub fn is_shell_menu(exe: &str) -> bool {
     matches!(exe.to_ascii_lowercase().as_str(), "startmenuexperiencehost.exe" | "searchhost.exe" | "shellexperiencehost.exe")
 }
 
+static LAST_SHELL_MENU_MS: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+
+fn now_ms() -> u64 {
+    std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map(|d| d.as_millis() as u64).unwrap_or(0)
+}
+
+/// True when one of Windows's own menus was in front a moment ago but is not any more. Clicking a dock button takes
+/// focus and closes the open menu before the click is handled; the click must then only close, not reopen.
+pub fn shell_menu_just_closed() -> bool {
+    let last = LAST_SHELL_MENU_MS.load(std::sync::atomic::Ordering::Relaxed);
+    last != 0 && now_ms().saturating_sub(last) < 700 && !foreground_exe().is_some_and(|exe| is_shell_menu(&exe))
+}
+
 /// File name of the program that owns the window in front.
 fn foreground_exe() -> Option<String> {
     unsafe {
@@ -109,6 +122,9 @@ pub fn start(app: AppHandle) {
             let others = if needs_overlap { windows_list::visible_rects() } else { Vec::new() };
             // While one of Windows's own menus is open (Start, Search, quick settings) the dock stays in view under it.
             let shell_menu_open = foreground_exe().is_some_and(|exe| is_shell_menu(&exe));
+            if shell_menu_open {
+                LAST_SHELL_MENU_MS.store(now_ms(), std::sync::atomic::Ordering::Relaxed);
+            }
             for (i, (label, vis)) in [("notch", s.notch_visibility), ("dock", s.dock_visibility)].into_iter().enumerate() {
                 let Some(win) = app.get_webview_window(label) else { continue };
                 let Ok(hwnd) = win.hwnd() else { continue };
