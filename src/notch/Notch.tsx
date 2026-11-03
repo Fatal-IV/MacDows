@@ -5,14 +5,15 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { listen } from "@tauri-apps/api/event";
-import { getMedia, getVolume, mediaNext, mediaPrev, mediaSeek, mediaToggle, onMediaChanged, setVolume, type MediaInfo } from "../bridge";
+import { getMedia, mediaNext, mediaPrev, mediaSeek, mediaToggle, onMediaChanged, type MediaInfo } from "../bridge";
 import { useT } from "../i18n";
 import { useUpdateStatus } from "../updates";
 import { useSystemStatus } from "../system";
 import { initTheme } from "../appearance/theme";
 import { SurfaceShape } from "../appearance/SurfaceShape";
 import "../appearance/surfaces.css";
-import { MusicNoteIcon, PauseIcon, PlayIcon, SkipBackIcon, SkipForwardIcon, SpeakerIcon } from "./icons";
+import { MusicNoteIcon, PauseIcon, PlayIcon, SkipBackIcon, SkipForwardIcon } from "./icons";
+import { ToolsPanel, usePomodoro } from "./Tools";
 import "./Notch.css";
 
 type Mode = "status" | "music";
@@ -24,6 +25,42 @@ const WHEEL_IDLE_MS = 180;
 const MUSIC_IDLE_BACK_MS = 5000;
 const MARQUEE_SPEED = 30; // px/s
 const MARQUEE_MIN_SECONDS = 5;
+
+/** The strongest color of the artwork (saturated pixels count more), for the soft gradient behind the player. */
+function useArtColor(url: string | null): string | null {
+  const [color, setColor] = useState<string | null>(null);
+  useEffect(() => {
+    if (!url) {
+      setColor(null);
+      return;
+    }
+    let dead = false;
+    const img = new Image();
+    img.onload = () => {
+      const c = document.createElement("canvas");
+      c.width = c.height = 16;
+      const g = c.getContext("2d", { willReadFrequently: true });
+      if (!g) return;
+      g.drawImage(img, 0, 0, 16, 16);
+      const d = g.getImageData(0, 0, 16, 16).data;
+      let r = 0, gr = 0, b = 0, w = 0;
+      for (let i = 0; i < d.length; i += 4) {
+        const sat = Math.max(d[i], d[i + 1], d[i + 2]) - Math.min(d[i], d[i + 1], d[i + 2]);
+        const weight = 1 + sat / 16;
+        r += d[i] * weight;
+        gr += d[i + 1] * weight;
+        b += d[i + 2] * weight;
+        w += weight;
+      }
+      if (!dead && w > 0) setColor(`${Math.round(r / w)}, ${Math.round(gr / w)}, ${Math.round(b / w)}`);
+    };
+    img.src = url;
+    return () => {
+      dead = true;
+    };
+  }, [url]);
+  return color;
+}
 
 const artUrl = (m: MediaInfo | null) => (m?.artwork_png_base64 ? `data:${m.artwork_mime};base64,${m.artwork_png_base64}` : null);
 
@@ -160,43 +197,6 @@ function Progress({ media }: { media: MediaInfo }) {
   );
 }
 
-/** The system output volume. */
-function VolumeRow() {
-  const [level, setLevel] = useState<number | null>(null);
-  const pending = useRef<number | null>(null);
-  useEffect(() => {
-    getVolume().then((v) => v && setLevel(v.level)).catch(() => {});
-  }, []);
-  const change = (v: number) => {
-    setLevel(v);
-    // At most one call in flight while dragging; the last value always goes out.
-    if (pending.current !== null) {
-      pending.current = v;
-      return;
-    }
-    pending.current = v;
-    const send = () => {
-      const value = pending.current!;
-      setVolume(value).finally(() => {
-        if (pending.current === value) pending.current = null;
-        else send();
-      });
-    };
-    send();
-  };
-  if (level === null) return <div className="volume-row" />;
-  return (
-    <div className="volume-row" onWheel={(e) => change(Math.min(1, Math.max(0, level - Math.sign(e.deltaY) * 0.04)))}>
-      <SpeakerIcon size={14} level="low" />
-      <div className="slider">
-        <input type="range" min="0" max="1" step="0.01" value={level} onChange={(e) => change(parseFloat(e.target.value))} onPointerDown={(e) => e.stopPropagation()} />
-        <div className="slider-fill" style={{ width: `${level * 100}%` }} />
-      </div>
-      <SpeakerIcon size={16} level="high" />
-    </div>
-  );
-}
-
 function Art({ url, className }: { url: string | null; className?: string }) {
   return (
     <AnimatePresence mode="wait" initial={false}>
@@ -241,10 +241,15 @@ export default function Notch() {
   const [ready, setReady] = useState(false);
   const [impacted, setImpacted] = useState(false);
   const [media, setMedia] = useState<MediaInfo | null>(null);
+  // A click opens the player; the middle button or the arrow opens calendar | Pomodoro.
+  const [open, setOpen] = useState(false);
+  const [tools, setTools] = useState(false);
+  const pomodoro = usePomodoro();
 
   const hasMedia = media !== null;
   const playing = media?.playing ?? false;
   const art = useMemo(() => artUrl(media), [media]);
+  const artColor = useArtColor(art);
 
   // Manual choice sticks: the auto-return to status only applies to music that opened itself.
   const manualMusic = useRef(false);
@@ -339,14 +344,30 @@ export default function Notch() {
   };
   const onHoverEnd = () => {
     setHovered(false);
+    setOpen(false);
+    setTools(false);
     setMode(restingMode());
   };
 
   const isMusic = hasMedia && mode === "music";
+  const musicOpen = isMusic && open && !tools;
+  const toggleTools = () => {
+    setTools((v) => !v);
+    setOpen(false);
+  };
+  const openPlayer = () => {
+    if (!hasMedia || open || tools) return;
+    manualMusic.current = true;
+    setMode("music");
+    setOpen(true);
+  };
+  useEffect(() => {
+    if (!hasMedia) setOpen(false);
+  }, [hasMedia]);
   const battery = system?.battery_percent ?? null;
 
-  const width = !ready ? 34 : isMusic ? (hovered ? 340 : 140 + (playing ? 30 : 0) + 30) : hovered ? (battery != null ? 200 : 170) : 140;
-  const height = !ready ? 34 : isMusic && hovered ? (media!.duration_ms > 0 ? 134 : 120) : 36;
+  const width = !ready ? 34 : tools || musicOpen ? 340 : isMusic ? 200 : hovered ? (battery != null ? 200 : 170) : hasMedia ? 170 : 140;
+  const height = !ready ? 34 : tools ? 156 : musicOpen ? (media!.duration_ms > 0 ? 112 : 98) : 36;
 
   return (
     <div className="screen" style={{ zoom: scale }}>
@@ -375,12 +396,19 @@ export default function Notch() {
         onHoverStart={onHoverStart}
         onHoverEnd={onHoverEnd}
         onWheel={onWheel}
+        onClick={openPlayer}
+        onMouseDown={(e) => e.button === 1 && e.preventDefault()}
+        onAuxClick={(e) => {
+          if (e.button !== 1) return;
+          e.preventDefault();
+          toggleTools();
+        }}
       >
         <SurfaceShape edge="top" flare={impacted ? 13 : 0} radius={18} edgeRadius={18} />
         {update.kind === "available" && <span className="update-dot" />}
 
         <AnimatePresence>
-          {isMusic && hovered && art && (
+          {musicOpen && art && (
             <motion.div className="ambient-glow" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.15 }}>
               <AnimatePresence mode="wait">
                 <motion.img key={art} src={art} alt="" draggable={false} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.3 }} />
@@ -389,8 +417,36 @@ export default function Notch() {
           )}
         </AnimatePresence>
 
+        <AnimatePresence>
+          {musicOpen && artColor && (
+            <motion.div
+              className="music-gradient"
+              style={{ background: `linear-gradient(135deg, rgba(${artColor}, 0.55) 0%, rgba(${artColor}, 0.18) 55%, transparent 100%)` }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.3 }}
+            />
+          )}
+        </AnimatePresence>
+
         <AnimatePresence mode="wait" initial={false}>
-          {isMusic && hovered ? (
+          {tools ? (
+            <motion.div key="tools" className="tools-wrap" initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.98, transition: { duration: 0.1 } }} transition={{ type: "spring", stiffness: 500, damping: 30 }}>
+              <ToolsPanel pomodoro={pomodoro} />
+              <button
+                className="corner-arrow"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setTools(false);
+                  setOpen(hasMedia);
+                }}
+                aria-label={t("notch.back")}
+              >
+                ⌄
+              </button>
+            </motion.div>
+          ) : musicOpen ? (
             <motion.div
               key="music-expanded"
               className="music-expanded"
@@ -402,6 +458,16 @@ export default function Notch() {
               <div className="art-large">
                 <Art url={art} />
               </div>
+              <button
+                className="corner-arrow"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  toggleTools();
+                }}
+                aria-label={t("notch.openTools")}
+              >
+                ⌃
+              </button>
               <div className="meta-col">
                 <div className="track-row">
                   <div className="track-info">
@@ -426,7 +492,6 @@ export default function Notch() {
                   </motion.button>
                 </div>
                 {media!.duration_ms > 0 && <Progress media={media!} />}
-                <VolumeRow />
               </div>
             </motion.div>
           ) : (
@@ -438,9 +503,9 @@ export default function Notch() {
               exit={{ opacity: 0, y: 5, transition: { duration: 0.1 } }}
               transition={{ duration: 0.2 }}
             >
-              <div className="side left">{isMusic && <Visualizer playing={playing} />}</div>
+              <div className="side left">{hasMedia && <Visualizer playing={playing} />}</div>
 
-              <button className="time-flip" onClick={() => cycle()} title={hasMedia ? t("notch.switchPanel") : undefined}>
+              <button className="time-flip" title={hasMedia ? t("notch.switchPanel") : undefined}>
                 <AnimatePresence mode="wait" initial={false}>
                   <motion.span
                     key={mode}
@@ -459,7 +524,10 @@ export default function Notch() {
                 {isMusic ? (
                   <button
                     className={`art-small${hovered ? " large" : ""}${playing ? "" : " paused"}`}
-                    onClick={mediaToggle}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      mediaToggle();
+                    }}
                     onDoubleClick={mediaNext}
                     onContextMenu={(e) => {
                       e.preventDefault();

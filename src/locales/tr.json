@@ -73,5 +73,15 @@
   "settings.showDesktop": "Masaüstü düğmesi",
   "settings.showDesktopHelp": "Dock'un sonuna, sizi hızlıca masaüstüne götüren bir düğme ekler. Tekrar basınca pencereleriniz geri gelir.",
   "window.controls": "Pencere düğmeleri",
-  "settings.categories": "Kategoriler"
+  "settings.categories": "Kategoriler",
+  "tools.calendar": "Takvim",
+  "tools.pomodoro": "Pomodoro",
+  "tools.focus": "Odak",
+  "tools.break": "Mola",
+  "tools.start": "Başlat",
+  "tools.pause": "Duraklat",
+  "tools.reset": "Sıfırla",
+  "tools.skip": "Atla",
+  "notch.openTools": "Takvim ve Pomodoro",
+  "notch.back": "Geri"
 }
