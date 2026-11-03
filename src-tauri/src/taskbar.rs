@@ -176,6 +176,8 @@ pub fn start_watchdog(setting_on: impl Fn() -> bool + Send + 'static) {
 
 /// Puts the taskbar back to the state recorded before MacDows touched it (used by the exit hook, the CLI flag and the guard).
 pub fn restore_now() {
+    // The personalization colors MacDows set for the Windows menus go back first, on every path that ends the takeover.
+    crate::system_theme::restore();
     crate::taskbar_plan::restore(&WinBackend, &FileStore::default());
     settle_visible();
 }

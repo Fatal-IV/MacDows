@@ -261,7 +261,7 @@ export default function Notch() {
   }, []);
 
   // Theme (colors, glass style, wallpaper backdrop) and UI scale come from the settings window.
-  useEffect(() => initTheme({ backdrop: true }), []);
+  useEffect(() => initTheme({ backdrop: true, syncSystem: true }), []);
   const [scale, setScale] = useState(readScale);
   useEffect(() => {
     const onStorage = (e: StorageEvent) => {

@@ -24,6 +24,7 @@ export default function Appearance() {
   const [accent, setAccent] = useStored("nectar-theme-accent", "mono");
   const [opacity, setOpacity] = useStored("nectar-theme-opacity", "0.8");
   const [scale, setScale] = useStored("nectar-scale", "1");
+  const [startTint, setStartTint] = useStored("macdows-start-tint", "false");
 
   return (
     <section className="appearance">
@@ -67,6 +68,11 @@ export default function Appearance() {
         <span>{t("appearance.scale")}: {Math.round(parseFloat(scale) * 100)}%</span>
         <input type="range" min="0.8" max="1.2" step="0.05" value={scale} onChange={(e) => setScale(e.target.value)} />
       </label>
+      <label className="check">
+        <input type="checkbox" checked={startTint === "true"} onChange={(e) => setStartTint(String(e.target.checked))} />
+        <span>{t("appearance.startTint")}</span>
+      </label>
+      <p className="help">{t("appearance.startTintHelp")}</p>
     </section>
   );
 }

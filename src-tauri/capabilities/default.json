@@ -6,9 +6,7 @@
     "notch",
     "dock",
     "settings",
-    "tray",
-    "start",
-    "search"
+    "tray"
   ],
   "permissions": [
     "core:default",

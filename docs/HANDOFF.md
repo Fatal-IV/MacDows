@@ -38,3 +38,10 @@ Settings live in `%APPDATA%\MacDows\settings.json`. The tray icon is in the hidd
 
 ## Knowledge graph
 `graphify-out/` has `graph.html` (open in a browser), `graph.json` and `GRAPH_REPORT.md`, built from the code plus the spec/plan/changelog concepts.
+
+## Start and Search (2026-11-03)
+MacDows's own Start menu, Search window and the Windows key hook were built and then removed again: the user wants Windows's own menus with only the colors matched. They are in commit 0b0c760 (`launcher.rs`, `search.rs`, `keyhook.rs`, `src/launcher/`) if they are ever wanted back.
+- `system_theme.rs` sets the personalization colors from the MacDows theme and restores them on every path that ends the taskbar takeover (`taskbar::restore_now` calls it first). Backup file: `%APPDATA%\MacDows\system-theme-backup.json`.
+- Start only takes a color through the system accent color, and it reads colors when its process starts, so the tint level sets the whole palette and restarts `StartMenuExperienceHost.exe`. Values that did NOT change Start in tests: AccentColorMenu/StartColorMenu alone, palette entries 4 to 7 alone, DWM accent alone.
+- The dock shows while Start, Search or quick settings is the foreground window (`visibility.rs`, `is_shell_menu`).
+- `SearchboxTaskbarMode` was set to 1 (icon only) on the author's PC so Windows's search opens above the dock instead of over it.

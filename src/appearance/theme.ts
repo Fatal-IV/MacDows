@@ -212,6 +212,9 @@ async function applyAccent(
   root.style.setProperty("--nectar-on-highlight", contrastText(color));
 }
 
+// Set by the notch window only (one window reports, so the colors are written once).
+let syncSystemTheme = false;
+
 export async function applyTheme(
   mode: string,
   customColor: string,
@@ -350,11 +353,17 @@ export async function applyTheme(
     ),
     applyBackdrop(root, style),
   ]);
+
+  // Windows's own Start and Search take their colors from the personalization settings: hand them the surface color.
+  if (syncSystemTheme) {
+    invoke("sync_system_theme", { light: root.classList.contains("light-mode"), surface, tint: localStorage.getItem("macdows-start-tint") === "true" }).catch(() => {});
+  }
 }
 
 // `backdrop`: this window draws the notch or dock, which show the wallpaper in the glass styles.
-export function initTheme(options: { backdrop?: boolean } = {}) {
+export function initTheme(options: { backdrop?: boolean; syncSystem?: boolean } = {}) {
   if (options.backdrop) enableBackdrop();
+  if (options.syncSystem) syncSystemTheme = true;
   const syncMode = localStorage.getItem('nectar-theme-mode') || 'dark';
   const syncColor = localStorage.getItem('nectar-theme-color') || '#007aff';
   const syncOpacityVal = localStorage.getItem('nectar-theme-opacity');
@@ -388,6 +397,7 @@ export function initTheme(options: { backdrop?: boolean } = {}) {
     'nectar-theme-style',
     'nectar-legacy-mode',
     'nectar-scale',
+    'macdows-start-tint',
   ];
 
   // The settings window writes localStorage; every other window of the app gets a `storage` event.

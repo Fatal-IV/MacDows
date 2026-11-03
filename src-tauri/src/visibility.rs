@@ -3,8 +3,10 @@ use crate::settings::Visibility;
 use crate::{windows_list, AppSettings};
 use std::time::Duration;
 use tauri::{AppHandle, Manager};
-use windows::Win32::Foundation::{HWND, POINT, RECT};
-use windows::Win32::UI::WindowsAndMessaging::{GetCursorPos, GetWindowRect, ShowWindow, SW_HIDE, SW_SHOWNOACTIVATE};
+use windows::Win32::Foundation::{CloseHandle, HWND, POINT, RECT};
+use windows::Win32::System::Threading::{OpenProcess, QueryFullProcessImageNameW, PROCESS_NAME_WIN32, PROCESS_QUERY_LIMITED_INFORMATION};
+use windows::core::PWSTR;
+use windows::Win32::UI::WindowsAndMessaging::{GetCursorPos, GetForegroundWindow, GetWindowRect, GetWindowThreadProcessId, ShowWindow, SW_HIDE, SW_SHOWNOACTIVATE};
 
 #[derive(Debug, Clone, Copy)]
 pub struct Inputs {
@@ -33,6 +35,30 @@ pub fn is_visible(i: Inputs) -> bool {
         Visibility::Fixed => true,
         Visibility::Smart => !i.overlapped || i.cursor_near,
         Visibility::Peek => i.cursor_near,
+    }
+}
+
+/// The programs behind Windows's own Start, Search and quick settings.
+pub fn is_shell_menu(exe: &str) -> bool {
+    matches!(exe.to_ascii_lowercase().as_str(), "startmenuexperiencehost.exe" | "searchhost.exe" | "shellexperiencehost.exe")
+}
+
+/// File name of the program that owns the window in front.
+fn foreground_exe() -> Option<String> {
+    unsafe {
+        let hwnd = GetForegroundWindow();
+        if hwnd.0.is_null() {
+            return None;
+        }
+        let mut pid = 0u32;
+        GetWindowThreadProcessId(hwnd, Some(&mut pid));
+        let process = OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, false, pid).ok()?;
+        let mut buf = [0u16; 520];
+        let mut len = buf.len() as u32;
+        let result = QueryFullProcessImageNameW(process, PROCESS_NAME_WIN32, PWSTR(buf.as_mut_ptr()), &mut len);
+        let _ = CloseHandle(process);
+        result.ok()?;
+        String::from_utf16_lossy(&buf[..len as usize]).rsplit('\\').next().map(str::to_string)
     }
 }
 
@@ -81,13 +107,15 @@ pub fn start(app: AppHandle) {
             let cur = cursor();
             let needs_overlap = s.notch_visibility == Visibility::Smart || s.dock_visibility == Visibility::Smart;
             let others = if needs_overlap { windows_list::visible_rects() } else { Vec::new() };
+            // While one of Windows's own menus is open (Start, Search, quick settings) the dock stays in view under it.
+            let shell_menu_open = foreground_exe().is_some_and(|exe| is_shell_menu(&exe));
             for (i, (label, vis)) in [("notch", s.notch_visibility), ("dock", s.dock_visibility)].into_iter().enumerate() {
                 let Some(win) = app.get_webview_window(label) else { continue };
                 let Ok(hwnd) = win.hwnd() else { continue };
                 let hwnd = HWND(hwnd.0);
                 let Some(r) = rect_of(hwnd) else { continue };
                 let zone = if shown[i].unwrap_or(true) { r } else { reveal_band(label, r) };
-                let near = cur.map(|(x, y)| point_in_rect(x, y, zone)).unwrap_or(false);
+                let near = cur.map(|(x, y)| point_in_rect(x, y, zone)).unwrap_or(false) || (label == "dock" && shell_menu_open);
                 let probe = overlap_probe(label, r);
                 let overlapped = others.iter().any(|o| rect_intersects(*o, probe));
                 // Show the bars for a few seconds after launch so the user sees the app started.
@@ -140,6 +168,15 @@ mod tests {
     fn peek_shows_only_when_cursor_near() {
         assert!(!is_visible(inp(Peek, Some(false), false, false)));
         assert!(is_visible(inp(Peek, Some(false), false, true)));
+    }
+
+    #[test]
+    fn windows_own_menus_are_recognized_by_program_name() {
+        assert!(is_shell_menu("StartMenuExperienceHost.exe"));
+        assert!(is_shell_menu("SearchHost.exe"));
+        assert!(is_shell_menu("shellexperiencehost.EXE"));
+        assert!(!is_shell_menu("explorer.exe"));
+        assert!(!is_shell_menu("macdows.exe"));
     }
 
     #[test]

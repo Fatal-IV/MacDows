@@ -2,9 +2,7 @@ mod i18n;
 mod cli;
 mod taskbar;
 mod taskbar_plan;
-mod keyhook;
-mod launcher;
-mod search;
+mod system_theme;
 mod tray_panel;
 mod updates;
 mod visualizer;
@@ -53,11 +51,12 @@ fn apply_replace_taskbar(app: &AppHandle, enabled: bool) {
         if enabled {
             if taskbar::hide_now() {
                 taskbar::start_guard();
-                // With Windows's taskbar gone, the Windows key and Win+S belong to MacDows's menus.
-                keyhook::set_enabled(true);
+                // Windows's Start and Search stay, in the colors of the MacDows theme while it runs.
+                system_theme::set_enabled(true);
             }
         } else {
-            keyhook::set_enabled(false);
+            // Puts the user's own personalization colors back (and then the taskbar).
+            system_theme::set_enabled(false);
             taskbar::restore_now();
         }
         // The work area changes a moment after the taskbar does.
@@ -125,84 +124,6 @@ fn start_taskbar_takeover(app: &AppHandle) {
 }
 
 
-/// When each popup last closed because it lost focus, so the click that did it does not reopen it at once.
-static POPUP_CLOSED_AT_MS: Mutex<Vec<(String, u64)>> = Mutex::new(Vec::new());
-
-fn note_popup_closed(label: &str) {
-    let mut list = POPUP_CLOSED_AT_MS.lock().unwrap();
-    list.retain(|(l, _)| l != label);
-    list.push((label.to_string(), now_ms()));
-}
-
-fn popup_recently_closed(label: &str) -> bool {
-    POPUP_CLOSED_AT_MS.lock().unwrap().iter().any(|(l, at)| l == label && now_ms().saturating_sub(*at) < 500)
-}
-
-#[tauri::command]
-fn close_popup(app: AppHandle, label: String) {
-    if let Some(w) = app.get_webview_window(&label) {
-        let _ = w.close();
-        note_popup_closed(&label);
-    }
-}
-
-/// Opens a themed popup (`label` is also the view the frontend shows) centered above the dock, or closes it when
-/// it is already open. `dock_top` is the dock's top edge in CSS pixels of the dock window.
-fn toggle_popup(app: &AppHandle, label: &'static str, title: &'static str, size: (f64, f64), dock_top: f64) {
-    if let Some(w) = app.get_webview_window(label) {
-        let _ = w.close();
-        return;
-    }
-    if popup_recently_closed(label) {
-        return;
-    }
-    let Some(dock) = app.get_webview_window("dock") else { return };
-    let (Ok(pos), Ok(Some(monitor))) = (dock.outer_position(), dock.current_monitor()) else { return };
-    let scale = dock.scale_factor().unwrap_or(1.0);
-    let (work_x, work_y, work_w) = {
-        let work = monitor.work_area();
-        (work.position.x as f64, work.position.y as f64, work.size.width as f64)
-    };
-    let (w, h) = size;
-    let x = work_x + (work_w - w * scale) / 2.0;
-    let y = pos.y as f64 + dock_top * scale - h * scale - 12.0 * scale;
-    let handle = app.clone();
-    let _ = app.run_on_main_thread(move || {
-        let built = WebviewWindowBuilder::new(&handle, label, WebviewUrl::App("index.html".into()))
-            .title(title)
-            .inner_size(w, h)
-            .decorations(false)
-            .transparent(true)
-            .resizable(false)
-            .shadow(false)
-            .always_on_top(true)
-            .skip_taskbar(true)
-            .focused(true)
-            .visible(false)
-            .build();
-        match built {
-            Ok(win) => {
-                if let Ok(hwnd) = win.hwnd() {
-                    windows_list::register_bar(hwnd.0 as isize);
-                }
-                let moved = win.set_position(PhysicalPosition::new(x as i32, y.max(work_y) as i32));
-                let shown = win.show();
-                let focused = win.set_focus();
-                eprintln!("popup {label}: move={moved:?} show={shown:?} focus={focused:?} at ({x:.0},{y:.0})");
-            }
-            Err(e) => eprintln!("popup {label}: could not be created: {e}"),
-        }
-    });
-}
-
-#[tauri::command]
-fn toggle_start_menu(app: AppHandle, dock_top: f64) {
-    eprintln!("popup start: toggle requested, dock_top={dock_top}");
-    // Windows are created from a worker thread, as for the hidden-icons panel: creating one inside a synchronous
-    // command (which runs on the main thread) leaves it half-built.
-    std::thread::spawn(move || toggle_popup(&app, "start", "MacDows Start", (640.0, 700.0), dock_top));
-}
-
 const TRAY_CELL: f64 = 46.0;
 const TRAY_PAD: f64 = 10.0;
 const TRAY_COLUMNS: usize = 5;
@@ -244,26 +165,6 @@ fn activate_tray_item(app: AppHandle, index: usize, name: String) {
     std::thread::spawn(move || {
         tray_panel::activate(index, &name);
     });
-}
-
-#[tauri::command]
-fn toggle_search_menu(app: AppHandle, dock_top: f64) {
-    std::thread::spawn(move || toggle_popup(&app, "search", "MacDows Search", (640.0, 560.0), dock_top));
-}
-
-/// The dock tells where its top edge is, so the menus opened from the keyboard sit right above it.
-#[tauri::command]
-fn report_dock_top(top: f64) {
-    keyhook::set_dock_top(top);
-}
-
-/// Called from the keyboard hook's worker thread.
-pub(crate) fn open_start_from_key(app: &AppHandle, dock_top: f64) {
-    toggle_popup(app, "start", "MacDows Start", (640.0, 700.0), dock_top);
-}
-
-pub(crate) fn open_search_from_key(app: &AppHandle, dock_top: f64) {
-    toggle_popup(app, "search", "MacDows Search", (640.0, 560.0), dock_top);
 }
 
 /// Opens (or closes) the hidden-icons panel just above the dock. `center_x` and `dock_top` are CSS pixels in
@@ -402,7 +303,7 @@ pub fn run() {
         .plugin(tauri_plugin_updater::Builder::new().build())
         .manage(AppSettings(Mutex::new(settings::load())))
         .manage(updates::UpdateState::default())
-        .invoke_handler(tauri::generate_handler![get_settings, set_setting, windows_list::list_windows, windows_list::focus_window, media::get_media, media::media_toggle, media::media_next, media::media_prev, media::media_seek, volume::get_volume, volume::set_volume, updates::get_update_status, updates::check_for_update, updates::install_update, appearance::get_system_accent_color, wallpaper::get_wallpaper_backdrop, taskbar::get_system_status, taskbar::shell_action, toggle_tray_panel, get_tray_items, activate_tray_item, close_tray_panel, launcher::launcher_apps, launcher::launcher_state, launcher::launch_app, launcher::toggle_pin, launcher::open_location, launcher::power_action, toggle_start_menu, toggle_search_menu, report_dock_top, close_popup, search::search_all, search::open_file, search::open_setting, search::open_web_search])
+        .invoke_handler(tauri::generate_handler![get_settings, set_setting, windows_list::list_windows, windows_list::focus_window, media::get_media, media::media_toggle, media::media_next, media::media_prev, media::media_seek, volume::get_volume, volume::set_volume, updates::get_update_status, updates::check_for_update, updates::install_update, appearance::get_system_accent_color, wallpaper::get_wallpaper_backdrop, taskbar::get_system_status, taskbar::shell_action, toggle_tray_panel, get_tray_items, activate_tray_item, close_tray_panel, system_theme::sync_system_theme])
         .setup(|app| {
             for label in ["notch", "dock"] {
                 if let Some(hwnd) = app.get_webview_window(label).and_then(|w| w.hwnd().ok()) {
@@ -418,9 +319,6 @@ pub fn run() {
             visualizer::start(app.handle().clone());
             visibility::start(app.handle().clone());
             updates::start(app.handle().clone());
-            keyhook::start(app.handle().clone());
-            launcher::warm_up();
-            search::warm_up();
             start_taskbar_takeover(app.handle());
             Ok(())
         })
@@ -429,7 +327,6 @@ pub fn run() {
         .run(|_app, event| {
             // Normal exit (tray Quit, update, shutdown): give the taskbar back. A crash is covered by the guard.
             if let tauri::RunEvent::Exit = event {
-                keyhook::set_enabled(false);
                 taskbar::restore_now();
             }
         });

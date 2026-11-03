@@ -62,3 +62,5 @@
 }
 .settings .appearance h2 { margin: 0; font-size: 16px; font-weight: 600; }
 .settings input[type="range"] { width: 100%; accent-color: #0a84ff; }
+
+.settings .appearance .check { flex-direction: row; align-items: center; gap: 8px; font-size: 13px; }

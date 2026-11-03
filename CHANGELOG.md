@@ -6,6 +6,8 @@ Format: [Keep a Changelog](https://keepachangelog.com/), versioning: [SemVer](ht
 ## [Unreleased]
 
 ### Added
+- Windows's own Start and Search are used, as they are on a normal PC (the Start and Search buttons of the dock open them, and so do the Windows key and Win+S). While one of Windows's menus (Start, Search, quick settings) is open, the dock stays in view under it.
+- Settings > Appearance > "Paint the Windows Start menu in the theme color". Off by default: MacDows then only makes Windows's system theme light or dark like its own. On, Start also takes the theme color; Windows only allows that through the system accent color, so every app's accent color is the theme color while MacDows runs. Your own colors come back when MacDows closes, whichever way it ends.
 - The music bars in the notch follow the real audio the PC is playing (five frequency bands, analysed locally; nothing is recorded or sent anywhere).
 - The notch player shows the elapsed and remaining time with a bar you can click to seek, and a system volume slider (the mouse wheel over it works too).
 

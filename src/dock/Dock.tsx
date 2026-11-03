@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { motion } from "framer-motion";
 import { invoke } from "@tauri-apps/api/core";
 import { focusWindow, listWindows, onWindowsChanged, type AppWindow } from "../bridge";
@@ -14,18 +14,6 @@ export default function Dock() {
 
   useEffect(() => initTheme({ backdrop: true }), []);
 
-  // The menus opened from the keyboard (Win, Win+S) need to know where the dock's top edge is.
-  const dockRef = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    const el = dockRef.current;
-    if (!el) return;
-    const report = () => invoke("report_dock_top", { top: el.getBoundingClientRect().top }).catch(() => {});
-    report();
-    const observer = new ResizeObserver(report);
-    observer.observe(el);
-    return () => observer.disconnect();
-  }, []);
-
   useEffect(() => {
     const refresh = () => listWindows().then(setWindows).catch(() => setWindows([]));
     refresh();
@@ -37,11 +25,11 @@ export default function Dock() {
 
   return (
     <div className="dock-stage">
-      <motion.div ref={dockRef} className="dock" layout>
+      <motion.div className="dock" layout>
         {system?.taskbar_hidden && (
           <>
-            <SystemButton action="start" label={t("system.start")} icon={START} onClick={openStartMenu} />
-            <SystemButton action="search" label={t("system.search")} icon={SEARCH} onClick={openSearchMenu} />
+            <SystemButton action="start" label={t("system.start")} icon={START} />
+            <SystemButton action="search" label={t("system.search")} icon={SEARCH} />
             <span className="dock-sep" />
           </>
         )}
@@ -98,20 +86,6 @@ const START = (
 );
 
 /** Opens MacDows's own hidden-icons panel above the dock, centered on the button. */
-function dockTop(button: HTMLElement) {
-  return button.closest(".dock")?.getBoundingClientRect().top ?? button.getBoundingClientRect().top;
-}
-
-/** Opens the MacDows Start menu above the dock. */
-function openStartMenu(button: HTMLElement) {
-  invoke("toggle_start_menu", { dockTop: dockTop(button) }).catch(() => {});
-}
-
-/** Opens the MacDows search menu above the dock. */
-function openSearchMenu(button: HTMLElement) {
-  invoke("toggle_search_menu", { dockTop: dockTop(button) }).catch(() => {});
-}
-
 function openTrayPanel(button: HTMLElement) {
   const r = button.getBoundingClientRect();
   const dock = button.closest(".dock")?.getBoundingClientRect();
