@@ -448,3 +448,37 @@ img { -webkit-user-drag: none; user-select: none; }
 .custom input:focus { border-color: rgba(255, 255, 255, 0.4); }
 .custom button { padding: 0 12px; }
 .custom button:disabled { opacity: 0.4; cursor: default; }
+
+/* ── Tools panel pages + Quick settings (glass tiles) ── */
+.tools-pages { position: relative; width: 100%; height: 100%; }
+.page-dots { position: absolute; left: 50%; bottom: 7px; transform: translateX(-50%); display: flex; gap: 6px; z-index: 2; }
+.page-dots button { width: 6px; height: 6px; padding: 0; border: 0; border-radius: 50%; background: rgba(255, 255, 255, 0.3); cursor: pointer; transition: background 0.15s, transform 0.15s; }
+.page-dots button.on { background: #fff; transform: scale(1.25); }
+
+.quick { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; height: 100%; box-sizing: border-box; padding: 30px 30px 26px; }
+.glass-tile {
+  position: relative; overflow: hidden;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px;
+  border-radius: 22px; padding: 0 6px;
+  color: var(--nectar-text, #fff);
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0.05));
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.28), inset 0 -10px 24px rgba(255, 255, 255, 0.03), 0 8px 22px rgba(0, 0, 0, 0.28);
+  backdrop-filter: blur(18px) saturate(160%);
+  -webkit-backdrop-filter: blur(18px) saturate(160%);
+  cursor: pointer; font: inherit;
+  transition: transform 0.15s, background 0.2s, border-color 0.2s, box-shadow 0.2s;
+}
+.glass-tile::before { content: ""; position: absolute; inset: 0 0 55% 0; background: linear-gradient(180deg, rgba(255, 255, 255, 0.18), transparent); pointer-events: none; }
+.glass-tile:hover { transform: translateY(-2px); border-color: rgba(255, 255, 255, 0.32); }
+.glass-tile:active { transform: scale(0.97); }
+.glass-tile:disabled { opacity: 0.45; cursor: default; transform: none; }
+.glass-tile.busy { opacity: 0.7; }
+.glass-tile.on {
+  background: linear-gradient(145deg, color-mix(in srgb, var(--music-accent, #0a84ff) 55%, transparent), color-mix(in srgb, var(--music-accent, #0a84ff) 25%, transparent));
+  border-color: rgba(255, 255, 255, 0.4);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.45), 0 8px 26px color-mix(in srgb, var(--music-accent, #0a84ff) 30%, transparent);
+}
+.glass-icon { display: flex; }
+.glass-name { font-size: 12px; font-weight: 600; text-align: center; line-height: 1.15; }
+.glass-state { font-size: 10px; opacity: 0.7; }

@@ -55,6 +55,20 @@ export const mediaToggle = () => invoke<void>("media_toggle");
 export const mediaNext = () => invoke<void>("media_next");
 export const mediaPrev = () => invoke<void>("media_prev");
 export const mediaSeek = (positionMs: number) => invoke<void>("media_seek", { positionMs });
+export interface QuickTile {
+  available: boolean;
+  on: boolean;
+}
+export interface QuickSettings {
+  wifi: QuickTile;
+  bluetooth: QuickTile;
+  dnd: QuickTile;
+  battery_saver: QuickTile;
+}
+export type QuickKey = keyof QuickSettings;
+export const getQuickSettings = () => invoke<QuickSettings>("get_quick_settings");
+export const setQuickSetting = (key: QuickKey, on: boolean) => invoke<QuickSettings>("set_quick_setting", { key, on });
+
 export const getVolume = () => invoke<Volume | null>("get_volume");
 export const setVolume = (level: number) => invoke<Volume | null>("set_volume", { level });
 export const onMediaChanged = (cb: (m: MediaInfo | null) => void): Promise<UnlistenFn> =>

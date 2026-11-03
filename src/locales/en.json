@@ -87,5 +87,16 @@
   "tools.timer": "Timer",
   "tools.stopwatch": "Stopwatch",
   "tools.custom": "Custom: 12, 1:30 or 0:45",
-  "tools.go": "Go"
+  "tools.go": "Go",
+  "quick.title": "Quick settings",
+  "quick.wifi": "Wi-Fi",
+  "quick.bluetooth": "Bluetooth",
+  "quick.dnd": "Do not disturb",
+  "quick.saver": "Battery saver",
+  "quick.on": "On",
+  "quick.off": "Off",
+  "quick.unavailable": "Not available",
+  "quick.page.tools": "Calendar and timer",
+  "quick.page.quick": "Quick settings",
+  "quick.error": "Could not change"
 }

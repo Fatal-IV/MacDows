@@ -87,5 +87,16 @@
   "tools.timer": "Zamanlayıcı",
   "tools.stopwatch": "Kronometre",
   "tools.custom": "Özel: 12, 1:30 veya 0:45",
-  "tools.go": "Başla"
+  "tools.go": "Başla",
+  "quick.title": "Hızlı ayarlar",
+  "quick.wifi": "Wi-Fi",
+  "quick.bluetooth": "Bluetooth",
+  "quick.dnd": "Rahatsız etmeyin",
+  "quick.saver": "Güç tasarrufu",
+  "quick.on": "Açık",
+  "quick.off": "Kapalı",
+  "quick.unavailable": "Yok",
+  "quick.page.tools": "Takvim ve zamanlayıcı",
+  "quick.page.quick": "Hızlı ayarlar",
+  "quick.error": "Değiştirilemedi"
 }
