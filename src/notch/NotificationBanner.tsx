@@ -2,10 +2,16 @@
 import type { Notice } from "../bridge";
 import { useT } from "../i18n";
 
-export function NotificationBanner({ notice, onDismiss }: { notice: Notice; onDismiss: () => void }) {
+export function NotificationBanner({ notice, onDismiss, onOpen }: { notice: Notice; onDismiss: () => void; onOpen: () => void }) {
   const t = useT();
   return (
-    <div className="banner">
+    <div
+      className="banner"
+      onClick={(e) => {
+        e.stopPropagation();
+        onOpen();
+      }}
+    >
       <span className="banner-icon">{notice.icon_png_base64 ? <img src={`data:image/png;base64,${notice.icon_png_base64}`} alt="" draggable={false} /> : <span>{notice.app.slice(0, 1)}</span>}</span>
       <div className="banner-text">
         <span className="banner-app">{notice.app}</span>

@@ -114,5 +114,11 @@
   "shelf.remove": "Raftan kaldır",
   "shelf.missing": "Dosya bulunamadı",
   "quick.shelf": "Raf",
-  "quick.macdows": "MacDows Ayarları"
+  "quick.macdows": "MacDows Ayarları",
+  "history.title": "Bildirimler",
+  "history.empty": "Henüz bildirim yok",
+  "history.now": "şimdi",
+  "history.min": "dk",
+  "history.hour": "sa",
+  "quick.history": "Bildirim geçmişi"
 }

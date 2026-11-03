@@ -36,7 +36,7 @@ const ORDER: { key: QuickKey; label: string }[] = [
   { key: "battery_saver", label: "quick.saver" },
 ];
 
-export function QuickSettingsScreen({ onOpenShelf }: { onOpenShelf: () => void }) {
+export function QuickSettingsScreen({ onOpenShelf, onOpenHistory }: { onOpenShelf: () => void; onOpenHistory: () => void }) {
   const t = useT();
   const [state, setState] = useState<QuickSettings | null>(null);
   const [busy, setBusy] = useState<QuickKey | null>(null);
@@ -103,6 +103,9 @@ export function QuickSettingsScreen({ onOpenShelf }: { onOpenShelf: () => void }
         ))}
         <button className="shortcut" title={t("quick.macdows")} aria-label={t("quick.macdows")} onClick={() => openMacdowsSettings().catch(() => {})}>
           {svg(<><path d="M4 7h9M17 7h3M4 17h3M11 17h9" /><circle cx="15" cy="7" r="2" /><circle cx="9" cy="17" r="2" /></>, 17)}
+        </button>
+        <button className="shortcut" title={t("quick.history")} aria-label={t("quick.history")} onClick={onOpenHistory}>
+          {svg(<><path d="M6 16.5V11a6 6 0 0 1 12 0v5.5l1.5 1.5h-15z" /><path d="M10 20.5a2 2 0 0 0 4 0" /></>, 17)}
         </button>
         <button className="shortcut" title={t("quick.shelf")} aria-label={t("quick.shelf")} onClick={onOpenShelf}>
           {svg(<><path d="M4 8.5V18a1.5 1.5 0 0 0 1.5 1.5h13A1.5 1.5 0 0 0 20 18V8.5" /><path d="M3 5.5h18v3H3z" /><path d="M10 12.5h4" /></>, 17)}

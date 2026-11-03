@@ -3,7 +3,7 @@
 //!
 //! An unpackaged app gets no change events, so the list is polled and compared with the last one.
 
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet};
 use std::sync::{Mutex, OnceLock};
 use std::time::Duration;
@@ -13,7 +13,7 @@ use windows::Win32::System::Com::{CoInitializeEx, COINIT_MULTITHREADED};
 use windows::UI::Notifications::Management::{UserNotificationListener, UserNotificationListenerAccessStatus};
 use windows::UI::Notifications::{KnownNotificationBindings, NotificationKinds, UserNotification};
 
-#[derive(Serialize, Clone, Debug, PartialEq)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 pub struct Notice {
     pub id: u32,
     pub app: String,
@@ -45,6 +45,53 @@ pub fn fresh(known: &Option<HashSet<u32>>, current: &[Notice]) -> Vec<Notice> {
 
 /// How long the notch stays in view for a banner: a little longer than the banner itself.
 const BANNER_HOLD_MS: u64 = 7_000;
+
+/// How many past notifications are kept.
+const HISTORY_MAX: usize = 100;
+
+/// A notification is "the same one" when app, title, body and time match (Windows reuses ids between sessions).
+fn same(a: &Notice, b: &Notice) -> bool {
+    a.time_ms == b.time_ms && a.app == b.app && a.title == b.title && a.body == b.body
+}
+
+/// `incoming` joins the history; ones already in it are skipped. Newest first, capped at `max`.
+/// Returns whether anything was added.
+pub fn merge_history(history: &mut Vec<Notice>, incoming: &[Notice], max: usize) -> bool {
+    let mut added = false;
+    for n in incoming {
+        if !history.iter().any(|h| same(h, n)) {
+            history.push(n.clone());
+            added = true;
+        }
+    }
+    if added {
+        sort_newest_first(history);
+        history.truncate(max);
+    }
+    added
+}
+
+fn history_path() -> std::path::PathBuf {
+    std::env::var_os("APPDATA").map(std::path::PathBuf::from).unwrap_or_else(std::env::temp_dir).join("MacDows").join("notification-history.json")
+}
+
+static HISTORY: Mutex<Option<Vec<Notice>>> = Mutex::new(None);
+
+fn with_history<R>(f: impl FnOnce(&mut Vec<Notice>) -> R) -> R {
+    let mut guard = HISTORY.lock().unwrap();
+    let list = guard.get_or_insert_with(|| std::fs::read_to_string(history_path()).ok().and_then(|t| serde_json::from_str(&t).ok()).unwrap_or_default());
+    f(list)
+}
+
+fn save_history(list: &[Notice]) {
+    let path = history_path();
+    if let Some(dir) = path.parent() {
+        let _ = std::fs::create_dir_all(dir);
+    }
+    if let Ok(text) = serde_json::to_string(list) {
+        let _ = std::fs::write(path, text);
+    }
+}
 
 static APP: OnceLock<AppHandle> = OnceLock::new();
 static LIST: Mutex<Vec<Notice>> = Mutex::new(Vec::new());
@@ -97,10 +144,16 @@ pub fn start(app: AppHandle) {
                 let ids: HashSet<u32> = current.iter().map(|n| n.id).collect();
                 let changed = known.as_ref() != Some(&ids);
                 let new = fresh(&known, &current);
+                with_history(|h| {
+                    if merge_history(h, &current, HISTORY_MAX) {
+                        save_history(h);
+                    }
+                });
                 *LIST.lock().unwrap() = current;
                 if let Some(app) = APP.get() {
                     if changed {
                         let _ = app.emit("notifications-changed", ());
+                        let _ = app.emit("notification-history-changed", ());
                     }
                     // The newest one is the one the notch shows.
                     if let Some(n) = new.first() {
@@ -118,6 +171,20 @@ pub fn start(app: AppHandle) {
 #[tauri::command]
 pub fn get_notifications() -> Vec<Notice> {
     LIST.lock().unwrap().clone()
+}
+
+/// Every notification seen so far (also the ones dismissed in Windows), newest first.
+#[tauri::command]
+pub fn get_notification_history() -> Vec<Notice> {
+    with_history(|h| h.clone())
+}
+
+#[tauri::command]
+pub fn clear_notification_history() {
+    with_history(|h| {
+        h.clear();
+        save_history(h);
+    });
 }
 
 #[tauri::command]
@@ -156,6 +223,21 @@ mod tests {
         let mut list = vec![n(1, 100), n(2, 300), n(3, 200)];
         sort_newest_first(&mut list);
         assert_eq!(list.iter().map(|x| x.id).collect::<Vec<_>>(), vec![2, 3, 1]);
+    }
+
+    #[test]
+    fn history_skips_what_it_already_has_and_keeps_newest_first() {
+        let mut h = vec![n(1, 100)];
+        assert!(merge_history(&mut h, &[n(1, 100), n(2, 300)], 10));
+        assert_eq!(h.iter().map(|x| x.time_ms).collect::<Vec<_>>(), vec![300, 100]);
+        assert!(!merge_history(&mut h, &[n(2, 300)], 10));
+    }
+
+    #[test]
+    fn history_is_capped() {
+        let mut h = Vec::new();
+        merge_history(&mut h, &[n(1, 1), n(2, 2), n(3, 3)], 2);
+        assert_eq!(h.iter().map(|x| x.time_ms).collect::<Vec<_>>(), vec![3, 2]);
     }
 
     #[test]

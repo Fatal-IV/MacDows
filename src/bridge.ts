@@ -115,3 +115,7 @@ export const removeFromShelf = (path: string) => invoke<ShelfItem[]>("remove_fro
 export const clearShelf = () => invoke<void>("clear_shelf");
 export const openShelfItem = (path: string) => invoke<void>("open_shelf_item", { path });
 export const revealShelfItem = (path: string) => invoke<void>("reveal_shelf_item", { path });
+
+export const getNotificationHistory = () => invoke<Notice[]>("get_notification_history");
+export const clearNotificationHistory = () => invoke<void>("clear_notification_history");
+export const onNotificationHistoryChanged = (cb: () => void): Promise<UnlistenFn> => listen("notification-history-changed", cb);

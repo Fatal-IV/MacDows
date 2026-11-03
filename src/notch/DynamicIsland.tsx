@@ -17,6 +17,7 @@ import { ToolsPanel, useTimer } from "./Tools";
 import { QuickSettingsScreen } from "./QuickSettings";
 import { NotificationBanner } from "./NotificationBanner";
 import { DropZone, ShelfScreen } from "./Shelf";
+import { NotificationHistory } from "./NotificationHistory";
 import { getCurrentWebview } from "@tauri-apps/api/webview";
 import "./DynamicIsland.css";
 
@@ -257,6 +258,7 @@ export default function Notch() {
   const [shelf, setShelf] = useState<ShelfItem[]>([]);
   const [shelfOpen, setShelfOpen] = useState(false);
   const [dropping, setDropping] = useState(false);
+  const [historyOpen, setHistoryOpen] = useState(false);
   const timer = useTimer();
 
   const hasMedia = media !== null;
@@ -285,6 +287,7 @@ export default function Notch() {
           setQuick(false);
           setTools(false);
           setOpen(false);
+          setHistoryOpen(false);
           setShelfOpen(true);
         }).catch(() => {});
       }
@@ -388,7 +391,9 @@ export default function Notch() {
     const direction = w.sum > 0 ? 1 : -1;
     w.sum = 0;
     // Scrolling up opens calendar | Pomodoro, scrolling down closes it (or switches the pill).
-    if (shelfOpen) {
+    if (historyOpen) {
+      setHistoryOpen(false);
+    } else if (shelfOpen) {
       setShelfOpen(false);
     } else if (quick) {
       setQuick(false);
@@ -414,19 +419,20 @@ export default function Notch() {
     setTools(false);
     setQuick(false);
     setShelfOpen(false);
+    setHistoryOpen(false);
     setMode(restingMode());
   };
 
   const isMusic = hasMedia && mode === "music";
-  const musicOpen = isMusic && open && !tools && !quick && !shelfOpen && !dropping;
-  const bannerOpen = banner !== null && !open && !tools && !quick && !shelfOpen && !dropping;
+  const musicOpen = isMusic && open && !tools && !quick && !shelfOpen && !historyOpen && !dropping;
+  const bannerOpen = banner !== null && !open && !tools && !quick && !shelfOpen && !historyOpen && !dropping;
   const toggleTools = () => {
     setTools((v) => !v);
     setOpen(false);
     setQuick(false);
   };
   const openQuick = () => {
-    if (open || tools || quick || shelfOpen) return;
+    if (open || tools || quick || shelfOpen || historyOpen) return;
     setBanner(null);
     setQuick(true);
   };
@@ -435,8 +441,8 @@ export default function Notch() {
   }, [hasMedia]);
   const battery = system?.battery_percent ?? null;
 
-  const width = !ready ? 34 : tools || quick || shelfOpen ? 520 : dropping ? 380 : bannerOpen ? 380 : musicOpen ? 340 : isMusic ? 200 : hovered ? (battery != null ? 200 : 170) : hasMedia ? 170 : 140;
-  const height = !ready ? 34 : tools ? 280 : quick ? 312 : shelfOpen ? 312 : dropping ? 110 : bannerOpen ? 76 : musicOpen ? (media!.duration_ms > 0 ? 126 : 108) : 36;
+  const width = !ready ? 34 : tools || quick || shelfOpen || historyOpen ? 520 : dropping ? 380 : bannerOpen ? 380 : musicOpen ? 340 : isMusic ? 200 : hovered ? (battery != null ? 200 : 170) : hasMedia ? 170 : 140;
+  const height = !ready ? 34 : tools ? 280 : quick ? 312 : shelfOpen || historyOpen ? 312 : dropping ? 110 : bannerOpen ? 76 : musicOpen ? (media!.duration_ms > 0 ? 126 : 108) : 36;
 
   return (
     <div className="screen" style={{ zoom: scale }}>
@@ -504,6 +510,20 @@ export default function Notch() {
             <motion.div key="drop" className="tools-wrap" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0, transition: { duration: 0.1 } }}>
               <DropZone />
             </motion.div>
+          ) : historyOpen ? (
+            <motion.div key="history" className="tools-wrap" initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.98, transition: { duration: 0.1 } }} transition={{ type: "spring", stiffness: 500, damping: 30 }}>
+              <NotificationHistory />
+              <button
+                className="corner-arrow"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setHistoryOpen(false);
+                }}
+                aria-label={t("notch.back")}
+              >
+                ⌄
+              </button>
+            </motion.div>
           ) : shelfOpen ? (
             <motion.div key="shelf" className="tools-wrap" initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.98, transition: { duration: 0.1 } }} transition={{ type: "spring", stiffness: 500, damping: 30 }}>
               <ShelfScreen
@@ -524,7 +544,14 @@ export default function Notch() {
             </motion.div>
           ) : bannerOpen ? (
             <motion.div key="banner" className="tools-wrap" initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.98, transition: { duration: 0.1 } }} transition={{ type: "spring", stiffness: 500, damping: 30 }}>
-              <NotificationBanner notice={banner!} onDismiss={() => setBanner(null)} />
+              <NotificationBanner
+                notice={banner!}
+                onDismiss={() => setBanner(null)}
+                onOpen={() => {
+                  setBanner(null);
+                  setHistoryOpen(true);
+                }}
+              />
             </motion.div>
           ) : quick ? (
             <motion.div key="quick" className="tools-wrap" initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.98, transition: { duration: 0.1 } }} transition={{ type: "spring", stiffness: 500, damping: 30 }}>
@@ -532,6 +559,10 @@ export default function Notch() {
                 onOpenShelf={() => {
                   setQuick(false);
                   setShelfOpen(true);
+                }}
+                onOpenHistory={() => {
+                  setQuick(false);
+                  setHistoryOpen(true);
                 }}
               />
               <button

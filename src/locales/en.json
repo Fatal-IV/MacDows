@@ -114,5 +114,11 @@
   "shelf.remove": "Remove from shelf",
   "shelf.missing": "File not found",
   "quick.shelf": "Shelf",
-  "quick.macdows": "MacDows Settings"
+  "quick.macdows": "MacDows Settings",
+  "history.title": "Notifications",
+  "history.empty": "No notifications yet",
+  "history.now": "now",
+  "history.min": "min",
+  "history.hour": "h",
+  "quick.history": "Notification history"
 }
