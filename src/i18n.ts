@@ -29,3 +29,8 @@ export function useT(): (key: string) => string {
   const lang = s?.language ?? "en";
   return (key) => translate(lang, key);
 }
+
+/** The app language as a locale tag for dates and numbers. */
+export function useLocale(): string {
+  return useSettings()?.language === "tr" ? "tr-TR" : "en-US";
+}

@@ -333,7 +333,14 @@ export default function Notch() {
     if (Math.abs(w.sum) < WHEEL_STEP) return;
     const direction = w.sum > 0 ? 1 : -1;
     w.sum = 0;
-    cycle(direction);
+    // Scrolling up opens calendar | Pomodoro, scrolling down closes it (or switches the pill).
+    if (direction < 0 && !tools) {
+      setTools(true);
+      setOpen(false);
+    } else if (direction > 0 && tools) {
+      setTools(false);
+      setOpen(hasMedia);
+    } else if (!tools) cycle(direction);
   };
 
   const restingMode = (): Mode => (hasMedia && playing ? "music" : "status");
@@ -366,8 +373,8 @@ export default function Notch() {
   }, [hasMedia]);
   const battery = system?.battery_percent ?? null;
 
-  const width = !ready ? 34 : tools || musicOpen ? 340 : isMusic ? 200 : hovered ? (battery != null ? 200 : 170) : hasMedia ? 170 : 140;
-  const height = !ready ? 34 : tools ? 156 : musicOpen ? (media!.duration_ms > 0 ? 126 : 108) : 36;
+  const width = !ready ? 34 : tools ? 400 : musicOpen ? 360 : isMusic ? 200 : hovered ? (battery != null ? 200 : 170) : hasMedia ? 170 : 140;
+  const height = !ready ? 34 : tools ? 166 : musicOpen ? (media!.duration_ms > 0 ? 126 : 108) : 36;
 
   return (
     <div className="screen" style={{ zoom: scale }}>

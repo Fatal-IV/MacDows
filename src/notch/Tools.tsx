@@ -1,6 +1,6 @@
 // The calendar and the Pomodoro timer that the notch shows besides the media panel.
 import { useEffect, useMemo, useState } from "react";
-import { useT } from "../i18n";
+import { useLocale, useT } from "../i18n";
 
 const FOCUS_SECONDS = 25 * 60;
 const BREAK_SECONDS = 5 * 60;
@@ -60,7 +60,7 @@ function Calendar() {
   const [offset, setOffset] = useState(0);
   const today = new Date();
   const first = new Date(today.getFullYear(), today.getMonth() + offset, 1);
-  const lang = document.documentElement.lang || undefined;
+  const lang = useLocale();
   const title = first.toLocaleDateString(lang, { month: "long", year: "numeric" });
   const cells = useMemo(() => {
     const lead = (first.getDay() + 6) % 7; // weeks start on Monday

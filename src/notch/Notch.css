@@ -387,3 +387,10 @@ img { -webkit-user-drag: none; user-select: none; }
 .track-row { padding-right: 22px; box-sizing: border-box; }
 .progress { gap: 6px; height: 16px; }
 .time-text { min-width: 38px; white-space: nowrap; overflow: visible; }
+
+/* Roomier calendar | Pomodoro, never wider than the panel */
+.tools-wrap { overflow: hidden; border-radius: 0 0 18px 18px; }
+.tools { width: 100%; padding: 14px 24px 12px; gap: 22px; }
+.pomodoro { padding-left: 22px; gap: 8px; }
+.cal-day { height: 15px; line-height: 15px; }
+.meta-col > * { max-width: 100%; min-width: 0; box-sizing: border-box; }
