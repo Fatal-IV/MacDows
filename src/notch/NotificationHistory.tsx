@@ -31,6 +31,7 @@ export function NotificationHistory() {
     <div className="history">
       <div className="shelf-head">
         <span className="shelf-title">{t("history.title")}</span>
+        <span className="history-count">{items ? `${items.length} ${t("history.countLabel")}` : ""}</span>
         {items && items.length > 0 && (
           <button className="shelf-clear" onClick={() => clearNotificationHistory().then(() => setItems([])).catch(() => {})}>
             {t("shelf.clear")}

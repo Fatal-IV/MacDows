@@ -369,18 +369,11 @@ export default function Notch() {
 
   const available = useCallback((): Mode[] => (hasMedia ? (playing ? ["music", "status"] : ["status", "music"]) : ["status"]), [hasMedia, playing]);
 
-  const cycle = useCallback(
-    (direction = 1) => {
-      const modes = available();
-      const next = modes[(modes.indexOf(mode) + direction + modes.length) % modes.length];
-      manualMusic.current = next === "music";
-      setMode(next);
-    },
-    [available, mode],
-  );
-
   const onWheel = (e: React.WheelEvent) => {
     if (!hovered) return;
+    // A list that can still scroll keeps the wheel for itself.
+    const list = (e.target as HTMLElement).closest(".history-list");
+    if (list && list.scrollHeight > list.clientHeight) return;
     const delta = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY;
     if (Math.abs(delta) < 2) return;
     const w = wheel.current;
@@ -390,21 +383,39 @@ export default function Notch() {
     if (Math.abs(w.sum) < WHEEL_STEP) return;
     const direction = w.sum > 0 ? 1 : -1;
     w.sum = 0;
-    // Scrolling up opens calendar | Pomodoro, scrolling down closes it (or switches the pill).
-    if (historyOpen) {
-      setHistoryOpen(false);
-    } else if (shelfOpen) {
-      setShelfOpen(false);
-    } else if (quick) {
-      setQuick(false);
-      if (direction < 0) setTools(true);
-    } else if (direction < 0 && !tools) {
-      setTools(true);
-      setOpen(false);
-    } else if (direction > 0 && tools) {
-      setTools(false);
-      setOpen(hasMedia);
-    } else if (!tools) cycle(direction);
+    go(direction);
+  };
+
+  // The wheel walks through the screens in a row: the pill (status, music), the player, tools, quick settings,
+  // notification history and the shelf. Down goes to the next one, up to the previous one.
+  type Stop = Mode | "player" | "tools" | "quick" | "history" | "shelf";
+  const stops = (): Stop[] => [...available(), ...(hasMedia ? (["player"] as Stop[]) : []), "tools", "quick", "history", "shelf"];
+  const currentStop = (): Stop => (shelfOpen ? "shelf" : historyOpen ? "history" : quick ? "quick" : tools ? "tools" : musicOpen ? "player" : mode);
+  const goTo = (stop: Stop) => {
+    setOpen(false);
+    setTools(false);
+    setQuick(false);
+    setShelfOpen(false);
+    setHistoryOpen(false);
+    setBanner(null);
+    if (stop === "tools") setTools(true);
+    else if (stop === "quick") setQuick(true);
+    else if (stop === "history") setHistoryOpen(true);
+    else if (stop === "shelf") setShelfOpen(true);
+    else if (stop === "player") {
+      manualMusic.current = true;
+      setMode("music");
+      setOpen(true);
+    } else {
+      manualMusic.current = stop === "music";
+      setMode(stop);
+    }
+  };
+  const go = (direction: number) => {
+    const list = stops();
+    const at = list.indexOf(currentStop());
+    const next = list[Math.min(list.length - 1, Math.max(0, (at < 0 ? 0 : at) + direction))];
+    if (next !== undefined && next !== currentStop()) goTo(next);
   };
 
   const restingMode = (): Mode => (hasMedia && playing ? "music" : "status");

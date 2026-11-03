@@ -131,5 +131,6 @@
   "bt.add": "Cihaz ekle",
   "bt.failed": "Bağlanılamadı. Windows ayarlarından deneyin.",
   "common.back": "Geri",
-  "common.more": "Ayrıntılar"
+  "common.more": "Ayrıntılar",
+  "history.countLabel": "bildirim"
 }
