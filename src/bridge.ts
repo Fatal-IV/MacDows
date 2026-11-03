@@ -98,3 +98,19 @@ export const removeNotification = (id: number) => invoke<void>("remove_notificat
 export const clearNotifications = () => invoke<void>("clear_notifications");
 export const onNotificationNew = (cb: (n: Notice) => void): Promise<UnlistenFn> => listen<Notice>("notification-new", (e) => cb(e.payload));
 export const onNotificationsChanged = (cb: () => void): Promise<UnlistenFn> => listen("notifications-changed", cb);
+
+export interface ShelfItem {
+  path: string;
+  name: string;
+  is_dir: boolean;
+  missing: boolean;
+  icon_png_base64: string | null;
+  icon_path: string | null;
+}
+
+export const getShelf = () => invoke<ShelfItem[]>("get_shelf");
+export const addToShelf = (paths: string[]) => invoke<ShelfItem[]>("add_to_shelf", { paths });
+export const removeFromShelf = (path: string) => invoke<ShelfItem[]>("remove_from_shelf", { path });
+export const clearShelf = () => invoke<void>("clear_shelf");
+export const openShelfItem = (path: string) => invoke<void>("open_shelf_item", { path });
+export const revealShelfItem = (path: string) => invoke<void>("reveal_shelf_item", { path });

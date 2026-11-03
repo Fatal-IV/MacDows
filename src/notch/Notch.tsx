@@ -5,7 +5,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { listen } from "@tauri-apps/api/event";
-import { getMedia, mediaNext, mediaPrev, mediaSeek, mediaToggle, onMediaChanged, onNotificationNew, type MediaInfo, type Notice } from "../bridge";
+import { getMedia, mediaNext, mediaPrev, mediaSeek, mediaToggle, onMediaChanged, onNotificationNew, addToShelf, clearShelf, getShelf, removeFromShelf, type MediaInfo, type Notice, type ShelfItem } from "../bridge";
 import { useT } from "../i18n";
 import { useUpdateStatus } from "../updates";
 import { useSystemStatus } from "../system";
@@ -16,6 +16,8 @@ import { MusicNoteIcon, PauseIcon, PlayIcon, SkipBackIcon, SkipForwardIcon } fro
 import { ToolsPanel, useTimer } from "./Tools";
 import { QuickSettingsScreen } from "./QuickSettings";
 import { NotificationBanner } from "./NotificationBanner";
+import { DropZone, ShelfScreen } from "./Shelf";
+import { getCurrentWebview } from "@tauri-apps/api/webview";
 import "./Notch.css";
 
 type Mode = "status" | "music";
@@ -251,6 +253,10 @@ export default function Notch() {
   const [quick, setQuick] = useState(false);
   // The newest notification, shown for a few seconds (and while the pointer rests on it).
   const [banner, setBanner] = useState<Notice | null>(null);
+  // The shelf: files dropped on the notch. `dropping` is true while a file is being dragged over it.
+  const [shelf, setShelf] = useState<ShelfItem[]>([]);
+  const [shelfOpen, setShelfOpen] = useState(false);
+  const [dropping, setDropping] = useState(false);
   const timer = useTimer();
 
   const hasMedia = media !== null;
@@ -263,6 +269,30 @@ export default function Notch() {
   const lastTrack = useRef<string | null>(null);
   const lastPlaying = useRef(false);
   const wheel = useRef({ sum: 0, timer: 0 as unknown as ReturnType<typeof setTimeout> });
+
+  useEffect(() => {
+    getShelf().then(setShelf).catch(() => {});
+    const un = getCurrentWebview().onDragDropEvent((e) => {
+      const d = e.payload;
+      if (d.type === "enter" || d.type === "over") setDropping(true);
+      else if (d.type === "leave") setDropping(false);
+      else if (d.type === "drop") {
+        setDropping(false);
+        if (d.paths.length === 0) return;
+        addToShelf(d.paths).then((items) => {
+          setShelf(items);
+          setBanner(null);
+          setQuick(false);
+          setTools(false);
+          setOpen(false);
+          setShelfOpen(true);
+        }).catch(() => {});
+      }
+    });
+    return () => {
+      un.then((f) => f());
+    };
+  }, []);
 
   useEffect(() => {
     const un = onNotificationNew(setBanner);
@@ -353,7 +383,9 @@ export default function Notch() {
     const direction = w.sum > 0 ? 1 : -1;
     w.sum = 0;
     // Scrolling up opens calendar | Pomodoro, scrolling down closes it (or switches the pill).
-    if (quick) {
+    if (shelfOpen) {
+      setShelfOpen(false);
+    } else if (quick) {
       setQuick(false);
       if (direction < 0) setTools(true);
     } else if (direction < 0 && !tools) {
@@ -376,19 +408,20 @@ export default function Notch() {
     setOpen(false);
     setTools(false);
     setQuick(false);
+    setShelfOpen(false);
     setMode(restingMode());
   };
 
   const isMusic = hasMedia && mode === "music";
-  const musicOpen = isMusic && open && !tools && !quick;
-  const bannerOpen = banner !== null && !open && !tools && !quick;
+  const musicOpen = isMusic && open && !tools && !quick && !shelfOpen && !dropping;
+  const bannerOpen = banner !== null && !open && !tools && !quick && !shelfOpen && !dropping;
   const toggleTools = () => {
     setTools((v) => !v);
     setOpen(false);
     setQuick(false);
   };
   const openQuick = () => {
-    if (open || tools || quick) return;
+    if (open || tools || quick || shelfOpen) return;
     setBanner(null);
     setQuick(true);
   };
@@ -397,8 +430,8 @@ export default function Notch() {
   }, [hasMedia]);
   const battery = system?.battery_percent ?? null;
 
-  const width = !ready ? 34 : tools || quick ? 520 : bannerOpen ? 380 : musicOpen ? 340 : isMusic ? 200 : hovered ? (battery != null ? 200 : 170) : hasMedia ? 170 : 140;
-  const height = !ready ? 34 : tools ? 280 : quick ? 312 : bannerOpen ? 76 : musicOpen ? (media!.duration_ms > 0 ? 126 : 108) : 36;
+  const width = !ready ? 34 : tools || quick || shelfOpen ? 520 : dropping ? 380 : bannerOpen ? 380 : musicOpen ? 340 : isMusic ? 200 : hovered ? (battery != null ? 200 : 170) : hasMedia ? 170 : 140;
+  const height = !ready ? 34 : tools ? 280 : quick ? 312 : shelfOpen ? 200 : dropping ? 110 : bannerOpen ? 76 : musicOpen ? (media!.duration_ms > 0 ? 126 : 108) : 36;
 
   return (
     <div className="screen" style={{ zoom: scale }}>
@@ -462,13 +495,40 @@ export default function Notch() {
         </AnimatePresence>
 
         <AnimatePresence mode="wait" initial={false}>
-          {bannerOpen ? (
+          {dropping ? (
+            <motion.div key="drop" className="tools-wrap" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0, transition: { duration: 0.1 } }}>
+              <DropZone />
+            </motion.div>
+          ) : shelfOpen ? (
+            <motion.div key="shelf" className="tools-wrap" initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.98, transition: { duration: 0.1 } }} transition={{ type: "spring", stiffness: 500, damping: 30 }}>
+              <ShelfScreen
+                items={shelf}
+                onRemove={(path) => removeFromShelf(path).then(setShelf).catch(() => {})}
+                onClear={() => clearShelf().then(() => setShelf([])).catch(() => {})}
+              />
+              <button
+                className="corner-arrow"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setShelfOpen(false);
+                }}
+                aria-label={t("notch.back")}
+              >
+                ⌄
+              </button>
+            </motion.div>
+          ) : bannerOpen ? (
             <motion.div key="banner" className="tools-wrap" initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.98, transition: { duration: 0.1 } }} transition={{ type: "spring", stiffness: 500, damping: 30 }}>
               <NotificationBanner notice={banner!} onDismiss={() => setBanner(null)} />
             </motion.div>
           ) : quick ? (
             <motion.div key="quick" className="tools-wrap" initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.98, transition: { duration: 0.1 } }} transition={{ type: "spring", stiffness: 500, damping: 30 }}>
-              <QuickSettingsScreen />
+              <QuickSettingsScreen
+                onOpenShelf={() => {
+                  setQuick(false);
+                  setShelfOpen(true);
+                }}
+              />
               <button
                 className="corner-arrow"
                 onClick={(e) => {

@@ -106,5 +106,12 @@
   "quick.taskManager": "Task Manager",
   "quick.calculator": "Calculator",
   "quick.lock": "Lock screen",
-  "notify.dismiss": "Dismiss"
+  "notify.dismiss": "Dismiss",
+  "shelf.title": "Shelf",
+  "shelf.drop": "Drop to add",
+  "shelf.empty": "Drag and drop files here",
+  "shelf.clear": "Clear",
+  "shelf.remove": "Remove from shelf",
+  "shelf.missing": "File not found",
+  "quick.shelf": "Shelf"
 }

@@ -13,6 +13,7 @@
     "test:scripts": "node --test scripts"
   },
   "dependencies": {
+    "@crabnebula/tauri-plugin-drag": "^2.1.0",
     "@tauri-apps/api": "^2.12.4",
     "@tauri-apps/plugin-opener": "^2",
     "framer-motion": "^14.9.0",

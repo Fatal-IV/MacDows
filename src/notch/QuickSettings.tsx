@@ -36,7 +36,7 @@ const ORDER: { key: QuickKey; label: string }[] = [
   { key: "battery_saver", label: "quick.saver" },
 ];
 
-export function QuickSettingsScreen() {
+export function QuickSettingsScreen({ onOpenShelf }: { onOpenShelf: () => void }) {
   const t = useT();
   const [state, setState] = useState<QuickSettings | null>(null);
   const [busy, setBusy] = useState<QuickKey | null>(null);
@@ -101,6 +101,9 @@ export function QuickSettingsScreen() {
             {icon}
           </button>
         ))}
+        <button className="shortcut" title={t("quick.shelf")} aria-label={t("quick.shelf")} onClick={onOpenShelf}>
+          {svg(<><path d="M4 8.5V18a1.5 1.5 0 0 0 1.5 1.5h13A1.5 1.5 0 0 0 20 18V8.5" /><path d="M3 5.5h18v3H3z" /><path d="M10 12.5h4" /></>, 17)}
+        </button>
       </div>
     </div>
   );

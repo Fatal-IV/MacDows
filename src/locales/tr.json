@@ -106,5 +106,12 @@
   "quick.taskManager": "Görev Yöneticisi",
   "quick.calculator": "Hesap Makinesi",
   "quick.lock": "Ekranı kilitle",
-  "notify.dismiss": "Kapat"
+  "notify.dismiss": "Kapat",
+  "shelf.title": "Raf",
+  "shelf.drop": "Dosyayı bırak",
+  "shelf.empty": "Buraya dosya sürükleyip bırakın",
+  "shelf.clear": "Temizle",
+  "shelf.remove": "Raftan kaldır",
+  "shelf.missing": "Dosya bulunamadı",
+  "quick.shelf": "Raf"
 }

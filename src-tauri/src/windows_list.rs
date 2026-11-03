@@ -83,7 +83,7 @@ pub fn prefer_window_icon(exe: &str) -> bool {
     exe.to_ascii_lowercase().contains(r"\windowsapps\")
 }
 
-fn icon_png_base64(exe: &str) -> Option<String> {
+pub fn icon_png_base64(exe: &str) -> Option<String> {
     if exe.is_empty() {
         return None;
     }
