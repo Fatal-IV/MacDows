@@ -356,7 +356,7 @@ export async function applyTheme(
 
   // Windows's own Start and Search take their colors from the personalization settings: hand them the surface color.
   if (syncSystemTheme) {
-    invoke("sync_system_theme", { light: root.classList.contains("light-mode"), surface, tint: localStorage.getItem("macdows-start-tint") === "true" }).catch(() => {});
+    invoke("sync_system_theme", { light: root.classList.contains("light-mode"), surface, tint: localStorage.getItem("macdows-start-tint") !== "false" }).catch(() => {});
   }
 }
 
@@ -364,7 +364,7 @@ export async function applyTheme(
 export function initTheme(options: { backdrop?: boolean; syncSystem?: boolean } = {}) {
   if (options.backdrop) enableBackdrop();
   if (options.syncSystem) syncSystemTheme = true;
-  const syncMode = localStorage.getItem('nectar-theme-mode') || 'dark';
+  const syncMode = localStorage.getItem('nectar-theme-mode') || 'auto';
   const syncColor = localStorage.getItem('nectar-theme-color') || '#007aff';
   const syncOpacityVal = localStorage.getItem('nectar-theme-opacity');
   const syncOpacity = syncOpacityVal !== null ? parseFloat(syncOpacityVal) : 0.80;
@@ -378,7 +378,7 @@ export function initTheme(options: { backdrop?: boolean; syncSystem?: boolean } 
 
   // Helper: read all theme values from localStorage and apply
   const applyThemeFromStorage = () => {
-    const mode = localStorage.getItem('nectar-theme-mode') || 'dark';
+    const mode = localStorage.getItem('nectar-theme-mode') || 'auto';
     const color = localStorage.getItem('nectar-theme-color') || '#007aff';
     const opacity = parseFloat(localStorage.getItem('nectar-theme-opacity') || '0.80');
     const saturation = parseFloat(localStorage.getItem('nectar-theme-saturation') || '0.50');
@@ -408,7 +408,7 @@ export function initTheme(options: { backdrop?: boolean; syncSystem?: boolean } 
 
   // Windows sends this for accent and other system setting changes
   const accentPromise = listen<string>('system-accent-changed', () => {
-    const currentMode = localStorage.getItem('nectar-theme-mode') || 'dark';
+    const currentMode = localStorage.getItem('nectar-theme-mode') || 'auto';
     if (
       currentMode === 'adaptive' ||
       currentMode === 'auto' ||
@@ -427,7 +427,7 @@ export function initTheme(options: { backdrop?: boolean; syncSystem?: boolean } 
 
   // Follow Windows light/dark in auto mode
   const onSchemeChange = () => {
-    if ((localStorage.getItem('nectar-theme-mode') || 'dark') === 'auto') applyThemeFromStorage();
+    if ((localStorage.getItem('nectar-theme-mode') || 'auto') === 'auto') applyThemeFromStorage();
   };
   darkScheme?.addEventListener('change', onSchemeChange);
 

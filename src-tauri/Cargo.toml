@@ -1,7 +1,7 @@
 [package]
 name = "macdows"
 version = "0.1.0"
-description = "A notch and a dock for Windows"
+description = "A Dynamic Island and a dock for Windows"
 authors = ["Fatal-IV"]
 license = "GPL-3.0-only"
 edition = "2024"

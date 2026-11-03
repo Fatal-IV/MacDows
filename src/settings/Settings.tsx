@@ -1,7 +1,13 @@
-import { setSetting, type Visibility } from "../bridge";
+import { useEffect, useState, type ReactNode } from "react";
+import { AnimatePresence, motion } from "framer-motion";
+import { setSetting, type Settings as AppSettings, type Visibility } from "../bridge";
+import { initTheme } from "../appearance/theme";
 import { useSettings, useT } from "../i18n";
 import { checkForUpdate, installUpdate, useAppVersion, useUpdateStatus, type UpdateStatus } from "../updates";
+import { Button, Group, Row, Select, Toggle } from "../ui/controls";
+import WindowControls from "../ui/WindowControls";
 import Appearance from "./Appearance";
+import RadialMenu from "./RadialMenu";
 import "./Settings.css";
 
 const VISIBILITIES: Visibility[] = ["fixed", "smart", "peek"];
@@ -24,82 +30,227 @@ function statusLine(t: (key: string) => string, status: UpdateStatus): string {
   }
 }
 
+// ---------------------------------------------------------------------------------------------
+// Categories and settings
+//
+// Every setting says which category it belongs to; the left menu and the pages are built from that list. A new
+// setting only needs an entry in ITEMS, and a category with no settings does not show up in the menu.
+// ---------------------------------------------------------------------------------------------
+type Category = "general" | "bars" | "appearance" | "taskbar" | "updates" | "about";
+
+const stroke = (d: string) => <path d={d} fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />;
+
+const CATEGORIES: { id: Category; icon: ReactNode }[] = [
+  { id: "general", icon: stroke("M5 7h8m4 0h2M5 17h2m4 0h8M13 4v6m-4 4v6") },
+  {
+    id: "bars",
+    icon: (
+      <>
+        <rect x="3.5" y="4" width="17" height="4" rx="1.5" fill="none" stroke="currentColor" strokeWidth="1.7" />
+        <rect x="6.5" y="16" width="11" height="4" rx="1.5" fill="none" stroke="currentColor" strokeWidth="1.7" />
+      </>
+    ),
+  },
+  { id: "appearance", icon: stroke("M12 3c3.5 4 6 6.5 6 10a6 6 0 0 1-12 0c0-3.5 2.5-6 6-10Z") },
+  {
+    id: "taskbar",
+    icon: (
+      <>
+        <rect x="3" y="5" width="18" height="12" rx="2" fill="none" stroke="currentColor" strokeWidth="1.7" />
+        {stroke("M8 21h8M12 17v4")}
+      </>
+    ),
+  },
+  { id: "updates", icon: stroke("M20 7v5h-5M4 17v-5h5M6.3 9A7 7 0 0 1 18 7.5M17.7 15A7 7 0 0 1 6 16.5") },
+  {
+    id: "about",
+    icon: (
+      <>
+        <circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" strokeWidth="1.7" />
+        {stroke("M12 11v5M12 8h.01")}
+      </>
+    ),
+  },
+];
+
+interface Ctx {
+  s: AppSettings;
+  t: (key: string) => string;
+  update: UpdateStatus;
+  version: string;
+}
+
+interface Item {
+  id: string;
+  category: Category;
+  render: (c: Ctx) => ReactNode;
+}
+
+const ITEMS: Item[] = [
+  {
+    id: "general",
+    category: "general",
+    render: ({ s, t }) => (
+      <Group>
+        <Row title={t("settings.language")}>
+          <Select label={t("settings.language")} value={s.language} onChange={(v) => setSetting("language", v)} options={LANGUAGES.map((l) => ({ value: l, label: t(`lang.${l}`) }))} />
+        </Row>
+        <Row title={t("settings.startWithWindows")}>
+          <Toggle label={t("settings.startWithWindows")} checked={s.start_with_windows} onChange={(v) => setSetting("start_with_windows", v)} />
+        </Row>
+      </Group>
+    ),
+  },
+  {
+    id: "bars",
+    category: "bars",
+    render: ({ s, t }) => (
+      <Group>
+        <Row title={t("settings.notch")} description={t("settings.visibilityHelp")}>
+          <Select label={t("settings.notch")} value={s.notch_visibility} onChange={(v) => setSetting("notch_visibility", v)} options={VISIBILITIES.map((v) => ({ value: v, label: t(`vis.${v}`) }))} />
+        </Row>
+        <Row title={t("settings.dock")}>
+          <Select label={t("settings.dock")} value={s.dock_visibility} onChange={(v) => setSetting("dock_visibility", v)} options={VISIBILITIES.map((v) => ({ value: v, label: t(`vis.${v}`) }))} />
+        </Row>
+        <Row title={t("settings.showDesktop")} description={t("settings.showDesktopHelp")}>
+          <Toggle label={t("settings.showDesktop")} checked={s.show_desktop_button} onChange={(v) => setSetting("show_desktop_button", v)} />
+        </Row>
+      </Group>
+    ),
+  },
+  { id: "appearance", category: "appearance", render: () => <Appearance /> },
+  {
+    id: "replace-taskbar",
+    category: "taskbar",
+    render: ({ s, t }) => (
+      <Group>
+        <Row title={t("settings.replaceTaskbar")} description={t("settings.replaceTaskbarHelp")}>
+          <Toggle label={t("settings.replaceTaskbar")} checked={s.replace_taskbar} onChange={(v) => setSetting("replace_taskbar", v)} />
+        </Row>
+      </Group>
+    ),
+  },
+  {
+    id: "updates",
+    category: "updates",
+    render: ({ s, t, update, version }) => {
+      const busy = update.kind === "checking" || update.kind === "installing";
+      return (
+        <>
+          <Group>
+            <Row title={t("update.version")} description={statusLine(t, update)}>
+              <strong className="version">{version}</strong>
+            </Row>
+            {update.kind === "available" && update.notes && (
+              <div className="notes">
+                <div className="notes-title">{t("update.notes")}</div>
+                <pre>{update.notes}</pre>
+              </div>
+            )}
+            <div className="ui-row actions">
+              <Button disabled={busy} onClick={() => checkForUpdate().catch(() => {})}>
+                {t("update.checkNow")}
+              </Button>
+              {update.kind === "available" && (
+                <Button kind="primary" disabled={busy} onClick={() => installUpdate().catch(() => {})}>
+                  {t("update.install")}
+                </Button>
+              )}
+            </div>
+          </Group>
+          <Group>
+            <Row title={t("update.auto")}>
+              <Toggle label={t("update.auto")} checked={s.check_updates} onChange={(v) => setSetting("check_updates", v)} />
+            </Row>
+          </Group>
+        </>
+      );
+    },
+  },
+  {
+    id: "about",
+    category: "about",
+    render: ({ t, version }) => (
+      <Group>
+        <Row title="MacDows" description={t("settings.about.license")}>
+          <strong className="version">{version}</strong>
+        </Row>
+      </Group>
+    ),
+  },
+];
+
+type View = "home" | Category;
+
 export default function Settings() {
   const s = useSettings();
   const t = useT();
   const update = useUpdateStatus();
   const version = useAppVersion();
+  const [view, setView] = useState<View>("home");
+  const [ringOpen, setRingOpen] = useState(false);
+
+  // Follows the app theme: Windows's light or dark look unless the user picked one.
+  useEffect(() => initTheme(), []);
+
+  // Esc closes the ring, or goes from a page back to the ring.
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== "Escape") return;
+      if (view !== "home") {
+        setView("home");
+        setRingOpen(true);
+      } else if (ringOpen) setRingOpen(false);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [view, ringOpen]);
+
   if (!s) return null;
-  const busy = update.kind === "checking" || update.kind === "installing";
+  const used = CATEGORIES.filter((c) => ITEMS.some((i) => i.category === c.id));
+  const ctx: Ctx = { s, t, update, version };
+
   return (
-    <div className="settings">
-      <h1>{t("settings.title")}</h1>
-      <label>
-        <span>{t("settings.notch")}</span>
-        <select value={s.notch_visibility} onChange={(e) => setSetting("notch_visibility", e.target.value)}>
-          {VISIBILITIES.map((v) => (
-            <option key={v} value={v}>{t(`vis.${v}`)}</option>
-          ))}
-        </select>
-      </label>
-      <label>
-        <span>{t("settings.dock")}</span>
-        <select value={s.dock_visibility} onChange={(e) => setSetting("dock_visibility", e.target.value)}>
-          {VISIBILITIES.map((v) => (
-            <option key={v} value={v}>{t(`vis.${v}`)}</option>
-          ))}
-        </select>
-      </label>
-      <p className="help">{t("settings.visibilityHelp")}</p>
-      <label>
-        <span>{t("settings.language")}</span>
-        <select value={s.language} onChange={(e) => setSetting("language", e.target.value)}>
-          {LANGUAGES.map((l) => (
-            <option key={l} value={l}>{t(`lang.${l}`)}</option>
-          ))}
-        </select>
-      </label>
-
-      <label className="check">
-        <input type="checkbox" checked={s.replace_taskbar} onChange={(e) => setSetting("replace_taskbar", e.target.checked)} />
-        <span>{t("settings.replaceTaskbar")}</span>
-      </label>
-      <p className="help">{t("settings.replaceTaskbarHelp")}</p>
-      <label className="check">
-        <input type="checkbox" checked={s.start_with_windows} onChange={(e) => setSetting("start_with_windows", e.target.checked)} />
-        <span>{t("settings.startWithWindows")}</span>
-      </label>
-
-      <Appearance />
-
-      <section className="updates">
-        <h2>{t("update.title")}</h2>
-        <div className="row">
-          <span>{t("update.version")}</span>
-          <strong>{version}</strong>
-        </div>
-        <p className={update.kind === "error" ? "status bad" : "status"}>{statusLine(t, update)}</p>
-        {update.kind === "available" && update.notes && (
-          <div className="notes">
-            <div className="notes-title">{t("update.notes")}</div>
-            <pre>{update.notes}</pre>
-          </div>
+    <div className="settings-app">
+      <WindowControls />
+      <AnimatePresence mode="wait" initial={false}>
+        {view === "home" ? (
+          <motion.div key="home" className="settings-home" initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.98 }} transition={{ duration: 0.14 }}>
+            <RadialMenu
+              items={used.map((c) => ({ id: c.id, label: t(`settings.cat.${c.id}`), icon: c.icon }))}
+              open={ringOpen}
+              onToggle={() => setRingOpen((o) => !o)}
+              onPick={(id) => setView(id as Category)}
+              toggleLabel={t("settings.title")}
+              hint={t("settings.homeHint")}
+            />
+          </motion.div>
+        ) : (
+          <motion.main key={view} className="settings-page" initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 14 }} transition={{ duration: 0.16 }}>
+            <header className="page-head">
+              <button
+                type="button"
+                className="back"
+                onClick={() => {
+                  setView("home");
+                  setRingOpen(true);
+                }}
+              >
+                <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden>
+                  <path d="M15 6l-6 6 6 6" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+                {t("settings.back")}
+              </button>
+              <h1>{t(`settings.cat.${view}`)}</h1>
+            </header>
+            <div className="page-body">
+              {ITEMS.filter((i) => i.category === view).map((i) => (
+                <div className="item" key={i.id}>{i.render(ctx)}</div>
+              ))}
+            </div>
+          </motion.main>
         )}
-        <div className="buttons">
-          <button disabled={busy} onClick={() => checkForUpdate().catch(() => {})}>
-            {t("update.checkNow")}
-          </button>
-          {update.kind === "available" && (
-            <button className="primary" disabled={busy} onClick={() => installUpdate().catch(() => {})}>
-              {t("update.install")}
-            </button>
-          )}
-        </div>
-        <label className="check">
-          <input type="checkbox" checked={s.check_updates} onChange={(e) => setSetting("check_updates", e.target.checked)} />
-          <span>{t("update.auto")}</span>
-        </label>
-      </section>
+      </AnimatePresence>
     </div>
   );
 }

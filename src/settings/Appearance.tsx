@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { STYLE_OPACITY, THEME_STYLES } from "../appearance/theme";
 import { useT } from "../i18n";
+import { Group, Row, Select, Slider, Toggle } from "../ui/controls";
 
-const MODES = ["dark", "light", "auto", "adaptive"] as const;
+const MODES = ["auto", "light", "dark", "adaptive"] as const;
 const ACCENTS = ["mono", "system"] as const;
 
 /** A localStorage-backed value. Other windows pick the change up through the `storage` event. */
@@ -19,60 +20,50 @@ function useStored(key: string, fallback: string): [string, (v: string) => void]
 
 export default function Appearance() {
   const t = useT();
-  const [mode, setMode] = useStored("nectar-theme-mode", "dark");
+  const [mode, setMode] = useStored("nectar-theme-mode", "auto");
   const [style, setStyle] = useStored("nectar-theme-style", "solid");
   const [accent, setAccent] = useStored("nectar-theme-accent", "mono");
   const [opacity, setOpacity] = useStored("nectar-theme-opacity", "0.8");
   const [scale, setScale] = useStored("nectar-scale", "1");
-  const [startTint, setStartTint] = useStored("macdows-start-tint", "false");
+  const [startTint, setStartTint] = useStored("macdows-start-tint", "true");
 
   return (
-    <section className="appearance">
-      <h2>{t("appearance.title")}</h2>
-      <label>
-        <span>{t("appearance.mode")}</span>
-        <select value={mode} onChange={(e) => setMode(e.target.value)}>
-          {MODES.map((m) => (
-            <option key={m} value={m}>{t(`appearance.mode.${m}`)}</option>
-          ))}
-        </select>
-      </label>
-      <label>
-        <span>{t("appearance.style")}</span>
-        <select
-          value={style}
-          onChange={(e) => {
-            setStyle(e.target.value);
-            // Each style is designed around its own opacity; the slider can still change it.
-            setOpacity(String(STYLE_OPACITY[e.target.value] ?? 0.8));
-          }}
-        >
-          {THEME_STYLES.map((s) => (
-            <option key={s} value={s}>{t(`appearance.style.${s}`)}</option>
-          ))}
-        </select>
-      </label>
-      <label>
-        <span>{t("appearance.accent")}</span>
-        <select value={accent} onChange={(e) => setAccent(e.target.value)}>
-          {ACCENTS.map((a) => (
-            <option key={a} value={a}>{t(`appearance.accent.${a}`)}</option>
-          ))}
-        </select>
-      </label>
-      <label>
-        <span>{t("appearance.opacity")}: {Math.round(parseFloat(opacity) * 100)}%</span>
-        <input type="range" min="0.3" max="1" step="0.01" value={opacity} onChange={(e) => setOpacity(e.target.value)} />
-      </label>
-      <label>
-        <span>{t("appearance.scale")}: {Math.round(parseFloat(scale) * 100)}%</span>
-        <input type="range" min="0.8" max="1.2" step="0.05" value={scale} onChange={(e) => setScale(e.target.value)} />
-      </label>
-      <label className="check">
-        <input type="checkbox" checked={startTint === "true"} onChange={(e) => setStartTint(String(e.target.checked))} />
-        <span>{t("appearance.startTint")}</span>
-      </label>
-      <p className="help">{t("appearance.startTintHelp")}</p>
-    </section>
+    <>
+      <Group>
+        <Row title={t("appearance.mode")}>
+          <Select label={t("appearance.mode")} value={mode} onChange={setMode} options={MODES.map((m) => ({ value: m, label: t(`appearance.mode.${m}`) }))} />
+        </Row>
+        <Row title={t("appearance.style")}>
+          <Select
+            label={t("appearance.style")}
+            value={style}
+            onChange={(v) => {
+              setStyle(v);
+              // Each style is designed around its own opacity; the slider can still change it.
+              setOpacity(String(STYLE_OPACITY[v] ?? 0.8));
+            }}
+            options={THEME_STYLES.map((s) => ({ value: s, label: t(`appearance.style.${s}`) }))}
+          />
+        </Row>
+        <Row title={t("appearance.accent")}>
+          <Select label={t("appearance.accent")} value={accent} onChange={setAccent} options={ACCENTS.map((a) => ({ value: a, label: t(`appearance.accent.${a}`) }))} />
+        </Row>
+      </Group>
+      <Group>
+        <Row title={t("appearance.opacity")}>
+          <Slider label={t("appearance.opacity")} value={parseFloat(opacity)} min={0.3} max={1} step={0.01} onChange={(v) => setOpacity(String(v))} />
+          <span className="ui-value">{Math.round(parseFloat(opacity) * 100)}%</span>
+        </Row>
+        <Row title={t("appearance.scale")}>
+          <Slider label={t("appearance.scale")} value={parseFloat(scale)} min={0.8} max={1.2} step={0.05} onChange={(v) => setScale(String(v))} />
+          <span className="ui-value">{Math.round(parseFloat(scale) * 100)}%</span>
+        </Row>
+      </Group>
+      <Group>
+        <Row title={t("appearance.startTint")} description={t("appearance.startTintHelp")}>
+          <Toggle label={t("appearance.startTint")} checked={startTint === "true"} onChange={(v) => setStartTint(String(v))} />
+        </Row>
+      </Group>
+    </>
   );
 }

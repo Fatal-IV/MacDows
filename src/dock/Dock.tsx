@@ -2,13 +2,14 @@ import { useEffect, useState, type ReactNode } from "react";
 import { motion } from "framer-motion";
 import { invoke } from "@tauri-apps/api/core";
 import { focusWindow, listWindows, onWindowsChanged, type AppWindow } from "../bridge";
-import { useT } from "../i18n";
+import { useSettings, useT } from "../i18n";
 import { initTheme } from "../appearance/theme";
 import { shellAction, useSystemStatus, type ShellAction } from "../system";
 import "./Dock.css";
 
 export default function Dock() {
   const t = useT();
+  const settings = useSettings();
   const system = useSystemStatus();
   const [windows, setWindows] = useState<AppWindow[]>([]);
 
@@ -58,6 +59,12 @@ export default function Dock() {
             <SystemButton action="notifications" label={t("system.notifications")} icon={BELL} />
             <SystemButton action="quick_settings" label={t("system.quickSettings")} icon={SLIDERS} />
             <SystemButton action="hidden_icons" label={t("system.hiddenIcons")} icon={CHEVRON} onClick={openTrayPanel} />
+            {settings?.show_desktop_button && (
+              <>
+                <span className="dock-sep" />
+                <SystemButton action="show_desktop" label={t("system.showDesktop")} icon={DESKTOP} />
+              </>
+            )}
           </>
         )}
       </motion.div>
@@ -69,6 +76,7 @@ const stroke = (d: string) => <path d={d} fill="none" stroke="currentColor" stro
 const BELL = stroke("M12 3a5 5 0 0 0-5 5v3l-1.5 3h13L17 11V8a5 5 0 0 0-5-5Zm-2 14a2 2 0 0 0 4 0");
 const SLIDERS = stroke("M5 7h8m4 0h2M5 17h2m4 0h8M13 4v6m-4 4v6");
 const CHEVRON = stroke("M7 14l5-5 5 5");
+const DESKTOP = stroke("M4 5h16v10H4zM9 19h6M12 15v4");
 const SEARCH = (
   <>
     <circle cx="10.5" cy="10.5" r="5.5" fill="none" stroke="currentColor" strokeWidth="1.8" />

@@ -2,7 +2,8 @@ export type Lang = "tr" | "en";
 
 const dict = {
   tr: {
-    slogan: "Windows için notch ve dock",
+    slogan: "Windows için Dinamik Ada ve dock",
+    startWithWindows: "Windows ile başlat",
     install: "Kurun",
     licenseNote: "Kurun düğmesine basarak kullanım koşullarını kabul edersiniz.",
     preparing: "Hazırlanıyor…",
@@ -20,7 +21,8 @@ const dict = {
     upgradeText: "Kurulu sürüm",
   },
   en: {
-    slogan: "Notch and dock for Windows",
+    slogan: "Dynamic Island and dock for Windows",
+    startWithWindows: "Start with Windows",
     install: "Install",
     licenseNote: "By clicking Install you accept the license terms.",
     preparing: "Preparing…",

@@ -6,12 +6,18 @@ Format: [Keep a Changelog](https://keepachangelog.com/), versioning: [SemVer](ht
 ## [Unreleased]
 
 ### Added
+- A dock button that jumps to the desktop (Win+D). Off by default; Settings > Dynamic Island and dock.
+- The app follows the light or dark theme of Windows by default, and can be set to light or dark.
+- The installer asks whether MacDows should start with Windows (a fresh install only; off by default).
 - Windows's own Start and Search are used, as they are on a normal PC (the Start and Search buttons of the dock open them, and so do the Windows key and Win+S). While one of Windows's menus (Start, Search, quick settings) is open, the dock stays in view under it.
 - Settings > Appearance > "Paint the Windows Start menu in the theme color". Off by default: MacDows then only makes Windows's system theme light or dark like its own. On, Start also takes the theme color; Windows only allows that through the system accent color, so every app's accent color is the theme color while MacDows runs. Your own colors come back when MacDows closes, whichever way it ends.
 - The music bars in the notch follow the real audio the PC is playing (five frequency bands, analysed locally; nothing is recorded or sent anywhere).
 - The notch player shows the elapsed and remaining time with a bar you can click to seek, and a system volume slider (the mouse wheel over it works too).
 
 ### Changed
+- The notch is now called the Dynamic Island in the app, the installer and the settings.
+- "Start with Windows" is off by default. Matching the color of Windows's Start and Search to the theme is on by default.
+- The Settings window has its own title bar, a left menu with categories and its own controls.
 - The notch now follows Nectar's design: one damped spring for width, height and corners, concave corners that join it to the screen edge, a slide-in at startup, a status pill and a music pill you switch with the mouse wheel or a click on the clock, a music pill that opens itself when playback starts, a full player with artwork, a scrolling title and an album-colored glow.
 - **License changed from MIT to GPL-3.0**, because the notch is adapted from Nectar (GPL-3.0). See `NOTICE`.
 - Turkish interface text now addresses you formally ("siz").

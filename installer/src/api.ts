@@ -35,7 +35,8 @@ const mockInfo = (): InstallInfo => {
 };
 
 export const installState = () => (inTauri ? invoke<InstallInfo>("install_state") : Promise.resolve(mockInfo()));
-export const startInstall = () => (inTauri ? invoke<void>("start_install") : Promise.resolve());
+/** `autostart` is only given for a fresh install; leaving it out keeps what an existing install has. */
+export const startInstall = (autostart?: boolean) => (inTauri ? invoke<void>("start_install", { autostart: autostart ?? null }) : Promise.resolve());
 export const launchApp = () => (inTauri ? invoke<void>("launch_app") : Promise.resolve());
 export const closeWindow = () => (inTauri ? getCurrentWindow().close() : Promise.resolve());
 

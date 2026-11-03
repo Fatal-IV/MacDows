@@ -1,6 +1,6 @@
 # MacDows
 
-A notch and a dock for Windows, built with Tauri 2, Rust and React.
+A Dynamic Island and a dock for Windows, built with Tauri 2, Rust and React.
 
 ## Install
 
@@ -21,7 +21,7 @@ Notes:
 
 ## Updates
 
-MacDows checks for a new release a little after it starts and then every 12 hours. When there is one, a small blue dot appears on the notch and **Settings → Updates** shows what is new. Nothing is installed until you press **Update and restart**. Updates are verified with the MacDows signing key. You can turn the automatic check off in the same card.
+MacDows checks for a new release a little after it starts and then every 12 hours. When there is one, a small blue dot appears on the Dynamic Island and **Settings → Updates** shows what is new. Nothing is installed until you press **Update and restart**. Updates are verified with the MacDows signing key. You can turn the automatic check off in the same card.
 
 ## Develop
 
@@ -32,4 +32,4 @@ bun run tauri dev
 
 Build the installer: `node scripts/build-installer.mjs` (needs `TAURI_SIGNING_PRIVATE_KEY`). Regenerate the icons from `branding/*.svg`: `bun run icons`.
 
-License: [GPL-3.0](LICENSE). The notch behavior and styling are adapted from [Nectar](https://github.com/kua8/Nectar) by kua8 (GPL-3.0); see [NOTICE](NOTICE).
+License: [GPL-3.0](LICENSE). Third-party credits are in [NOTICE](NOTICE).

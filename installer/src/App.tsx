@@ -14,6 +14,7 @@ export default function App() {
   const [screen, setScreen] = useState<Screen>(initialScreen);
   const [stage, setStage] = useState<StageEvent["stage"]>("installing");
   const [percent, setPercent] = useState(mockScreen === "working" ? 60 : 0);
+  const [autostart, setAutostart] = useState(false);
   const [error, setError] = useState(mockScreen === "error" ? "The installer stopped with code 2." : "");
 
   const lang = info?.lang ?? "en";
@@ -39,7 +40,7 @@ export default function App() {
     setScreen("working");
     setStage("preparing");
     setPercent(0);
-    startInstall().catch((e) => {
+    startInstall(info?.decision === "fresh" ? autostart : undefined).catch((e) => {
       setError(String(e));
       setScreen("error");
     });
@@ -72,7 +73,13 @@ export default function App() {
             {decision === "fresh" || decision === "older" ? (
               <>
                 <div className="muted tight">{t("slogan")}</div>
-                <button className="accent" style={{ marginTop: 26 }} onClick={install}>
+                {decision === "fresh" && (
+                  <button type="button" role="switch" aria-checked={autostart} className="opt" onClick={() => setAutostart((v) => !v)}>
+                    <span className="sw" />
+                    {t("startWithWindows")}
+                  </button>
+                )}
+                <button className="accent" style={{ marginTop: decision === "fresh" ? 18 : 26 }} onClick={install}>
                   {t("install")}
                 </button>
                 <div className="muted small" style={{ marginTop: 14 }}>

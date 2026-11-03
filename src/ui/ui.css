@@ -1,0 +1,170 @@
+/* Design tokens. The settings window sets them; light mode overrides them. */
+.settings-app {
+  --s-bg: #111113;
+  --s-nav: #161619;
+  --s-surface: #1b1b1f;
+  --s-surface-hover: #222227;
+  --s-raised: #26262c;
+  --s-border: rgba(255, 255, 255, 0.08);
+  --s-border-strong: rgba(255, 255, 255, 0.16);
+  --s-text: #f4f4f6;
+  --s-muted: rgba(255, 255, 255, 0.58);
+  --s-accent: #0a84ff;
+  --s-accent-text: #fff;
+  --s-danger: #e5493a;
+}
+:root.light-mode .settings-app {
+  --s-bg: #f3f3f6;
+  --s-nav: #eaeaee;
+  --s-surface: #ffffff;
+  --s-surface-hover: #f6f6f9;
+  --s-raised: #ffffff;
+  --s-border: rgba(0, 0, 0, 0.09);
+  --s-border-strong: rgba(0, 0, 0, 0.18);
+  --s-text: #1c1c1e;
+  --s-muted: rgba(0, 0, 0, 0.56);
+}
+
+/* Switch */
+.ui-toggle {
+  position: relative;
+  flex: none;
+  width: 42px;
+  height: 24px;
+  padding: 0;
+  border: 1px solid var(--s-border-strong);
+  border-radius: 12px;
+  background: transparent;
+  cursor: default;
+  transition: background 0.16s ease, border-color 0.16s ease;
+}
+.ui-toggle:hover { border-color: var(--s-muted); }
+.ui-toggle.on { background: var(--s-accent); border-color: var(--s-accent); }
+.ui-toggle-knob {
+  position: absolute;
+  top: 50%;
+  left: 4px;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--s-muted);
+  transform: translateY(-50%);
+  transition: left 0.16s ease, width 0.12s ease, background 0.16s ease;
+}
+.ui-toggle:active .ui-toggle-knob { width: 18px; }
+.ui-toggle.on .ui-toggle-knob { left: 22px; background: var(--s-accent-text); }
+.ui-toggle.on:active .ui-toggle-knob { left: 18px; }
+.ui-toggle:focus-visible, .ui-select-button:focus-visible, .ui-button:focus-visible, .ui-slider:focus-visible {
+  outline: 2px solid var(--s-accent);
+  outline-offset: 2px;
+}
+
+/* Drop-down */
+.ui-select { position: relative; min-width: 180px; }
+.ui-select-button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  width: 100%;
+  padding: 7px 10px 7px 12px;
+  border: 1px solid var(--s-border-strong);
+  border-radius: 8px;
+  background: var(--s-raised);
+  color: var(--s-text);
+  font: inherit;
+  font-size: 13px;
+  cursor: default;
+  transition: border-color 0.12s ease;
+}
+.ui-select-button:hover, .ui-select-button.open { border-color: var(--s-muted); }
+.ui-select-button svg { color: var(--s-muted); transition: transform 0.15s ease; }
+.ui-select-button.open svg { transform: rotate(180deg); }
+.ui-select-list {
+  position: absolute;
+  z-index: 20;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  margin: 0;
+  padding: 4px;
+  list-style: none;
+  border: 1px solid var(--s-border-strong);
+  border-radius: 10px;
+  background: var(--s-raised);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.35);
+}
+.ui-select-list button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 7px 10px;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--s-text);
+  font: inherit;
+  font-size: 13px;
+  text-align: left;
+  cursor: default;
+}
+.ui-select-list button:hover { background: var(--s-surface-hover); }
+.ui-select-list button.selected { color: var(--s-accent); }
+
+/* Slider */
+.ui-slider { width: 200px; padding: 9px 0; cursor: default; touch-action: none; }
+.ui-slider-track { position: relative; height: 4px; border-radius: 2px; background: var(--s-border-strong); }
+.ui-slider-fill { position: absolute; left: 0; top: 0; bottom: 0; border-radius: inherit; background: var(--s-accent); }
+.ui-slider-thumb {
+  position: absolute;
+  top: 50%;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.45), 0 0 0 1px rgba(0, 0, 0, 0.12);
+  transform: translate(-50%, -50%);
+  transition: transform 0.1s ease;
+}
+.ui-slider:hover .ui-slider-thumb { transform: translate(-50%, -50%) scale(1.12); }
+.ui-slider:active .ui-slider-thumb { transform: translate(-50%, -50%) scale(0.95); }
+
+/* Button */
+.ui-button {
+  padding: 7px 16px;
+  border: 1px solid var(--s-border-strong);
+  border-radius: 8px;
+  background: var(--s-raised);
+  color: var(--s-text);
+  font: inherit;
+  font-size: 13px;
+  cursor: default;
+  transition: background 0.12s ease, border-color 0.12s ease, opacity 0.12s ease;
+}
+.ui-button:hover:not(:disabled) { background: var(--s-surface-hover); border-color: var(--s-muted); }
+.ui-button.primary { background: var(--s-accent); border-color: var(--s-accent); color: var(--s-accent-text); }
+.ui-button.primary:hover:not(:disabled) { background: var(--s-accent); border-color: var(--s-accent); filter: brightness(1.1); }
+.ui-button:disabled { opacity: 0.45; }
+
+/* Cards and rows */
+.ui-group {
+  border: 1px solid var(--s-border);
+  border-radius: 12px;
+  background: var(--s-surface);
+  overflow: visible;
+}
+.ui-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 14px 18px;
+  min-height: 24px;
+}
+.ui-row + .ui-row { border-top: 1px solid var(--s-border); }
+.ui-row-text { min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+.ui-row-title { font-size: 13.5px; font-weight: 500; color: var(--s-text); }
+.ui-row-desc { font-size: 12px; line-height: 1.45; color: var(--s-muted); max-width: 440px; }
+.ui-row-control { flex: none; display: flex; align-items: center; gap: 12px; }
+.ui-value { min-width: 40px; text-align: right; font-size: 12.5px; font-variant-numeric: tabular-nums; color: var(--s-muted); }

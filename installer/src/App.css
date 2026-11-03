@@ -178,3 +178,43 @@ button.quiet:hover {
   font-size: 30px;
   font-weight: 700;
 }
+
+/* "Start with Windows" switch on the first screen */
+.opt {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 20px;
+  padding: 4px 6px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: #3a3c44;
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+.opt:hover { background: rgba(0, 0, 0, 0.05); }
+.opt .sw {
+  position: relative;
+  width: 34px;
+  height: 20px;
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.24);
+  transition: background 0.15s ease;
+}
+.opt .sw::after {
+  content: "";
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  transition: left 0.15s ease;
+}
+.opt[aria-checked="true"] .sw { background: #0067c0; }
+.opt[aria-checked="true"] .sw::after { left: 17px; }
+.opt:focus-visible { outline: 2px solid #0067c0; outline-offset: 2px; }

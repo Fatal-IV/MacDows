@@ -219,8 +219,10 @@ fn open_settings(app: &AppHandle) {
     }
     if let Ok(w) = WebviewWindowBuilder::new(app, "settings", WebviewUrl::App("index.html".into()))
         .title("MacDows")
-        .inner_size(440.0, 760.0)
-        .resizable(false)
+        .inner_size(860.0, 620.0)
+        .min_inner_size(740.0, 500.0)
+        .decorations(false)
+        .shadow(true)
         .center()
         .build()
     {

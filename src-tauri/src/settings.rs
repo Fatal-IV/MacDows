@@ -25,6 +25,8 @@ pub struct Settings {
     pub taskbar_notice_shown: bool,
     /// Start MacDows when Windows starts.
     pub start_with_windows: bool,
+    /// A dock button that jumps to the desktop.
+    pub show_desktop_button: bool,
 }
 
 impl Default for Settings {
@@ -37,7 +39,8 @@ impl Default for Settings {
             last_update_check: None,
             replace_taskbar: true,
             taskbar_notice_shown: false,
-            start_with_windows: true,
+            start_with_windows: false,
+            show_desktop_button: false,
         }
     }
 }
@@ -111,6 +114,7 @@ mod tests {
             replace_taskbar: false,
             taskbar_notice_shown: true,
             start_with_windows: false,
+            show_desktop_button: true,
         };
         let json = serde_json::to_string(&s).unwrap();
         assert_eq!(Settings::from_json(&json), s);
@@ -128,9 +132,10 @@ mod tests {
         let s = Settings::default();
         assert!(s.replace_taskbar);
         assert!(!s.taskbar_notice_shown);
-        assert!(s.start_with_windows);
+        assert!(!s.start_with_windows);
+        assert!(!s.show_desktop_button);
         let old = Settings::from_json(r#"{"language":"tr"}"#);
-        assert!(old.replace_taskbar && !old.taskbar_notice_shown && old.start_with_windows);
+        assert!(old.replace_taskbar && !old.taskbar_notice_shown && !old.start_with_windows);
     }
 
     #[test]

@@ -1,0 +1,82 @@
+.radial { position: absolute; inset: 0; overflow: hidden; }
+
+/* A faint circle the items sit on */
+.radial-guide {
+  position: absolute;
+  left: 50%;
+  border-radius: 50%;
+  border: 1px dashed var(--s-border-strong);
+  transform-origin: center;
+  translate: -50% -50%;
+  pointer-events: none;
+}
+
+.radial-center {
+  position: absolute;
+  left: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  color: #fff;
+  background: linear-gradient(145deg, #3d9bff 0%, var(--s-accent) 45%, #5b4bff 100%);
+  box-shadow: 0 10px 30px rgba(10, 132, 255, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.35);
+  cursor: default;
+  z-index: 2;
+}
+.radial-center:focus-visible { outline: 3px solid var(--s-text); outline-offset: 3px; }
+
+.radial-item {
+  position: absolute;
+  left: 50%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--s-text);
+  font: inherit;
+  cursor: default;
+  z-index: 1;
+}
+.radial-circle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 66px;
+  height: 66px;
+  border-radius: 50%;
+  background: var(--s-surface);
+  border: 1px solid var(--s-border-strong);
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.22);
+  color: var(--s-accent);
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+.radial-item:hover .radial-circle, .radial-item:focus-visible .radial-circle {
+  background: var(--s-accent);
+  border-color: var(--s-accent);
+  color: #fff;
+}
+.radial-item:focus-visible { outline: none; }
+.radial-label {
+  max-width: 100%;
+  font-size: 12.5px;
+  font-weight: 500;
+  text-align: center;
+  line-height: 1.25;
+}
+
+.radial-hint {
+  position: absolute;
+  left: 0;
+  right: 0;
+  margin: 0;
+  text-align: center;
+  font-size: 13px;
+  color: var(--s-muted);
+  pointer-events: none;
+}

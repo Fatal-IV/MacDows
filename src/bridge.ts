@@ -11,6 +11,7 @@ export interface Settings {
   replace_taskbar: boolean;
   taskbar_notice_shown: boolean;
   start_with_windows: boolean;
+  show_desktop_button: boolean;
 }
 
 export const getSettings = () => invoke<Settings>("get_settings");

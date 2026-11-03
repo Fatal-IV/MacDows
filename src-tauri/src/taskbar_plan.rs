@@ -82,6 +82,7 @@ pub enum ShellAction {
     HiddenIcons,
     Start,
     Search,
+    ShowDesktop,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -98,6 +99,8 @@ pub fn key_steps(action: ShellAction) -> Vec<KeyStep> {
         // A bare Windows key press opens Start; Win+S opens Search.
         ShellAction::Start => vec![KeyStep::Chord { win: false, key: 0x5B }],
         ShellAction::Search => vec![KeyStep::Chord { win: true, key: 0x53 }],
+        // Win+D shows the desktop and, pressed again, brings the windows back.
+        ShellAction::ShowDesktop => vec![KeyStep::Chord { win: true, key: 0x44 }],
         ShellAction::HiddenIcons => {
             // Win+B focuses the last focused tray item, not necessarily the "show hidden icons" chevron. The chevron is
             // always the leftmost item and Home jumps straight to it. Walking Left does not work: focus wraps around, so
@@ -276,6 +279,11 @@ mod tests {
     fn shell_buttons_send_the_documented_shortcuts() {
         assert_eq!(key_steps(ShellAction::Notifications), vec![KeyStep::Chord { win: true, key: 0x4E }]);
         assert_eq!(key_steps(ShellAction::QuickSettings), vec![KeyStep::Chord { win: true, key: 0x41 }]);
+    }
+
+    #[test]
+    fn the_desktop_button_sends_win_d() {
+        assert_eq!(key_steps(ShellAction::ShowDesktop), vec![KeyStep::Chord { win: true, key: 0x44 }]);
     }
 
     #[test]

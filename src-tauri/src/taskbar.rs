@@ -264,6 +264,7 @@ pub fn shell_action(action: String) -> Result<(), String> {
         "quick_settings" => ShellAction::QuickSettings,
         "start" => ShellAction::Start,
         "search" => ShellAction::Search,
+        "show_desktop" => ShellAction::ShowDesktop,
         "hidden_icons" => {
             if !current_status().hidden_icons_available {
                 return Err("hidden_icons_unavailable".into());
