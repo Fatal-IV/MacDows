@@ -381,3 +381,9 @@ img { -webkit-user-drag: none; user-select: none; }
 .pomo-buttons { display: flex; gap: 4px; }
 .pomo-buttons button { background: rgba(255, 255, 255, 0.14); border: 0; border-radius: 10px; padding: 3px 8px; color: inherit; font-size: 10px; cursor: pointer; }
 .pomo-buttons button:hover { background: rgba(255, 255, 255, 0.24); }
+
+/* Elapsed and remaining time must stay fully inside the panel */
+.meta-col { padding-right: 4px; box-sizing: border-box; }
+.track-row { padding-right: 22px; box-sizing: border-box; }
+.progress { gap: 6px; height: 16px; }
+.time-text { min-width: 38px; white-space: nowrap; overflow: visible; }
