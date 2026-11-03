@@ -7,6 +7,7 @@ mod launcher;
 mod search;
 mod tray_panel;
 mod updates;
+mod visualizer;
 mod volume;
 mod visibility;
 mod wallpaper;
@@ -414,6 +415,7 @@ pub fn run() {
             fullscreen::start(app.handle().clone());
             windows_list::start(app.handle().clone());
             media::start(app.handle().clone());
+            visualizer::start(app.handle().clone());
             visibility::start(app.handle().clone());
             updates::start(app.handle().clone());
             keyhook::start(app.handle().clone());

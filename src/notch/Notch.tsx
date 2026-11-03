@@ -4,6 +4,7 @@
 // concave "bridge" corners that join the notch to the screen edge.
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
+import { listen } from "@tauri-apps/api/event";
 import { getMedia, getVolume, mediaNext, mediaPrev, mediaSeek, mediaToggle, onMediaChanged, setVolume, type MediaInfo } from "../bridge";
 import { useT } from "../i18n";
 import { useUpdateStatus } from "../updates";
@@ -26,12 +27,43 @@ const MARQUEE_MIN_SECONDS = 5;
 
 const artUrl = (m: MediaInfo | null) => (m?.artwork_png_base64 ? `data:${m.artwork_mime};base64,${m.artwork_png_base64}` : null);
 
-/** Decorative equalizer. MacDows has no audio capture, so the bars are animated, not measured. */
+/** The levels of what is playing, in a few frequency bands, from the audio the PC is sending to the speakers. */
 function Visualizer({ playing, bars = 5, height = 20 }: { playing: boolean; bars?: number; height?: number }) {
+  const [levels, setLevels] = useState<number[]>(() => Array(bars).fill(0));
+
+  useEffect(() => {
+    const rest = () => setLevels(Array(bars).fill(0));
+    if (!playing) {
+      rest();
+      return;
+    }
+    // Frames can arrive faster than the screen refreshes: keep the newest and draw it once per frame.
+    let latest: number[] | null = null;
+    let frame = 0;
+    let lastEvent = Date.now();
+    const un = listen<{ bands: number[] }>("audio-visualization", (e) => {
+      latest = e.payload.bands;
+      lastEvent = Date.now();
+      if (!frame) {
+        frame = requestAnimationFrame(() => {
+          frame = 0;
+          if (latest) setLevels(latest.slice(0, bars));
+        });
+      }
+    });
+    // Nothing is being sent (paused, or no sound): drop the bars to rest.
+    const idle = setInterval(() => Date.now() - lastEvent > 600 && rest(), 300);
+    return () => {
+      un.then((f) => f());
+      clearInterval(idle);
+      cancelAnimationFrame(frame);
+    };
+  }, [playing, bars]);
+
   return (
     <div className={`visualizer${playing ? " live" : ""}`} style={{ height, width: bars * 6 }} aria-hidden>
-      {Array.from({ length: bars }, (_, i) => (
-        <span key={i} className="bar" style={{ animationDelay: `${i * 0.13}s`, animationDuration: `${0.7 + (i % 3) * 0.18}s` }} />
+      {levels.map((level, i) => (
+        <span key={i} className="bar" style={{ transform: `scaleY(${Math.max(0.12, level)})`, opacity: 0.45 + level * 0.5 }} />
       ))}
     </div>
   );

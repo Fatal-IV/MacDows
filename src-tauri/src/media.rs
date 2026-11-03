@@ -148,6 +148,11 @@ fn attach_current() {
     }
 }
 
+/// Whether a media session is playing right now.
+pub fn is_playing() -> bool {
+    LAST.lock().map(|l| l.as_ref().is_some_and(|m| m.playing)).unwrap_or(false)
+}
+
 #[tauri::command]
 pub fn get_media() -> Option<MediaInfo> {
     LAST.lock().unwrap().clone()

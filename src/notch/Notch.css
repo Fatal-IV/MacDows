@@ -130,16 +130,9 @@ img { -webkit-user-drag: none; user-select: none; }
   transform-origin: center;
   transform: scaleY(0.1);
   opacity: 0.5;
-  transition: transform 200ms ease, opacity 200ms linear;
+  transition: transform 70ms linear, opacity 120ms linear;
 }
-.visualizer.live .bar {
-  opacity: 0.95;
-  animation: eq 0.8s ease-in-out infinite alternate;
-}
-@keyframes eq {
-  from { transform: scaleY(0.2); }
-  to { transform: scaleY(1); }
-}
+/* The bars follow the real audio levels; transform and opacity are set per frame. */
 
 /* Small album art in the music pill */
 .art-small {

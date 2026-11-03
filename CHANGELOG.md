@@ -6,6 +6,7 @@ Format: [Keep a Changelog](https://keepachangelog.com/), versioning: [SemVer](ht
 ## [Unreleased]
 
 ### Added
+- The music bars in the notch follow the real audio the PC is playing (five frequency bands, analysed locally; nothing is recorded or sent anywhere).
 - The notch player shows the elapsed and remaining time with a bar you can click to seek, and a system volume slider (the mouse wheel over it works too).
 
 ### Changed
