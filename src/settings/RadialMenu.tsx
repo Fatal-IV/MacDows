@@ -8,7 +8,7 @@ export interface RadialItem {
   icon: ReactNode;
 }
 
-const ITEM_WIDTH = 104;
+const ITEM_WIDTH = 90;
 const CIRCLE = 62;
 const CENTER = 60;
 const MARGIN_BOTTOM = 22;
@@ -45,21 +45,15 @@ export default function RadialMenu({
     return () => observer.disconnect();
   }, []);
 
-  // The arc has to fit in the window, whatever its size: wider than tall, like a rainbow.
-  const radiusX = Math.max(140, Math.min(270, size.w / 2 - ITEM_WIDTH / 2 - 16));
-  const radiusY = Math.max(110, Math.min(200, size.h - CENTER - MARGIN_BOTTOM - CIRCLE - 56));
+  // A tight arc close above the button, wider than tall like a rainbow; it still has to fit a small window.
+  const radiusX = Math.max(120, Math.min(205, size.w / 2 - ITEM_WIDTH / 2 - 16));
+  const radiusY = Math.max(90, Math.min(125, size.h - CENTER - MARGIN_BOTTOM - CIRCLE - 56));
   const cy = size.h - MARGIN_BOTTOM - CENTER / 2;
 
   return (
     <div className="radial" ref={stage}>
-      <motion.div
-        className="radial-scrim"
-        initial={false}
-        animate={{ opacity: open ? 1 : 0 }}
-        transition={{ duration: 0.18 }}
-        style={{ pointerEvents: open ? "auto" : "none" }}
-        onClick={onToggle}
-      />
+      {/* Invisible: a click anywhere outside the buttons closes the menu. The page is not dimmed or blurred. */}
+      <div className="radial-scrim" style={{ pointerEvents: open ? "auto" : "none" }} onClick={onToggle} />
       {items.map((item, i) => {
         // From just above the left edge to just above the right edge.
         const angle = (180 + (180 / (items.length + 1)) * (i + 1)) * (Math.PI / 180);
