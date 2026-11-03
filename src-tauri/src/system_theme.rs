@@ -59,11 +59,10 @@ fn abgr((r, g, b): (u8, u8, u8)) -> u32 {
 #[derive(Debug, PartialEq)]
 pub struct Tint {
     pub prevalence: u32,
-    pub palette: [u8; 32],
+    /// The color of the taskbar surface (`AccentColorMenu`).
     pub accent_menu: u32,
+    /// The color of Start and Search (`StartColorMenu`).
     pub start_menu: u32,
-    pub dwm_accent: u32,
-    pub dwm_colorization: u32,
 }
 
 #[derive(Debug, PartialEq)]
@@ -76,21 +75,13 @@ pub struct Plan {
 /// What to write for a light or dark MacDows with the given surface color. The window title bar color and the app
 /// theme are never changed.
 pub fn plan(light: bool, surface: (u8, u8, u8), tint: bool) -> Plan {
-    let tint = (tint && !light).then(|| {
-        let shades: Vec<(u8, u8, u8)> = SHADES.iter().map(|f| shade(surface, *f)).collect();
-        let mut palette = [0u8; 32];
-        for (i, (r, g, b)) in shades.iter().enumerate() {
-            palette[i * 4..i * 4 + 4].copy_from_slice(&[*r, *g, *b, 0]);
-        }
-        Tint {
-            // Windows tints Start and the taskbar with the accent only in the dark system theme.
-            prevalence: 1,
-            palette,
-            accent_menu: abgr(shades[3]),
-            start_menu: abgr(shades[4]),
-            dwm_accent: abgr(shades[3]),
-            dwm_colorization: abgr(shades[3]) & 0x00FF_FFFF,
-        }
+    // Only the two menu colors are written. The accent palette and the window colors stay the user's own, so
+    // apps, title bars and the quick settings keep their accent color.
+    let tint = (tint && !light).then(|| Tint {
+        // Windows tints Start and the taskbar with these colors only in the dark system theme.
+        prevalence: 1,
+        accent_menu: abgr(shade(surface, SHADES[3])),
+        start_menu: abgr(shade(surface, SHADES[4])),
     });
     Plan { system_light: light as u32, tint }
 }
@@ -234,11 +225,14 @@ pub fn apply(light: bool, surface_hex: &str, tint: bool) {
     match &p.tint {
         Some(t) => {
             write_u32(&pz, "ColorPrevalence", Some(t.prevalence));
-            write_palette(&ac, Some(&t.palette));
             write_u32(&ac, "AccentColorMenu", Some(t.accent_menu));
             write_u32(&ac, "StartColorMenu", Some(t.start_menu));
-            write_u32(&dw, "AccentColor", Some(t.dwm_accent));
-            write_u32(&dw, "ColorizationColor", Some(t.dwm_colorization));
+            // An earlier version also painted the accent palette and the window colors: those are the user's own again.
+            if let Some(b) = read_backup_file() {
+                write_palette(&ac, b.palette.as_deref());
+                write_u32(&dw, "AccentColor", b.dwm_accent);
+                write_u32(&dw, "ColorizationColor", b.dwm_colorization);
+            }
         }
         None => {
             // Back to the user's own accent and tint settings.
@@ -320,11 +314,9 @@ mod tests {
         assert_eq!(p.system_light, 0);
         let t = p.tint.expect("tint");
         assert_eq!(t.prevalence, 1);
-        // Entry 3 of the palette is the surface color itself; entry 4, the Start color, is a little darker.
-        assert_eq!(&t.palette[12..15], &[0x20, 0x20, 0x24]);
+        // The taskbar gets the surface color itself; Start, a little darker.
         assert_eq!(t.accent_menu, abgr((0x20, 0x20, 0x24)));
         assert_eq!(t.start_menu, abgr(shade((0x20, 0x20, 0x24), 0.9)));
-        assert_eq!(t.dwm_colorization & 0xFF00_0000, 0);
     }
 
     #[test]
@@ -335,11 +327,11 @@ mod tests {
     }
 
     #[test]
-    fn shades_never_overflow_and_the_fourth_byte_stays_zero() {
+    fn the_tint_never_touches_the_accent_color_of_apps() {
+        // The Tint holds nothing but the three menu values; the palette and the window colors are not part of it.
         let t = plan(false, (0xFF, 0xFF, 0xFF), true).tint.unwrap();
-        assert_eq!(t.palette.len(), 32);
-        assert!(t.palette.chunks(4).all(|c| c[3] == 0));
-        assert_eq!(&t.palette[0..3], &[255, 255, 255]);
+        assert_eq!(t.accent_menu, abgr((255, 255, 255)));
+        assert_eq!(t.start_menu & 0xFF00_0000, 0xFF00_0000);
     }
 
     #[test]

@@ -57,7 +57,7 @@
   "system.start": "Start",
   "system.search": "Search",
   "appearance.startTint": "Paint the Windows Start menu in the theme color",
-  "appearance.startTintHelp": "Start, Search and quick settings are Windows's own, so they only take a color through the system accent color: while MacDows runs, the accent color of every app is the theme color too. Your own colors come back when MacDows closes. Off, only the light or dark look follows the theme.",
+  "appearance.startTintHelp": "Start, Search and quick settings are Windows's own. While MacDows runs, Start and Search take this color; the accent color of your apps and the window title bars stay your own. Your colors come back when MacDows closes. Off, only the light or dark look follows the theme.",
   "settings.cat.general": "General",
   "settings.cat.bars": "Dynamic Island and dock",
   "settings.cat.appearance": "Appearance",

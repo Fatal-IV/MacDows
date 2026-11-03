@@ -57,7 +57,7 @@
   "system.start": "Başlat",
   "system.search": "Ara",
   "appearance.startTint": "Windows Başlat menüsünü tema renginde boya",
-  "appearance.startTintHelp": "Başlat, Arama ve hızlı ayarlar Windows'un kendisine ait, bu yüzden renk yalnızca sistem vurgu rengi üzerinden verilebiliyor: MacDows çalışırken tüm uygulamalardaki vurgu rengi de tema rengi olur. MacDows kapanınca kendi renkleriniz geri gelir. Kapalıyken yalnızca açık veya koyu görünüm temayı izler.",
+  "appearance.startTintHelp": "Başlat, Arama ve hızlı ayarlar Windows'un kendisine ait. MacDows çalışırken Başlat ve Arama bu renge boyanır; uygulamaların vurgu rengi ve pencere başlıkları kendi renginizde kalır. MacDows kapanınca renkler geri gelir. Kapalıyken yalnızca açık veya koyu görünüm temayı izler.",
   "settings.cat.general": "Genel",
   "settings.cat.bars": "Dinamik Ada ve Dock",
   "settings.cat.appearance": "Görünüm",
