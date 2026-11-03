@@ -457,24 +457,16 @@ img { -webkit-user-drag: none; user-select: none; }
 .glass-tile, .glass-slider {
   position: relative; overflow: hidden;
   border-radius: 18px;
-  background: linear-gradient(145deg, rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0.05));
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.28), 0 8px 20px rgba(0, 0, 0, 0.26);
-  backdrop-filter: blur(18px) saturate(160%);
-  -webkit-backdrop-filter: blur(18px) saturate(160%);
+  background: rgba(255, 255, 255, 0.1);
   color: inherit; font: inherit;
 }
-.glass-tile::before, .glass-slider::before { content: ""; position: absolute; inset: 0 0 55% 0; background: linear-gradient(180deg, rgba(255, 255, 255, 0.16), transparent); pointer-events: none; }
-.glass-tile { display: flex; flex-direction: row; align-items: center; gap: 10px; padding: 0 12px; text-align: left; cursor: pointer; transition: transform 0.15s, background 0.2s, border-color 0.2s, box-shadow 0.2s; }
-.glass-tile:hover { transform: translateY(-1px); border-color: rgba(255, 255, 255, 0.32); }
+.glass-tile { display: flex; flex-direction: row; align-items: center; gap: 10px; padding: 0 12px; border: 0; text-align: left; cursor: pointer; transition: transform 0.15s, background 0.2s, color 0.2s; }
+.glass-tile:hover { background: rgba(255, 255, 255, 0.16); }
 .glass-tile:active { transform: scale(0.97); }
-.glass-tile:disabled { opacity: 0.45; cursor: default; transform: none; }
+.glass-tile:disabled { opacity: 0.45; cursor: default; }
 .glass-tile.busy { opacity: 0.7; }
-.glass-tile.on {
-  background: linear-gradient(145deg, color-mix(in srgb, var(--music-accent, #0a84ff) 55%, transparent), color-mix(in srgb, var(--music-accent, #0a84ff) 25%, transparent));
-  border-color: rgba(255, 255, 255, 0.4);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.45), 0 8px 24px color-mix(in srgb, var(--music-accent, #0a84ff) 30%, transparent);
-}
+/* On: one flat white, like the selected segment and today in the calendar. */
+.glass-tile.on { background: #fff; color: #000; }
 .glass-icon { display: flex; flex: none; }
 .glass-text { display: flex; flex-direction: column; min-width: 0; }
 .glass-name { font-size: 12px; font-weight: 600; line-height: 1.15; }
@@ -488,5 +480,5 @@ img { -webkit-user-drag: none; user-select: none; }
 .slider-name { font-size: 11px; font-weight: 600; opacity: 0.85; min-width: 58px; }
 .slider-value { font-size: 10px; opacity: 0.7; min-width: 22px; text-align: right; }
 .glass-slider input[type="range"] { -webkit-appearance: none; appearance: none; width: 100%; height: 6px; border-radius: 3px; margin: 0; outline: none; cursor: pointer;
-  background: linear-gradient(to right, rgba(255, 255, 255, 0.9) var(--v, 0%), rgba(255, 255, 255, 0.2) var(--v, 0%)); }
+  background: linear-gradient(to right, #fff var(--v, 0%), rgba(255, 255, 255, 0.2) var(--v, 0%)); }
 .glass-slider input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 14px; height: 14px; border-radius: 50%; background: #fff; box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4); }

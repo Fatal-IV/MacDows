@@ -161,8 +161,9 @@ pub async fn get_brightness() -> Option<u32> {
 pub async fn set_brightness(level: f64) -> Result<(), String> {
     let percent = clamp_percent(level);
     tauri::async_runtime::spawn_blocking(move || {
+        // WmiSetBrightness is an instance method; Timeout is a uint32 and Brightness a byte.
         powershell(&format!(
-            "Invoke-CimMethod -Namespace root/WMI -ClassName WmiMonitorBrightnessMethods -MethodName WmiSetBrightness -Arguments @{{Timeout=1;Brightness={percent}}} -ErrorAction Stop | Out-Null"
+            "$i = Get-CimInstance -Namespace root/WMI -ClassName WmiMonitorBrightnessMethods | Select-Object -First 1; Invoke-CimMethod -InputObject $i -MethodName WmiSetBrightness -Arguments @{{Timeout=[uint32]1;Brightness=[byte]{percent}}} -ErrorAction Stop | Out-Null"
         ))
         .map(|_| ())
         .ok_or_else(|| "could not set the brightness".to_string())
