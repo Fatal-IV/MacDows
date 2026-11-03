@@ -404,3 +404,9 @@ img { -webkit-user-drag: none; user-select: none; }
 .cal-name { font-size: 10px; }
 .cal-day { height: 18px; line-height: 18px; font-size: 11px; border-radius: 9px; }
 .pomo-time { font-size: 34px; }
+
+/* A month can span six weeks: keep all six rows inside the panel */
+.tools { padding: 14px 30px 14px; }
+.cal-head { margin-bottom: 2px; }
+.cal-grid { row-gap: 1px; }
+.cal-day { height: 17px; line-height: 17px; }
