@@ -180,6 +180,8 @@ pub fn launch_plan(id: &str) -> Option<(&'static str, &'static [&'static str])> 
         "task_manager" => Some(("taskmgr.exe", &[])),
         "calculator" => Some(("calc.exe", &[])),
         "lock" => Some(("rundll32.exe", &["user32.dll,LockWorkStation"])),
+        "bluetooth_settings" => Some(("explorer.exe", &["ms-settings:bluetooth"])),
+        "wifi_settings" => Some(("explorer.exe", &["ms-settings:network-wifi"])),
         _ => None,
     }
 }
@@ -225,7 +227,7 @@ mod tests {
 
     #[test]
     fn every_shortcut_has_a_launch_plan() {
-        for id in ["screenshot", "settings", "task_manager", "calculator", "lock"] {
+        for id in ["screenshot", "settings", "task_manager", "calculator", "lock", "bluetooth_settings", "wifi_settings"] {
             assert!(launch_plan(id).is_some(), "{id}");
         }
         assert!(launch_plan("format_c").is_none());

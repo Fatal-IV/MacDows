@@ -120,5 +120,16 @@
   "history.now": "şimdi",
   "history.min": "dk",
   "history.hour": "sa",
-  "quick.history": "Bildirim geçmişi"
+  "quick.history": "Bildirim geçmişi",
+  "bt.title": "Bluetooth",
+  "bt.connected": "Bağlı",
+  "bt.notConnected": "Bağlı değil",
+  "bt.connect": "Bağlan",
+  "bt.disconnect": "Bağlantıyı kes",
+  "bt.working": "…",
+  "bt.empty": "Eşleşmiş cihaz yok",
+  "bt.add": "Cihaz ekle",
+  "bt.failed": "Bağlanılamadı. Windows ayarlarından deneyin.",
+  "common.back": "Geri",
+  "common.more": "Ayrıntılar"
 }

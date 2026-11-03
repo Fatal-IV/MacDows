@@ -460,10 +460,14 @@ img { -webkit-user-drag: none; user-select: none; }
   background: rgba(255, 255, 255, 0.1);
   color: inherit; font: inherit;
 }
-.glass-tile { display: flex; flex-direction: row; align-items: center; gap: 10px; padding: 0 12px; border: 0; text-align: left; cursor: pointer; transition: transform 0.15s, background 0.2s, color 0.2s; }
+.glass-tile { display: flex; flex-direction: row; align-items: stretch; padding: 0; transition: transform 0.15s, background 0.2s, color 0.2s; }
+.tile-main { flex: 1; min-width: 0; display: flex; align-items: center; gap: 10px; padding: 0 12px; border: 0; background: none; color: inherit; font: inherit; text-align: left; cursor: pointer; }
+.tile-main:disabled { cursor: default; }
+.tile-more { flex: none; width: 32px; border: 0; border-left: 1px solid rgba(128, 128, 128, 0.35); background: none; color: inherit; font-size: 17px; cursor: pointer; }
+.tile-more:hover { background: rgba(128, 128, 128, 0.18); }
+.glass-tile.disabled { opacity: 0.45; }
 .glass-tile:hover { background: rgba(255, 255, 255, 0.16); }
-.glass-tile:active { transform: scale(0.97); }
-.glass-tile:disabled { opacity: 0.45; cursor: default; }
+.glass-tile:has(.tile-main:active) { transform: scale(0.97); }
 .glass-tile.busy { opacity: 0.7; }
 /* On: one flat white, like the selected segment and today in the calendar. */
 .glass-tile.on { background: #fff; color: #000; }
@@ -527,3 +531,18 @@ img { -webkit-user-drag: none; user-select: none; }
 .history-item { display: flex; align-items: center; gap: 12px; flex: none; padding: 9px 12px; border-radius: 16px; background: rgba(255, 255, 255, 0.1); }
 .banner-icon.small { width: 32px; height: 32px; border-radius: 8px; }
 .history-time { flex: none; align-self: flex-start; font-size: 10px; opacity: 0.55; }
+
+/* ── Bluetooth / Wi-Fi pages ── */
+.devpage { display: flex; flex-direction: column; gap: 10px; height: 100%; box-sizing: border-box; padding: 24px 26px 18px; color: var(--nectar-text, #fff); }
+.devpage-head { display: flex; align-items: center; gap: 10px; }
+.devpage-head .shelf-title { flex: 1; }
+.devpage-back { width: 26px; height: 26px; padding: 0; border: 0; border-radius: 50%; background: rgba(255, 255, 255, 0.1); color: inherit; font-size: 17px; line-height: 1; cursor: pointer; }
+.devpage-back:hover { background: rgba(255, 255, 255, 0.2); }
+.bt-row { display: flex; align-items: center; gap: 12px; flex: none; padding: 9px 12px; border-radius: 16px; background: rgba(255, 255, 255, 0.1); }
+.bt-row.on { background: rgba(255, 255, 255, 0.18); }
+.bt-icon { flex: none; width: 34px; height: 34px; display: flex; align-items: center; justify-content: center; border-radius: 50%; background: rgba(255, 255, 255, 0.12); }
+.bt-row.on .bt-icon { background: #fff; color: #000; }
+.bt-battery { flex: none; display: inline-flex; align-items: center; gap: 5px; font-size: 11px; opacity: 0.85; }
+.bt-action { flex: none; border: 0; border-radius: 12px; padding: 6px 12px; background: rgba(255, 255, 255, 0.14); color: inherit; font-size: 11px; font-weight: 600; cursor: pointer; }
+.bt-action:hover:not(:disabled) { background: rgba(255, 255, 255, 0.26); }
+.bt-action:disabled { opacity: 0.5; cursor: default; }

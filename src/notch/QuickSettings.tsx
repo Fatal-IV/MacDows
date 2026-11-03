@@ -2,6 +2,7 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { getBrightness, getQuickSettings, getVolume, openMacdowsSettings, quickLaunch, setBrightness, setQuickSetting, setVolume, type QuickKey, type QuickSettings, type QuickShortcut } from "../bridge";
 import { useT } from "../i18n";
+import { BluetoothPage } from "./BluetoothPage";
 
 const svg = (children: ReactNode, size = 22) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
@@ -29,6 +30,9 @@ const ICONS: Record<QuickKey, ReactNode> = {
   ),
 };
 
+/** The tiles that have a page of their own behind an arrow. */
+const DETAIL: QuickKey[] = ["bluetooth"];
+
 const ORDER: { key: QuickKey; label: string }[] = [
   { key: "wifi", label: "quick.wifi" },
   { key: "bluetooth", label: "quick.bluetooth" },
@@ -41,6 +45,8 @@ export function QuickSettingsScreen({ onOpenShelf, onOpenHistory }: { onOpenShel
   const [state, setState] = useState<QuickSettings | null>(null);
   const [busy, setBusy] = useState<QuickKey | null>(null);
   const [failed, setFailed] = useState<QuickKey | null>(null);
+  // Wi-Fi and Bluetooth open a page of their own; the arrow on the tile leads there.
+  const [page, setPage] = useState<QuickKey | null>(null);
 
   useEffect(() => {
     let alive = true;
@@ -67,6 +73,8 @@ export function QuickSettingsScreen({ onOpenShelf, onOpenHistory }: { onOpenShel
     }
   };
 
+  if (page === "bluetooth") return <BluetoothPage onBack={() => setPage(null)} />;
+
   return (
     <div className="quick">
       <div className="quick-tiles">
@@ -75,19 +83,20 @@ export function QuickSettingsScreen({ onOpenShelf, onOpenHistory }: { onOpenShel
         const unavailable = tile ? !tile.available : false;
         const on = !!tile?.on && !unavailable;
         return (
-          <button
-            key={key}
-            className={`glass-tile${on ? " on" : ""}${busy === key ? " busy" : ""}`}
-            disabled={!tile || unavailable}
-            onClick={() => toggle(key)}
-            aria-pressed={on}
-          >
-            <span className="glass-icon">{ICONS[key]}</span>
-            <span className="glass-text">
-              <span className="glass-name">{t(label)}</span>
-              <span className="glass-state">{failed === key ? t("quick.error") : unavailable ? t("quick.unavailable") : on ? t("quick.on") : t("quick.off")}</span>
-            </span>
-          </button>
+          <div key={key} className={`glass-tile${on ? " on" : ""}${busy === key ? " busy" : ""}${!tile || unavailable ? " disabled" : ""}`}>
+            <button className="tile-main" disabled={!tile || unavailable} onClick={() => toggle(key)} aria-pressed={on}>
+              <span className="glass-icon">{ICONS[key]}</span>
+              <span className="glass-text">
+                <span className="glass-name">{t(label)}</span>
+                <span className="glass-state">{failed === key ? t("quick.error") : unavailable ? t("quick.unavailable") : on ? t("quick.on") : t("quick.off")}</span>
+              </span>
+            </button>
+            {DETAIL.includes(key) && (
+              <button className="tile-more" aria-label={t("common.more")} title={t("common.more")} onClick={() => setPage(key)}>
+                ›
+              </button>
+            )}
+          </div>
         );
       })}
       </div>

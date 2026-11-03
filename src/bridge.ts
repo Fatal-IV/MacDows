@@ -69,7 +69,7 @@ export type QuickKey = keyof QuickSettings;
 export const getQuickSettings = () => invoke<QuickSettings>("get_quick_settings");
 export const setQuickSetting = (key: QuickKey, on: boolean) => invoke<QuickSettings>("set_quick_setting", { key, on });
 
-export type QuickShortcut = "screenshot" | "settings" | "task_manager" | "calculator" | "lock";
+export type QuickShortcut = "screenshot" | "settings" | "task_manager" | "calculator" | "lock" | "bluetooth_settings" | "wifi_settings";
 export const openMacdowsSettings = () => invoke<void>("open_macdows_settings");
 export const quickLaunch = (id: QuickShortcut) => invoke<void>("quick_launch", { id });
 
@@ -119,3 +119,15 @@ export const revealShelfItem = (path: string) => invoke<void>("reveal_shelf_item
 export const getNotificationHistory = () => invoke<Notice[]>("get_notification_history");
 export const clearNotificationHistory = () => invoke<void>("clear_notification_history");
 export const onNotificationHistoryChanged = (cb: () => void): Promise<UnlistenFn> => listen("notification-history-changed", cb);
+
+export type BtKind = "audio" | "phone" | "computer" | "input" | "other";
+export interface BtDevice {
+  id: string;
+  name: string;
+  address: string;
+  connected: boolean;
+  battery: number | null;
+  kind: BtKind;
+}
+export const getBluetoothDevices = () => invoke<BtDevice[]>("get_bluetooth_devices");
+export const setBluetoothConnection = (address: string, connect: boolean) => invoke<BtDevice[]>("set_bluetooth_connection", { address, connect });

@@ -120,5 +120,16 @@
   "history.now": "now",
   "history.min": "min",
   "history.hour": "h",
-  "quick.history": "Notification history"
+  "quick.history": "Notification history",
+  "bt.title": "Bluetooth",
+  "bt.connected": "Connected",
+  "bt.notConnected": "Not connected",
+  "bt.connect": "Connect",
+  "bt.disconnect": "Disconnect",
+  "bt.working": "…",
+  "bt.empty": "No paired devices",
+  "bt.add": "Add a device",
+  "bt.failed": "Could not connect. Try Windows settings.",
+  "common.back": "Back",
+  "common.more": "Details"
 }
