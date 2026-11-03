@@ -1,10 +1,10 @@
-// Wi-Fi, Bluetooth, Do not disturb and Battery saver as glass tiles, the second page of the tools panel.
-import { useEffect, useState, type ReactNode } from "react";
-import { getQuickSettings, setQuickSetting, type QuickKey, type QuickSettings } from "../bridge";
+// The quick settings screen of the notch: Wi-Fi, Bluetooth, Do not disturb and Battery saver as wide glass tiles (2 x 2), brightness and volume sliders beside them.
+import { useEffect, useRef, useState, type ReactNode } from "react";
+import { getBrightness, getQuickSettings, getVolume, setBrightness, setQuickSetting, setVolume, type QuickKey, type QuickSettings } from "../bridge";
 import { useT } from "../i18n";
 
-const svg = (children: ReactNode) => (
-  <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+const svg = (children: ReactNode, size = 22) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
     {children}
   </svg>
 );
@@ -36,7 +36,7 @@ const ORDER: { key: QuickKey; label: string }[] = [
   { key: "battery_saver", label: "quick.saver" },
 ];
 
-export function QuickSettingsPage() {
+export function QuickSettingsScreen() {
   const t = useT();
   const [state, setState] = useState<QuickSettings | null>(null);
   const [busy, setBusy] = useState<QuickKey | null>(null);
@@ -69,6 +69,7 @@ export function QuickSettingsPage() {
 
   return (
     <div className="quick">
+      <div className="quick-tiles">
       {ORDER.map(({ key, label }) => {
         const tile = state?.[key];
         const unavailable = tile ? !tile.available : false;
@@ -82,11 +83,84 @@ export function QuickSettingsPage() {
             aria-pressed={on}
           >
             <span className="glass-icon">{ICONS[key]}</span>
-            <span className="glass-name">{t(label)}</span>
-            <span className="glass-state">{failed === key ? t("quick.error") : unavailable ? t("quick.unavailable") : on ? t("quick.on") : t("quick.off")}</span>
+            <span className="glass-text">
+              <span className="glass-name">{t(label)}</span>
+              <span className="glass-state">{failed === key ? t("quick.error") : unavailable ? t("quick.unavailable") : on ? t("quick.on") : t("quick.off")}</span>
+            </span>
           </button>
         );
       })}
+      </div>
+      <div className="quick-sliders">
+        <GlassSlider label="quick.brightness" icon={SUN} read={getBrightness} write={setBrightness} />
+        <GlassSlider label="quick.volume" icon={SPEAKER} read={() => getVolume().then((v) => (v ? Math.round(v.level * 100) : null))} write={(p) => setVolume(p / 100).then(() => {})} />
+      </div>
+    </div>
+  );
+}
+
+const SUN = svg(
+  <>
+    <circle cx="12" cy="12" r="4" />
+    <path d="M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M5.3 5.3l1.6 1.6M17.1 17.1l1.6 1.6M18.7 5.3l-1.6 1.6M6.9 17.1l-1.6 1.6" />
+  </>,
+  18,
+);
+const SPEAKER = svg(
+  <>
+    <path d="M4 9.5v5h3.6L12.5 19V5L7.6 9.5H4Z" />
+    <path d="M16 9a4.2 4.2 0 0 1 0 6M18.6 6.4a8 8 0 0 1 0 11.2" />
+  </>,
+  18,
+);
+
+/** A glass slider (0 to 100). `read` returning null means this PC has no such control. */
+function GlassSlider({ label, icon, read, write }: { label: string; icon: ReactNode; read: () => Promise<number | null>; write: (percent: number) => Promise<void> }) {
+  const t = useT();
+  const [value, setValue] = useState<number | null | undefined>(undefined); // undefined: still loading
+  const dragging = useRef(false);
+  const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+
+  useEffect(() => {
+    let alive = true;
+    const load = () => read().then((v) => alive && !dragging.current && setValue(v)).catch(() => alive && setValue(null));
+    load();
+    const id = setInterval(load, 3000);
+    return () => {
+      alive = false;
+      clearInterval(id);
+      clearTimeout(timer.current);
+    };
+  }, []);
+
+  // Slider moves are sent at most every 120 ms, and the last one always goes through.
+  const change = (v: number) => {
+    setValue(v);
+    clearTimeout(timer.current);
+    timer.current = setTimeout(() => write(v).catch(() => {}), 120);
+  };
+
+  const unavailable = value === null;
+  const shown = value ?? 0;
+  return (
+    <div className={`glass-slider${unavailable ? " off" : ""}`}>
+      <span className="slider-icon">{icon}</span>
+      <div className="slider-body">
+        <span className="slider-name">{t(label)}</span>
+        <input
+          type="range"
+          min={0}
+          max={100}
+          value={shown}
+          disabled={unavailable || value === undefined}
+          style={{ ["--v" as string]: `${shown}%` }}
+          onPointerDown={() => (dragging.current = true)}
+          onPointerUp={() => (dragging.current = false)}
+          onChange={(e) => change(Number(e.target.value))}
+          aria-label={t(label)}
+        />
+      </div>
+      <span className="slider-value">{unavailable ? t("quick.unavailable") : `${shown}`}</span>
     </div>
   );
 }

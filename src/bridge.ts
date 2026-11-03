@@ -69,6 +69,9 @@ export type QuickKey = keyof QuickSettings;
 export const getQuickSettings = () => invoke<QuickSettings>("get_quick_settings");
 export const setQuickSetting = (key: QuickKey, on: boolean) => invoke<QuickSettings>("set_quick_setting", { key, on });
 
+export const getBrightness = () => invoke<number | null>("get_brightness");
+export const setBrightness = (level: number) => invoke<void>("set_brightness", { level });
+
 export const getVolume = () => invoke<Volume | null>("get_volume");
 export const setVolume = (level: number) => invoke<Volume | null>("set_volume", { level });
 export const onMediaChanged = (cb: (m: MediaInfo | null) => void): Promise<UnlistenFn> =>

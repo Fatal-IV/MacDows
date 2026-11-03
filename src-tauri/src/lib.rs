@@ -306,7 +306,7 @@ pub fn run() {
         .plugin(tauri_plugin_updater::Builder::new().build())
         .manage(AppSettings(Mutex::new(settings::load())))
         .manage(updates::UpdateState::default())
-        .invoke_handler(tauri::generate_handler![get_settings, set_setting, windows_list::list_windows, windows_list::focus_window, media::get_media, media::media_toggle, media::media_next, media::media_prev, media::media_seek, volume::get_volume, volume::set_volume, quick_settings::get_quick_settings, quick_settings::set_quick_setting, updates::get_update_status, updates::check_for_update, updates::install_update, appearance::get_system_accent_color, wallpaper::get_wallpaper_backdrop, taskbar::get_system_status, taskbar::shell_action, toggle_tray_panel, get_tray_items, activate_tray_item, close_tray_panel, system_theme::sync_system_theme])
+        .invoke_handler(tauri::generate_handler![get_settings, set_setting, windows_list::list_windows, windows_list::focus_window, media::get_media, media::media_toggle, media::media_next, media::media_prev, media::media_seek, volume::get_volume, volume::set_volume, quick_settings::get_quick_settings, quick_settings::set_quick_setting, quick_settings::get_brightness, quick_settings::set_brightness, updates::get_update_status, updates::check_for_update, updates::install_update, appearance::get_system_accent_color, wallpaper::get_wallpaper_backdrop, taskbar::get_system_status, taskbar::shell_action, toggle_tray_panel, get_tray_items, activate_tray_item, close_tray_panel, system_theme::sync_system_theme])
         .setup(|app| {
             for label in ["notch", "dock"] {
                 if let Some(hwnd) = app.get_webview_window(label).and_then(|w| w.hwnd().ok()) {

@@ -1,7 +1,6 @@
 // The calendar and the timer / stopwatch that the notch shows besides the media panel.
 import { useEffect, useMemo, useState } from "react";
 import { useLocale, useT } from "../i18n";
-import { QuickSettingsPage } from "./QuickSettings";
 
 export type TimerMode = "timer" | "stopwatch";
 
@@ -160,22 +159,10 @@ function TimerView({ p }: { p: Timer }) {
 }
 
 export function ToolsPanel({ timer }: { timer: Timer }) {
-  const t = useT();
-  const [page, setPage] = useState<"tools" | "quick">("tools");
   return (
-    <div className="tools-pages">
-      {page === "tools" ? (
-        <div className="tools">
-          <Calendar />
-          <TimerView p={timer} />
-        </div>
-      ) : (
-        <QuickSettingsPage />
-      )}
-      <div className="page-dots">
-        <button className={page === "tools" ? "on" : ""} aria-label={t("quick.page.tools")} title={t("quick.page.tools")} onClick={() => setPage("tools")} />
-        <button className={page === "quick" ? "on" : ""} aria-label={t("quick.page.quick")} title={t("quick.page.quick")} onClick={() => setPage("quick")} />
-      </div>
+    <div className="tools">
+      <Calendar />
+      <TimerView p={timer} />
     </div>
   );
 }

@@ -14,6 +14,7 @@ import { SurfaceShape } from "../appearance/SurfaceShape";
 import "../appearance/surfaces.css";
 import { MusicNoteIcon, PauseIcon, PlayIcon, SkipBackIcon, SkipForwardIcon } from "./icons";
 import { ToolsPanel, useTimer } from "./Tools";
+import { QuickSettingsScreen } from "./QuickSettings";
 import "./Notch.css";
 
 type Mode = "status" | "music";
@@ -244,6 +245,8 @@ export default function Notch() {
   // A click opens the player; the middle button or the arrow opens calendar | Pomodoro.
   const [open, setOpen] = useState(false);
   const [tools, setTools] = useState(false);
+  // A click opens the quick settings: its own screen, separate from the player and the tools.
+  const [quick, setQuick] = useState(false);
   const timer = useTimer();
 
   const hasMedia = media !== null;
@@ -334,7 +337,10 @@ export default function Notch() {
     const direction = w.sum > 0 ? 1 : -1;
     w.sum = 0;
     // Scrolling up opens calendar | Pomodoro, scrolling down closes it (or switches the pill).
-    if (direction < 0 && !tools) {
+    if (quick) {
+      setQuick(false);
+      if (direction < 0) setTools(true);
+    } else if (direction < 0 && !tools) {
       setTools(true);
       setOpen(false);
     } else if (direction > 0 && tools) {
@@ -353,28 +359,28 @@ export default function Notch() {
     setHovered(false);
     setOpen(false);
     setTools(false);
+    setQuick(false);
     setMode(restingMode());
   };
 
   const isMusic = hasMedia && mode === "music";
-  const musicOpen = isMusic && open && !tools;
+  const musicOpen = isMusic && open && !tools && !quick;
   const toggleTools = () => {
     setTools((v) => !v);
     setOpen(false);
+    setQuick(false);
   };
-  const openPlayer = () => {
-    if (!hasMedia || open || tools) return;
-    manualMusic.current = true;
-    setMode("music");
-    setOpen(true);
+  const openQuick = () => {
+    if (open || tools || quick) return;
+    setQuick(true);
   };
   useEffect(() => {
     if (!hasMedia) setOpen(false);
   }, [hasMedia]);
   const battery = system?.battery_percent ?? null;
 
-  const width = !ready ? 34 : tools ? 520 : musicOpen ? 340 : isMusic ? 200 : hovered ? (battery != null ? 200 : 170) : hasMedia ? 170 : 140;
-  const height = !ready ? 34 : tools ? 280 : musicOpen ? (media!.duration_ms > 0 ? 126 : 108) : 36;
+  const width = !ready ? 34 : tools || quick ? 520 : musicOpen ? 340 : isMusic ? 200 : hovered ? (battery != null ? 200 : 170) : hasMedia ? 170 : 140;
+  const height = !ready ? 34 : tools ? 280 : quick ? 230 : musicOpen ? (media!.duration_ms > 0 ? 126 : 108) : 36;
 
   return (
     <div className="screen" style={{ zoom: scale }}>
@@ -403,7 +409,7 @@ export default function Notch() {
         onHoverStart={onHoverStart}
         onHoverEnd={onHoverEnd}
         onWheel={onWheel}
-        onClick={openPlayer}
+        onClick={openQuick}
         onMouseDown={(e) => e.button === 1 && e.preventDefault()}
         onAuxClick={(e) => {
           if (e.button !== 1) return;
@@ -438,7 +444,21 @@ export default function Notch() {
         </AnimatePresence>
 
         <AnimatePresence mode="wait" initial={false}>
-          {tools ? (
+          {quick ? (
+            <motion.div key="quick" className="tools-wrap" initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.98, transition: { duration: 0.1 } }} transition={{ type: "spring", stiffness: 500, damping: 30 }}>
+              <QuickSettingsScreen />
+              <button
+                className="corner-arrow"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setQuick(false);
+                }}
+                aria-label={t("notch.back")}
+              >
+                ⌄
+              </button>
+            </motion.div>
+          ) : tools ? (
             <motion.div key="tools" className="tools-wrap" initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.98, transition: { duration: 0.1 } }} transition={{ type: "spring", stiffness: 500, damping: 30 }}>
               <ToolsPanel timer={timer} />
               <button

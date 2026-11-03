@@ -98,5 +98,7 @@
   "quick.unavailable": "Yok",
   "quick.page.tools": "Takvim ve zamanlayıcı",
   "quick.page.quick": "Hızlı ayarlar",
-  "quick.error": "Değiştirilemedi"
+  "quick.error": "Değiştirilemedi",
+  "quick.brightness": "Parlaklık",
+  "quick.volume": "Ses"
 }

@@ -129,6 +129,48 @@ fn read_all() -> QuickSettings {
     }
 }
 
+/// A slider value as a whole percent: NaN becomes 0, anything out of range is clamped.
+pub fn clamp_percent(level: f64) -> u32 {
+    if level.is_nan() { 0 } else { level.clamp(0.0, 100.0).round() as u32 }
+}
+
+fn powershell(script: &str) -> Option<String> {
+    let out = Command::new("powershell")
+        .args(["-NoProfile", "-NonInteractive", "-Command", script])
+        .creation_flags(CREATE_NO_WINDOW)
+        .output()
+        .ok()?;
+    out.status.success().then(|| String::from_utf8_lossy(&out.stdout).into_owned())
+}
+
+/// Brightness of the built-in display (0 to 100); `None` on a PC whose screen has no brightness control.
+#[tauri::command]
+pub async fn get_brightness() -> Option<u32> {
+    tauri::async_runtime::spawn_blocking(|| {
+        powershell("(Get-CimInstance -Namespace root/WMI -ClassName WmiMonitorBrightness -ErrorAction Stop | Select-Object -First 1).CurrentBrightness")?
+            .trim()
+            .parse()
+            .ok()
+    })
+    .await
+    .ok()
+    .flatten()
+}
+
+#[tauri::command]
+pub async fn set_brightness(level: f64) -> Result<(), String> {
+    let percent = clamp_percent(level);
+    tauri::async_runtime::spawn_blocking(move || {
+        powershell(&format!(
+            "Invoke-CimMethod -Namespace root/WMI -ClassName WmiMonitorBrightnessMethods -MethodName WmiSetBrightness -Arguments @{{Timeout=1;Brightness={percent}}} -ErrorAction Stop | Out-Null"
+        ))
+        .map(|_| ())
+        .ok_or_else(|| "could not set the brightness".to_string())
+    })
+    .await
+    .map_err(|e| e.to_string())?
+}
+
 // These wait on WinRT and child processes, so they run off the main thread.
 #[tauri::command]
 pub async fn get_quick_settings() -> Result<QuickSettings, String> {
@@ -160,6 +202,14 @@ mod tests {
         let out = "Güç Ayarı Dizini: 0x00000000\n  Geçerli AC Güç Ayarı Dizini: 0x00000000\n  Geçerli DC Güç Ayarı Dizini: 0x00000064\n";
         assert_eq!(last_hex_value(out), Some(100));
         assert_eq!(last_hex_value("no numbers here"), None);
+    }
+
+    #[test]
+    fn percent_is_clamped() {
+        assert_eq!(clamp_percent(f64::NAN), 0);
+        assert_eq!(clamp_percent(-5.0), 0);
+        assert_eq!(clamp_percent(42.4), 42);
+        assert_eq!(clamp_percent(180.0), 100);
     }
 
     #[test]

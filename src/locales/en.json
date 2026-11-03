@@ -98,5 +98,7 @@
   "quick.unavailable": "Not available",
   "quick.page.tools": "Calendar and timer",
   "quick.page.quick": "Quick settings",
-  "quick.error": "Could not change"
+  "quick.error": "Could not change",
+  "quick.brightness": "Brightness",
+  "quick.volume": "Volume"
 }
