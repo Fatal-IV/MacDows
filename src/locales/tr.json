@@ -83,5 +83,9 @@
   "tools.reset": "Sıfırla",
   "tools.skip": "Atla",
   "notch.openTools": "Takvim ve Pomodoro",
-  "notch.back": "Geri"
+  "notch.back": "Geri",
+  "tools.timer": "Zamanlayıcı",
+  "tools.stopwatch": "Kronometre",
+  "tools.custom": "Özel: 12, 1:30 veya 0:45",
+  "tools.go": "Başla"
 }

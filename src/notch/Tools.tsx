@@ -1,57 +1,92 @@
-// The calendar and the Pomodoro timer that the notch shows besides the media panel.
+// The calendar and the timer / stopwatch that the notch shows besides the media panel.
 import { useEffect, useMemo, useState } from "react";
 import { useLocale, useT } from "../i18n";
 
-const FOCUS_SECONDS = 25 * 60;
-const BREAK_SECONDS = 5 * 60;
+export type TimerMode = "timer" | "stopwatch";
 
-export interface Pomodoro {
-  phase: "focus" | "break";
-  remaining: number;
+export interface Timer {
+  mode: TimerMode;
+  /** Milliseconds shown: what is left (timer) or what has passed (stopwatch). */
+  ms: number;
   running: boolean;
+  setMode: (m: TimerMode) => void;
   toggle: () => void;
   reset: () => void;
-  skip: () => void;
+  /** Sets the timer to this many milliseconds and starts it. */
+  start: (ms: number) => void;
 }
 
-const length = (phase: "focus" | "break") => (phase === "focus" ? FOCUS_SECONDS : BREAK_SECONDS);
+/** "12" is 12 minutes, "1:30" is 1 hour 30 minutes, "0:45" is 45 minutes. */
+export function parseDuration(text: string): number | null {
+  const t = text.trim();
+  const m = /^(\d+)(?::(\d{1,2}))?$/.exec(t);
+  if (!m) return null;
+  const ms = m[2] === undefined ? Number(m[1]) * 60_000 : (Number(m[1]) * 60 + Number(m[2])) * 60_000;
+  return ms > 0 ? ms : null;
+}
+
+const clock = (ms: number, up: boolean) => {
+  const s = up ? Math.floor(ms / 1000) : Math.ceil(ms / 1000);
+  const h = Math.floor(s / 3600);
+  const mm = Math.floor((s % 3600) / 60);
+  const ss = String(s % 60).padStart(2, "0");
+  return h ? `${h}:${String(mm).padStart(2, "0")}:${ss}` : `${mm}:${ss}`;
+};
 
 /** Lives in the notch itself so the timer keeps running while the panel is closed. */
-export function usePomodoro(): Pomodoro {
-  const [phase, setPhase] = useState<"focus" | "break">("focus");
-  const [remaining, setRemaining] = useState(FOCUS_SECONDS);
-  const [endAt, setEndAt] = useState<number | null>(null);
+export function useTimer(): Timer {
+  const [mode, setModeState] = useState<TimerMode>("timer");
+  // Timer: `left` is what remained when it last stopped. Stopwatch: `spent` is what had passed.
+  const [left, setLeft] = useState(0);
+  const [spent, setSpent] = useState(0);
+  const [since, setSince] = useState<number | null>(null);
+  const [now, setNow] = useState(Date.now());
 
   useEffect(() => {
-    if (endAt === null) return;
-    const id = setInterval(() => {
-      const left = Math.max(0, Math.round((endAt - Date.now()) / 1000));
-      setRemaining(left);
-      if (left === 0) {
-        // The phase ends: switch to the other one and stop, waiting for the user.
-        const next = phase === "focus" ? "break" : "focus";
-        setPhase(next);
-        setRemaining(length(next));
-        setEndAt(null);
-      }
-    }, 250);
+    if (since === null) return;
+    const id = setInterval(() => setNow(Date.now()), 200);
     return () => clearInterval(id);
-  }, [endAt, phase]);
+  }, [since]);
+
+  const run = since === null ? 0 : Math.max(0, now - since);
+  const ms = mode === "timer" ? Math.max(0, left - run) : spent + run;
+
+  // A timer that reaches zero stops there.
+  useEffect(() => {
+    if (mode === "timer" && since !== null && left - run <= 0) {
+      setSince(null);
+      setLeft(0);
+    }
+  }, [mode, since, left, run]);
 
   return {
-    phase,
-    remaining,
-    running: endAt !== null,
-    toggle: () => setEndAt((e) => (e === null ? Date.now() + remaining * 1000 : null)),
-    reset: () => {
-      setEndAt(null);
-      setRemaining(length(phase));
+    mode,
+    ms,
+    running: since !== null,
+    setMode: (m) => {
+      setSince(null);
+      setModeState(m);
     },
-    skip: () => {
-      const next = phase === "focus" ? "break" : "focus";
-      setEndAt(null);
-      setPhase(next);
-      setRemaining(length(next));
+    toggle: () => {
+      if (since !== null) {
+        if (mode === "timer") setLeft(ms);
+        else setSpent(ms);
+        setSince(null);
+      } else if (mode === "stopwatch" || left > 0) {
+        setNow(Date.now());
+        setSince(Date.now());
+      }
+    },
+    reset: () => {
+      setSince(null);
+      setLeft(0);
+      setSpent(0);
+    },
+    start: (d) => {
+      setModeState("timer");
+      setLeft(d);
+      setNow(Date.now());
+      setSince(Date.now());
     },
   };
 }
@@ -72,9 +107,11 @@ function Calendar() {
   return (
     <div className="calendar">
       <div className="cal-head">
-        <button onClick={() => setOffset(offset - 1)} aria-label="‹">‹</button>
         <button className="cal-title" onClick={() => setOffset(0)}>{title}</button>
-        <button onClick={() => setOffset(offset + 1)} aria-label="›">›</button>
+        <span className="cal-nav">
+          <button onClick={() => setOffset(offset - 1)} aria-label="‹">‹</button>
+          <button onClick={() => setOffset(offset + 1)} aria-label="›">›</button>
+        </span>
       </div>
       <div className="cal-grid">
         {names.map((n, i) => <span key={`n${i}`} className="cal-name">{n}</span>)}
@@ -84,30 +121,48 @@ function Calendar() {
   );
 }
 
-const mmss = (s: number) => `${String(Math.floor(s / 60)).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}`;
+const PRESETS = [5, 15, 25, 50];
 
-function PomodoroView({ p }: { p: Pomodoro }) {
+function TimerView({ p }: { p: Timer }) {
   const t = useT();
-  const ratio = 1 - p.remaining / length(p.phase);
+  const [custom, setCustom] = useState("");
+  const parsed = parseDuration(custom);
+  const submit = () => {
+    if (parsed === null) return;
+    p.start(parsed);
+    setCustom("");
+  };
   return (
-    <div className="pomodoro">
-      <span className="pomo-phase">{p.phase === "focus" ? t("tools.focus") : t("tools.break")}</span>
-      <span className="pomo-time">{mmss(p.remaining)}</span>
-      <div className="bar-track"><div className="bar-fill" style={{ width: `${ratio * 100}%` }} /></div>
-      <div className="pomo-buttons">
-        <button onClick={p.toggle}>{p.running ? t("tools.pause") : t("tools.start")}</button>
-        <button onClick={p.reset}>{t("tools.reset")}</button>
-        <button onClick={p.skip}>{t("tools.skip")}</button>
+    <div className="timer">
+      <div className="seg">
+        <button className={p.mode === "timer" ? "on" : ""} onClick={() => p.setMode("timer")}>{t("tools.timer")}</button>
+        <button className={p.mode === "stopwatch" ? "on" : ""} onClick={() => p.setMode("stopwatch")}>{t("tools.stopwatch")}</button>
       </div>
+      <span className="timer-time">{clock(p.ms, p.mode === "stopwatch")}</span>
+      <div className="timer-main">
+        <button className="primary" onClick={p.toggle}>{p.running ? t("tools.pause") : t("tools.start")}</button>
+        <button onClick={p.reset}>{t("tools.reset")}</button>
+      </div>
+      {p.mode === "timer" && (
+        <>
+          <div className="presets">
+            {PRESETS.map((m) => <button key={m} onClick={() => p.start(m * 60_000)}>{m}m</button>)}
+          </div>
+          <div className="custom">
+            <input value={custom} onChange={(e) => setCustom(e.target.value)} onKeyDown={(e) => e.key === "Enter" && submit()} placeholder={t("tools.custom")} spellCheck={false} />
+            <button disabled={parsed === null} onClick={submit}>{t("tools.go")}</button>
+          </div>
+        </>
+      )}
     </div>
   );
 }
 
-export function ToolsPanel({ pomodoro }: { pomodoro: Pomodoro }) {
+export function ToolsPanel({ timer }: { timer: Timer }) {
   return (
     <div className="tools">
       <Calendar />
-      <PomodoroView p={pomodoro} />
+      <TimerView p={timer} />
     </div>
   );
 }

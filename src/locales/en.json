@@ -83,5 +83,9 @@
   "tools.reset": "Reset",
   "tools.skip": "Skip",
   "notch.openTools": "Calendar and Pomodoro",
-  "notch.back": "Back"
+  "notch.back": "Back",
+  "tools.timer": "Timer",
+  "tools.stopwatch": "Stopwatch",
+  "tools.custom": "Custom: 12, 1:30 or 0:45",
+  "tools.go": "Go"
 }

@@ -13,7 +13,7 @@ import { initTheme } from "../appearance/theme";
 import { SurfaceShape } from "../appearance/SurfaceShape";
 import "../appearance/surfaces.css";
 import { MusicNoteIcon, PauseIcon, PlayIcon, SkipBackIcon, SkipForwardIcon } from "./icons";
-import { ToolsPanel, usePomodoro } from "./Tools";
+import { ToolsPanel, useTimer } from "./Tools";
 import "./Notch.css";
 
 type Mode = "status" | "music";
@@ -244,7 +244,7 @@ export default function Notch() {
   // A click opens the player; the middle button or the arrow opens calendar | Pomodoro.
   const [open, setOpen] = useState(false);
   const [tools, setTools] = useState(false);
-  const pomodoro = usePomodoro();
+  const timer = useTimer();
 
   const hasMedia = media !== null;
   const playing = media?.playing ?? false;
@@ -373,8 +373,8 @@ export default function Notch() {
   }, [hasMedia]);
   const battery = system?.battery_percent ?? null;
 
-  const width = !ready ? 34 : tools ? 440 : musicOpen ? 340 : isMusic ? 200 : hovered ? (battery != null ? 200 : 170) : hasMedia ? 170 : 140;
-  const height = !ready ? 34 : tools ? 236 : musicOpen ? (media!.duration_ms > 0 ? 126 : 108) : 36;
+  const width = !ready ? 34 : tools ? 520 : musicOpen ? 340 : isMusic ? 200 : hovered ? (battery != null ? 200 : 170) : hasMedia ? 170 : 140;
+  const height = !ready ? 34 : tools ? 280 : musicOpen ? (media!.duration_ms > 0 ? 126 : 108) : 36;
 
   return (
     <div className="screen" style={{ zoom: scale }}>
@@ -440,7 +440,7 @@ export default function Notch() {
         <AnimatePresence mode="wait" initial={false}>
           {tools ? (
             <motion.div key="tools" className="tools-wrap" initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.98, transition: { duration: 0.1 } }} transition={{ type: "spring", stiffness: 500, damping: 30 }}>
-              <ToolsPanel pomodoro={pomodoro} />
+              <ToolsPanel timer={timer} />
               <button
                 className="corner-arrow"
                 onClick={(e) => {

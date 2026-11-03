@@ -419,3 +419,32 @@ img { -webkit-user-drag: none; user-select: none; }
 
 /* More air between the calendar rows */
 .cal-grid { row-gap: 5px; }
+
+/* Calendar | timer, laid out like the reference screenshot */
+.tools { align-items: stretch; gap: 0; padding: 22px 26px 20px; }
+.calendar { flex: 1.1; padding-right: 26px; }
+.cal-head { justify-content: space-between; margin-bottom: 8px; }
+.cal-head .cal-title { font-size: 15px; font-weight: 700; text-transform: none; padding: 0; }
+.cal-nav button { font-size: 16px; padding: 0 5px; opacity: 0.6; }
+.cal-nav button:hover { opacity: 1; }
+.cal-grid { row-gap: 7px; }
+.cal-name { font-size: 10px; font-weight: 600; opacity: 0.55; }
+.cal-day { height: 24px; width: 24px; line-height: 24px; margin: 0 auto; font-size: 12px; border-radius: 7px; }
+.cal-day.today { background: #fff; color: #000; font-weight: 700; }
+.timer { flex: 1; display: flex; flex-direction: column; gap: 10px; padding-left: 26px; border-left: 1px solid rgba(255, 255, 255, 0.12); }
+.seg { display: flex; padding: 3px; border-radius: 10px; background: rgba(255, 255, 255, 0.08); }
+.seg button { flex: 1; border: 0; border-radius: 8px; padding: 4px 0; background: transparent; color: var(--nectar-text-muted, rgba(255, 255, 255, 0.6)); font-size: 11px; font-weight: 600; cursor: pointer; }
+.seg button.on { background: #fff; color: #000; }
+.timer-time { text-align: center; font-size: 40px; font-weight: 700; line-height: 1.1; font-variant-numeric: tabular-nums; }
+.timer-main { display: flex; gap: 8px; }
+.timer-main button, .presets button, .custom button { border: 0; border-radius: 10px; background: rgba(255, 255, 255, 0.1); color: inherit; font-size: 12px; font-weight: 600; cursor: pointer; }
+.timer-main button { flex: 1; padding: 9px 0; font-size: 13px; }
+.timer-main button.primary { background: #fff; color: #000; }
+.timer-main button:hover:not(.primary), .presets button:hover, .custom button:hover:not(:disabled) { background: rgba(255, 255, 255, 0.2); }
+.presets { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.presets button { padding: 7px 0; border: 1px solid rgba(255, 255, 255, 0.1); background: rgba(255, 255, 255, 0.04); }
+.custom { display: flex; gap: 8px; }
+.custom input { flex: 1; min-width: 0; border: 1px solid rgba(255, 255, 255, 0.12); border-radius: 10px; background: transparent; color: inherit; padding: 6px 9px; font-size: 11px; outline: none; }
+.custom input:focus { border-color: rgba(255, 255, 255, 0.4); }
+.custom button { padding: 0 12px; }
+.custom button:disabled { opacity: 0.4; cursor: default; }
