@@ -1,6 +1,6 @@
 // The quick settings screen of the notch: Wi-Fi, Bluetooth, Do not disturb and Battery saver as wide glass tiles (2 x 2), brightness and volume sliders beside them.
 import { useEffect, useRef, useState, type ReactNode } from "react";
-import { getBrightness, getQuickSettings, getVolume, setBrightness, setQuickSetting, setVolume, type QuickKey, type QuickSettings } from "../bridge";
+import { getBrightness, getQuickSettings, getVolume, quickLaunch, setBrightness, setQuickSetting, setVolume, type QuickKey, type QuickSettings, type QuickShortcut } from "../bridge";
 import { useT } from "../i18n";
 
 const svg = (children: ReactNode, size = 22) => (
@@ -95,9 +95,24 @@ export function QuickSettingsScreen() {
         <GlassSlider label="quick.brightness" icon={SUN} read={getBrightness} write={setBrightness} />
         <GlassSlider label="quick.volume" icon={SPEAKER} read={() => getVolume().then((v) => (v ? Math.round(v.level * 100) : null))} write={(p) => setVolume(p / 100).then(() => {})} />
       </div>
+      <div className="quick-shortcuts">
+        {SHORTCUTS.map(({ id, label, icon }) => (
+          <button key={id} className="shortcut" title={t(label)} aria-label={t(label)} onClick={() => quickLaunch(id).catch(() => {})}>
+            {icon}
+          </button>
+        ))}
+      </div>
     </div>
   );
 }
+
+const SHORTCUTS: { id: QuickShortcut; label: string; icon: ReactNode }[] = [
+  { id: "screenshot", label: "quick.screenshot", icon: svg(<><path d="M7 3v14h14" /><path d="M3 7h14v14" /></>, 17) },
+  { id: "settings", label: "quick.settings", icon: svg(<><circle cx="12" cy="12" r="3" /><path d="M12 2.8v2.6M12 18.6v2.6M2.8 12h2.6M18.6 12h2.6M5.5 5.5l1.8 1.8M16.7 16.7l1.8 1.8M18.5 5.5l-1.8 1.8M7.3 16.7l-1.8 1.8" /></>, 17) },
+  { id: "task_manager", label: "quick.taskManager", icon: svg(<path d="M3 12h4l2.5-6 4 12 2.5-6H21" />, 17) },
+  { id: "calculator", label: "quick.calculator", icon: svg(<><rect x="5" y="3" width="14" height="18" rx="2.5" /><path d="M8.5 7.5h7M9 12h.01M12 12h.01M15 12h.01M9 16h.01M12 16h.01M15 16h.01" /></>, 17) },
+  { id: "lock", label: "quick.lock", icon: svg(<><rect x="5" y="11" width="14" height="9.5" rx="2.5" /><path d="M8 11V8a4 4 0 0 1 8 0v3" /></>, 17) },
+];
 
 const SUN = svg(
   <>

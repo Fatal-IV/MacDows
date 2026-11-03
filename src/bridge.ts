@@ -69,6 +69,9 @@ export type QuickKey = keyof QuickSettings;
 export const getQuickSettings = () => invoke<QuickSettings>("get_quick_settings");
 export const setQuickSetting = (key: QuickKey, on: boolean) => invoke<QuickSettings>("set_quick_setting", { key, on });
 
+export type QuickShortcut = "screenshot" | "settings" | "task_manager" | "calculator" | "lock";
+export const quickLaunch = (id: QuickShortcut) => invoke<void>("quick_launch", { id });
+
 export const getBrightness = () => invoke<number | null>("get_brightness");
 export const setBrightness = (level: number) => invoke<void>("set_brightness", { level });
 

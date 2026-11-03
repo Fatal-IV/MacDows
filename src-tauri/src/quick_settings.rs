@@ -172,6 +172,24 @@ pub async fn set_brightness(level: f64) -> Result<(), String> {
     .map_err(|e| e.to_string())?
 }
 
+/// What each quick shortcut starts: a program and its arguments. `None` for an unknown id.
+pub fn launch_plan(id: &str) -> Option<(&'static str, &'static [&'static str])> {
+    match id {
+        "screenshot" => Some(("explorer.exe", &["ms-screenclip:"])),
+        "settings" => Some(("explorer.exe", &["ms-settings:"])),
+        "task_manager" => Some(("taskmgr.exe", &[])),
+        "calculator" => Some(("calc.exe", &[])),
+        "lock" => Some(("rundll32.exe", &["user32.dll,LockWorkStation"])),
+        _ => None,
+    }
+}
+
+#[tauri::command]
+pub fn quick_launch(id: String) -> Result<(), String> {
+    let (program, args) = launch_plan(&id).ok_or_else(|| format!("unknown shortcut: {id}"))?;
+    Command::new(program).args(args).creation_flags(CREATE_NO_WINDOW).spawn().map(|_| ()).map_err(|e| e.to_string())
+}
+
 // These wait on WinRT and child processes, so they run off the main thread.
 #[tauri::command]
 pub async fn get_quick_settings() -> Result<QuickSettings, String> {
@@ -203,6 +221,14 @@ mod tests {
         let out = "Güç Ayarı Dizini: 0x00000000\n  Geçerli AC Güç Ayarı Dizini: 0x00000000\n  Geçerli DC Güç Ayarı Dizini: 0x00000064\n";
         assert_eq!(last_hex_value(out), Some(100));
         assert_eq!(last_hex_value("no numbers here"), None);
+    }
+
+    #[test]
+    fn every_shortcut_has_a_launch_plan() {
+        for id in ["screenshot", "settings", "task_manager", "calculator", "lock"] {
+            assert!(launch_plan(id).is_some(), "{id}");
+        }
+        assert!(launch_plan("format_c").is_none());
     }
 
     #[test]

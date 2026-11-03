@@ -100,5 +100,10 @@
   "quick.page.quick": "Hızlı ayarlar",
   "quick.error": "Değiştirilemedi",
   "quick.brightness": "Parlaklık",
-  "quick.volume": "Ses"
+  "quick.volume": "Ses",
+  "quick.screenshot": "Ekran alıntısı",
+  "quick.settings": "Windows Ayarları",
+  "quick.taskManager": "Görev Yöneticisi",
+  "quick.calculator": "Hesap Makinesi",
+  "quick.lock": "Ekranı kilitle"
 }

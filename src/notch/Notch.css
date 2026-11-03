@@ -482,3 +482,8 @@ img { -webkit-user-drag: none; user-select: none; }
 .glass-slider input[type="range"] { -webkit-appearance: none; appearance: none; width: 100%; height: 6px; border-radius: 3px; margin: 0; outline: none; cursor: pointer;
   background: linear-gradient(to right, #fff var(--v, 0%), rgba(255, 255, 255, 0.2) var(--v, 0%)); }
 .glass-slider input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 14px; height: 14px; border-radius: 50%; background: #fff; box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4); }
+
+.quick-shortcuts { display: flex; justify-content: center; gap: 14px; flex: none; }
+.shortcut { display: flex; align-items: center; justify-content: center; width: 40px; height: 32px; padding: 0; border: 0; border-radius: 16px; background: rgba(255, 255, 255, 0.1); color: inherit; cursor: pointer; transition: background 0.15s, transform 0.15s; }
+.shortcut:hover { background: rgba(255, 255, 255, 0.2); }
+.shortcut:active { transform: scale(0.94); }

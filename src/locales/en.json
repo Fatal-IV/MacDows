@@ -100,5 +100,10 @@
   "quick.page.quick": "Quick settings",
   "quick.error": "Could not change",
   "quick.brightness": "Brightness",
-  "quick.volume": "Volume"
+  "quick.volume": "Volume",
+  "quick.screenshot": "Screenshot",
+  "quick.settings": "Windows Settings",
+  "quick.taskManager": "Task Manager",
+  "quick.calculator": "Calculator",
+  "quick.lock": "Lock screen"
 }
