@@ -3,6 +3,7 @@ name = "macdows"
 version = "0.1.0"
 description = "A notch and a dock for Windows"
 authors = ["Fatal-IV"]
+license = "GPL-3.0-only"
 edition = "2024"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
@@ -22,10 +23,11 @@ tauri = { version = "2", features = ["tray-icon", "image-png"] }
 tauri-plugin-opener = "2"
 tauri-plugin-single-instance = "2"
 tauri-plugin-updater = "2"
-windows = { version = "0.61", features = ["Win32_Foundation", "Foundation", "Media_Control", "Storage_Streams", "Win32_System_Com", "Win32_Graphics_Gdi", "Win32_Graphics_Dwm", "Win32_Storage_FileSystem", "Win32_System_Threading", "Win32_UI_Accessibility", "Win32_UI_Shell", "Win32_UI_WindowsAndMessaging", "Win32_UI_Input_KeyboardAndMouse", "Win32_System_Power"] }
+windows = { version = "0.61", features = ["Win32_Foundation", "Foundation", "Media_Control", "Storage_Streams", "Win32_System_Com", "Win32_Graphics_Gdi", "Win32_Graphics_Dwm", "Win32_Storage_FileSystem", "Win32_System_Threading", "Win32_UI_Accessibility", "Win32_UI_Shell", "Win32_UI_WindowsAndMessaging", "Win32_UI_Input_KeyboardAndMouse", "Win32_System_Power", "Win32_System_Registry", "Win32_Storage_Xps", "Win32_Security_Authentication_Identity"] }
 png = "0.17"
 winreg = "0.55"
 base64 = "0.22"
+image = { version = "0.25", default-features = false, features = ["jpeg", "png", "bmp"] }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 

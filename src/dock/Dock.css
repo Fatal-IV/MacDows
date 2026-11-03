@@ -1,4 +1,5 @@
 :root { --dock-r: 22px; }
+.dock { --dock-bg: var(--nectar-bg, #000); }
 
 .dock-stage {
   display: flex;
@@ -11,9 +12,10 @@
   position: relative;
   display: flex;
   align-items: flex-end;
-  gap: 12px;
-  padding: 10px 16px 12px;
-  background: #000;
+  gap: 10px;
+  padding: 8px 14px 9px;
+  background: var(--dock-bg);
+  color: var(--nectar-text, #fff);
   border-top-left-radius: var(--dock-r);
   border-top-right-radius: var(--dock-r);
 }
@@ -29,20 +31,20 @@
 }
 .dock::before {
   left: calc(var(--dock-r) * -1);
-  background: radial-gradient(circle at 0 0, transparent var(--dock-r), #000 calc(var(--dock-r) + 0.5px));
+  background: radial-gradient(circle at 0 0, transparent var(--dock-r), var(--dock-bg) calc(var(--dock-r) + 0.5px));
 }
 .dock::after {
   right: calc(var(--dock-r) * -1);
-  background: radial-gradient(circle at 100% 0, transparent var(--dock-r), #000 calc(var(--dock-r) + 0.5px));
+  background: radial-gradient(circle at 100% 0, transparent var(--dock-r), var(--dock-bg) calc(var(--dock-r) + 0.5px));
 }
 
 .dock-item {
   position: relative;
-  width: 48px;
-  height: 48px;
+  width: 40px;
+  height: 40px;
   padding: 0;
   border: 0;
-  border-radius: 13px;
+  border-radius: 11px;
   background: transparent;
   cursor: default;
   display: flex;
@@ -50,21 +52,12 @@
   justify-content: center;
 }
 
-.dock-item img { width: 40px; height: 40px; object-fit: contain; }
+.dock-item img { width: 32px; height: 32px; object-fit: contain; }
 
 .dock-fallback {
   color: #fff;
   font-weight: 600;
-  font-size: 18px;
-}
-
-.dock-dot {
-  position: absolute;
-  bottom: -8px;
-  width: 4px;
-  height: 4px;
-  border-radius: 50%;
-  background: #fff;
+  font-size: 16px;
 }
 
 .dock-empty { color: rgba(255, 255, 255, 0.6); font-size: 12px; padding: 14px 8px; }
@@ -72,20 +65,20 @@
 .dock-sep {
   align-self: center;
   width: 1px;
-  height: 28px;
-  margin: 0 4px;
+  height: 24px;
+  margin: 0 3px;
   background: rgba(255, 255, 255, 0.18);
 }
 
 .dock-system {
   align-self: center;
-  width: 40px;
-  height: 40px;
+  width: 34px;
+  height: 34px;
   padding: 0;
   border: 0;
-  border-radius: 12px;
+  border-radius: 10px;
   background: transparent;
-  color: #fff;
+  color: var(--nectar-text, #fff);
   display: flex;
   align-items: center;
   justify-content: center;

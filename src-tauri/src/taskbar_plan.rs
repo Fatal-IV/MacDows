@@ -80,6 +80,8 @@ pub enum ShellAction {
     Notifications,
     QuickSettings,
     HiddenIcons,
+    Start,
+    Search,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -93,17 +95,20 @@ pub fn key_steps(action: ShellAction) -> Vec<KeyStep> {
     match action {
         ShellAction::Notifications => vec![KeyStep::Chord { win: true, key: 0x4E }],
         ShellAction::QuickSettings => vec![KeyStep::Chord { win: true, key: 0x41 }],
+        // A bare Windows key press opens Start; Win+S opens Search.
+        ShellAction::Start => vec![KeyStep::Chord { win: false, key: 0x5B }],
+        ShellAction::Search => vec![KeyStep::Chord { win: true, key: 0x53 }],
         ShellAction::HiddenIcons => {
             // Win+B focuses the last focused tray item, not necessarily the "show hidden icons" chevron. The chevron is
-            // always the leftmost item, so walking Left far enough reaches it from anywhere.
-            let mut steps = vec![KeyStep::Chord { win: true, key: 0x42 }, KeyStep::Wait { ms: 700 }];
-            for _ in 0..16 {
-                steps.push(KeyStep::Chord { win: false, key: 0x25 });
-                steps.push(KeyStep::Wait { ms: 40 });
-            }
-            steps.push(KeyStep::Wait { ms: 200 });
-            steps.push(KeyStep::Chord { win: false, key: 0x0D });
-            steps
+            // always the leftmost item and Home jumps straight to it. Walking Left does not work: focus wraps around, so
+            // with fewer than 16 items it can land on the clock and Enter opens the notification center instead.
+            vec![
+                KeyStep::Chord { win: true, key: 0x42 },
+                KeyStep::Wait { ms: 700 },
+                KeyStep::Chord { win: false, key: 0x24 },
+                KeyStep::Wait { ms: 300 },
+                KeyStep::Chord { win: false, key: 0x0D },
+            ]
         }
     }
 }
@@ -274,18 +279,24 @@ mod tests {
     }
 
     #[test]
-    fn hidden_icons_walk_left_to_the_chevron_before_pressing_enter() {
-        // Win+B focuses the LAST focused tray item, not the chevron; Left x16 always ends on the leftmost item (the chevron).
+    fn start_is_a_bare_windows_key_press_and_search_is_win_s() {
+        assert_eq!(key_steps(ShellAction::Start), vec![KeyStep::Chord { win: false, key: 0x5B }]);
+        assert_eq!(key_steps(ShellAction::Search), vec![KeyStep::Chord { win: true, key: 0x53 }]);
+    }
+
+    #[test]
+    fn hidden_icons_jump_to_the_chevron_with_home_before_pressing_enter() {
+        // Win+B focuses the LAST focused tray item, not the chevron. Home reaches the leftmost item (the chevron); Left
+        // presses wrap around and can end on the clock, which opens the notification center.
         let steps = key_steps(ShellAction::HiddenIcons);
         assert_eq!(steps[0], KeyStep::Chord { win: true, key: 0x42 });
         assert_eq!(steps[1], KeyStep::Wait { ms: 700 });
-        let lefts = steps.iter().filter(|s| matches!(s, KeyStep::Chord { win: false, key: 0x25 })).count();
-        assert_eq!(lefts, 16);
-        assert_eq!(*steps.last().unwrap(), KeyStep::Chord { win: false, key: 0x0D });
+        assert!(!steps.iter().any(|s| matches!(s, KeyStep::Chord { key: 0x25, .. })), "Left wraps around and must not be used");
         assert!(!steps.iter().any(|s| matches!(s, KeyStep::Chord { key: 0x1B, .. })), "Esc must never be sent");
+        let home_at = steps.iter().position(|s| matches!(s, KeyStep::Chord { win: false, key: 0x24 })).unwrap();
         let enter_at = steps.iter().position(|s| matches!(s, KeyStep::Chord { win: false, key: 0x0D })).unwrap();
-        let last_left_at = steps.iter().rposition(|s| matches!(s, KeyStep::Chord { win: false, key: 0x25 })).unwrap();
-        assert!(last_left_at < enter_at, "all Left presses come before Enter");
+        assert!(home_at < enter_at, "Home comes before Enter");
+        assert_eq!(*steps.last().unwrap(), KeyStep::Chord { win: false, key: 0x0D });
     }
 
     #[test]

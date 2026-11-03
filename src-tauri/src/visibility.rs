@@ -24,8 +24,10 @@ pub fn point_in_rect(x: i32, y: i32, r: Rect) -> bool {
 
 /// Whether a bar (notch or dock) should be shown right now.
 pub fn is_visible(i: Inputs) -> bool {
+    // A fullscreen app never hides the bar for good: it only stays out of the way until the
+    // cursor reaches the screen edge, like Peek.
     if should_hide(i.vis, i.fullscreen) {
-        return false;
+        return i.cursor_near;
     }
     match i.vis {
         Visibility::Fixed => true,
@@ -116,13 +118,15 @@ mod tests {
     fn fixed_is_visible_unless_fullscreen() {
         assert!(is_visible(inp(Fixed, Some(false), true, false)));
         assert!(is_visible(inp(Fixed, None, true, false)));
-        assert!(!is_visible(inp(Fixed, Some(true), false, true)));
+        assert!(!is_visible(inp(Fixed, Some(true), false, false)));
     }
 
     #[test]
-    fn fullscreen_hides_smart_and_peek_even_with_cursor_near() {
-        assert!(!is_visible(inp(Smart, Some(true), false, true)));
-        assert!(!is_visible(inp(Peek, Some(true), false, true)));
+    fn fullscreen_reveals_every_mode_when_the_cursor_is_near() {
+        for vis in [Fixed, Smart, Peek] {
+            assert!(is_visible(inp(vis, Some(true), false, true)), "{vis:?} near");
+            assert!(!is_visible(inp(vis, Some(true), false, false)), "{vis:?} away");
+        }
     }
 
     #[test]

@@ -5,7 +5,10 @@
   "windows": [
     "notch",
     "dock",
-    "settings"
+    "settings",
+    "tray",
+    "start",
+    "search"
   ],
   "permissions": [
     "core:default",

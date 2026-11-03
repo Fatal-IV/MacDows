@@ -1,6 +1,7 @@
 import { setSetting, type Visibility } from "../bridge";
 import { useSettings, useT } from "../i18n";
 import { checkForUpdate, installUpdate, useAppVersion, useUpdateStatus, type UpdateStatus } from "../updates";
+import Appearance from "./Appearance";
 import "./Settings.css";
 
 const VISIBILITIES: Visibility[] = ["fixed", "smart", "peek"];
@@ -68,6 +69,8 @@ export default function Settings() {
         <input type="checkbox" checked={s.start_with_windows} onChange={(e) => setSetting("start_with_windows", e.target.checked)} />
         <span>{t("settings.startWithWindows")}</span>
       </label>
+
+      <Appearance />
 
       <section className="updates">
         <h2>{t("update.title")}</h2>

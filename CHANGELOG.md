@@ -5,6 +5,15 @@ Format: [Keep a Changelog](https://keepachangelog.com/), versioning: [SemVer](ht
 
 ## [Unreleased]
 
+### Changed
+- The notch now follows Nectar's design: one damped spring for width, height and corners, concave corners that join it to the screen edge, a slide-in at startup, a status pill and a music pill you switch with the mouse wheel or a click on the clock, a music pill that opens itself when playback starts, a full player with artwork, a scrolling title and an album-colored glow.
+- **License changed from MIT to GPL-3.0**, because the notch is adapted from Nectar (GPL-3.0). See `NOTICE`.
+- Turkish interface text now addresses you formally ("siz").
+
+### Fixed
+- In a fullscreen app the notch and dock no longer disappear completely; they appear when the pointer reaches the screen edge.
+- Settings could open behind other windows and be unreachable while the taskbar was replaced; it now comes to the front.
+
 ## [0.1.0] - 2026-11-02
 
 First public release. A notch at the top of the screen and a dock at the bottom, as an extra layer on top of the Windows taskbar. The taskbar itself is not touched in this version.

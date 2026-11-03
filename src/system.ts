@@ -2,7 +2,7 @@ import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import { useEffect, useState } from "react";
 
-export type ShellAction = "notifications" | "quick_settings" | "hidden_icons";
+export type ShellAction = "notifications" | "quick_settings" | "hidden_icons" | "start" | "search";
 
 export interface SystemStatus {
   battery_percent: number | null;

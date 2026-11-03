@@ -168,7 +168,7 @@ pub fn start_watchdog(setting_on: impl Fn() -> bool + Send + 'static) {
     std::thread::spawn(move || loop {
         std::thread::sleep(Duration::from_secs(2));
         let visible = !WinBackend.window_hidden();
-        if visible && crate::taskbar_plan::watchdog_should_rehide(setting_on(), FileStore::default().load().as_ref(), visible) {
+        if visible && !crate::tray_panel::is_busy() && crate::taskbar_plan::watchdog_should_rehide(setting_on(), FileStore::default().load().as_ref(), visible) {
             WinBackend.hide_window();
         }
     });
@@ -212,7 +212,7 @@ fn key_input(vk: u8, up: bool) -> INPUT {
     }
 }
 
-fn run_steps(steps: &[KeyStep]) {
+pub(crate) fn run_steps(steps: &[KeyStep]) {
     const VK_LWIN: u8 = 0x5B;
     for step in steps {
         match *step {
@@ -260,6 +260,8 @@ pub fn shell_action(action: String) -> Result<(), String> {
     let action = match action.as_str() {
         "notifications" => ShellAction::Notifications,
         "quick_settings" => ShellAction::QuickSettings,
+        "start" => ShellAction::Start,
+        "search" => ShellAction::Search,
         "hidden_icons" => {
             if !current_status().hidden_icons_available {
                 return Err("hidden_icons_unavailable".into());
