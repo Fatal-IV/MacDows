@@ -410,3 +410,9 @@ img { -webkit-user-drag: none; user-select: none; }
 .cal-head { margin-bottom: 2px; }
 .cal-grid { row-gap: 1px; }
 .cal-day { height: 17px; line-height: 17px; }
+
+/* Airy again, the panel is taller instead */
+.tools { padding: 20px 30px 20px; }
+.cal-head { margin-bottom: 4px; }
+.cal-grid { row-gap: 2px; }
+.cal-day { height: 19px; line-height: 19px; }
