@@ -14,8 +14,8 @@
       {
         "label": "notch",
         "title": "MacDows Dynamic Island",
-        "width": 500,
-        "height": 176,
+        "width": 540,
+        "height": 200,
         "decorations": false,
         "transparent": true,
         "alwaysOnTop": true,

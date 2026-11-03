@@ -394,3 +394,13 @@ img { -webkit-user-drag: none; user-select: none; }
 .pomodoro { padding-left: 22px; gap: 8px; }
 .cal-day { height: 15px; line-height: 15px; }
 .meta-col > * { max-width: 100%; min-width: 0; box-sizing: border-box; }
+
+/* Airier calendar */
+.tools { padding: 18px 30px 16px; gap: 28px; }
+.pomodoro { padding-left: 28px; gap: 10px; }
+.cal-head { margin-bottom: 4px; }
+.cal-head .cal-title { font-size: 12px; }
+.cal-grid { row-gap: 2px; }
+.cal-name { font-size: 10px; }
+.cal-day { height: 18px; line-height: 18px; font-size: 11px; border-radius: 9px; }
+.pomo-time { font-size: 34px; }
