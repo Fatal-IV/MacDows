@@ -9,6 +9,7 @@ mod visualizer;
 mod volume;
 mod quick_settings;
 mod notifications;
+mod secure_store;
 mod shelf;
 mod bluetooth;
 mod visibility;

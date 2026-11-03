@@ -77,9 +77,21 @@ fn history_path() -> std::path::PathBuf {
 
 static HISTORY: Mutex<Option<Vec<Notice>>> = Mutex::new(None);
 
+/// The history file is encrypted for the current Windows user (see `secure_store`). A plain file from an earlier
+/// version is still read, and replaced by an encrypted one the first time it is loaded.
+fn load_history() -> Vec<Notice> {
+    let Ok(bytes) = std::fs::read(history_path()) else { return Vec::new() };
+    if crate::secure_store::is_sealed(&bytes) {
+        return crate::secure_store::open(&bytes).and_then(|plain| serde_json::from_slice(&plain).ok()).unwrap_or_default();
+    }
+    let list: Vec<Notice> = serde_json::from_slice(&bytes).unwrap_or_default();
+    save_history(&list);
+    list
+}
+
 fn with_history<R>(f: impl FnOnce(&mut Vec<Notice>) -> R) -> R {
     let mut guard = HISTORY.lock().unwrap();
-    let list = guard.get_or_insert_with(|| std::fs::read_to_string(history_path()).ok().and_then(|t| serde_json::from_str(&t).ok()).unwrap_or_default());
+    let list = guard.get_or_insert_with(load_history);
     f(list)
 }
 
@@ -88,8 +100,14 @@ fn save_history(list: &[Notice]) {
     if let Some(dir) = path.parent() {
         let _ = std::fs::create_dir_all(dir);
     }
-    if let Ok(text) = serde_json::to_string(list) {
-        let _ = std::fs::write(path, text);
+    // Never written in plain text: if Windows cannot encrypt, the file is removed instead.
+    match serde_json::to_vec(list).ok().and_then(|plain| crate::secure_store::seal(&plain)) {
+        Some(sealed) => {
+            let _ = std::fs::write(path, sealed);
+        }
+        None => {
+            let _ = std::fs::remove_file(path);
+        }
     }
 }
 
