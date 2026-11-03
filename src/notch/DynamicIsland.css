@@ -507,10 +507,10 @@ img { -webkit-user-drag: none; user-select: none; }
 .shelf-clear { border: 0; border-radius: 10px; padding: 4px 10px; background: rgba(255, 255, 255, 0.1); color: inherit; font-size: 11px; cursor: pointer; }
 .shelf-clear:hover { background: rgba(255, 255, 255, 0.2); }
 .shelf-empty { flex: 1; display: flex; align-items: center; justify-content: center; border: 1.5px dashed rgba(255, 255, 255, 0.25); border-radius: 16px; font-size: 12px; opacity: 0.7; }
-.shelf-row { flex: 1; display: flex; gap: 10px; overflow-x: auto; overflow-y: hidden; padding-bottom: 4px; align-items: stretch; }
+.shelf-row { flex: 1; display: flex; gap: 10px; overflow-x: auto; overflow-y: hidden; padding-bottom: 4px; align-items: flex-start; }
 .shelf-row::-webkit-scrollbar { height: 4px; }
 .shelf-row::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.25); border-radius: 2px; }
-.shelf-tile { position: relative; flex: none; width: 88px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; padding: 8px 6px; border-radius: 16px; background: rgba(255, 255, 255, 0.1); cursor: grab; user-select: none; transition: background 0.15s; }
+.shelf-tile { position: relative; flex: none; width: 88px; height: 112px; box-sizing: border-box; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; padding: 8px 6px; border-radius: 16px; background: rgba(255, 255, 255, 0.1); cursor: grab; user-select: none; transition: background 0.15s; }
 .shelf-tile:hover { background: rgba(255, 255, 255, 0.17); }
 .shelf-tile.missing { opacity: 0.45; cursor: default; }
 .shelf-icon { display: flex; align-items: center; justify-content: center; width: 40px; height: 40px; font-size: 26px; }
