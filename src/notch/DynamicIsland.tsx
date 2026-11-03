@@ -445,7 +445,14 @@ export default function Notch() {
   const openQuick = () => {
     if (open || tools || quick || shelfOpen || historyOpen) return;
     setBanner(null);
-    setQuick(true);
+    // While media is playing a click opens the player; otherwise the quick settings.
+    if (hasMedia && playing) {
+      manualMusic.current = true;
+      setMode("music");
+      setOpen(true);
+    } else {
+      setQuick(true);
+    }
   };
   useEffect(() => {
     if (!hasMedia) setOpen(false);
