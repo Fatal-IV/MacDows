@@ -33,3 +33,6 @@ installer/dist
 installer/src-tauri/target
 installer/src-tauri/gen
 installer/src-tauri/payload/*.exe
+installer/MacDows.Setup/bin/
+installer/MacDows.Setup/obj/
+installer/MacDows.Setup/out/
