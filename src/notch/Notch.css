@@ -336,3 +336,20 @@ img { -webkit-user-drag: none; user-select: none; }
   pointer-events: none;
   z-index: 2;
 }
+
+/* Progress and volume rows under the player controls */
+.progress, .volume-row { display: flex; align-items: center; gap: 8px; width: 100%; height: 14px; }
+.time-text { flex: none; min-width: 32px; font-size: 10.5px; font-variant-numeric: tabular-nums; color: var(--nectar-text-muted, rgba(255, 255, 255, 0.6)); }
+.time-text:last-child { text-align: right; }
+.bar-track { position: relative; flex: 1; height: 4px; border-radius: 2px; background: rgba(255, 255, 255, 0.18); }
+.bar-track.seekable { cursor: pointer; height: 5px; }
+.bar-track.seekable:hover { height: 6px; }
+.bar-fill { position: absolute; left: 0; top: 0; bottom: 0; border-radius: inherit; background: var(--music-accent); transition: width 0.4s linear; }
+.volume-row .slider { position: relative; flex: 1; height: 5px; border-radius: 2.5px; background: rgba(255, 255, 255, 0.15); overflow: hidden; }
+.volume-row .slider:hover { background: rgba(255, 255, 255, 0.22); }
+.volume-row .slider-fill { position: absolute; left: 0; top: 0; bottom: 0; background: var(--music-accent); border-radius: inherit; pointer-events: none; }
+.volume-row input[type="range"] {
+  -webkit-appearance: none; appearance: none; position: relative; z-index: 1;
+  display: block; width: 100%; height: 100%; margin: 0; background: transparent; cursor: pointer;
+}
+.volume-row input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 0; height: 0; }

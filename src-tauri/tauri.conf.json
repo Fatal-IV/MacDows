@@ -15,7 +15,7 @@
         "label": "notch",
         "title": "MacDows Notch",
         "width": 460,
-        "height": 150,
+        "height": 176,
         "decorations": false,
         "transparent": true,
         "alwaysOnTop": true,

@@ -7,6 +7,7 @@ mod launcher;
 mod search;
 mod tray_panel;
 mod updates;
+mod volume;
 mod visibility;
 mod wallpaper;
 mod media;
@@ -400,7 +401,7 @@ pub fn run() {
         .plugin(tauri_plugin_updater::Builder::new().build())
         .manage(AppSettings(Mutex::new(settings::load())))
         .manage(updates::UpdateState::default())
-        .invoke_handler(tauri::generate_handler![get_settings, set_setting, windows_list::list_windows, windows_list::focus_window, media::get_media, media::media_toggle, media::media_next, media::media_prev, updates::get_update_status, updates::check_for_update, updates::install_update, appearance::get_system_accent_color, wallpaper::get_wallpaper_backdrop, taskbar::get_system_status, taskbar::shell_action, toggle_tray_panel, get_tray_items, activate_tray_item, close_tray_panel, launcher::launcher_apps, launcher::launcher_state, launcher::launch_app, launcher::toggle_pin, launcher::open_location, launcher::power_action, toggle_start_menu, toggle_search_menu, report_dock_top, close_popup, search::search_all, search::open_file, search::open_setting, search::open_web_search])
+        .invoke_handler(tauri::generate_handler![get_settings, set_setting, windows_list::list_windows, windows_list::focus_window, media::get_media, media::media_toggle, media::media_next, media::media_prev, media::media_seek, volume::get_volume, volume::set_volume, updates::get_update_status, updates::check_for_update, updates::install_update, appearance::get_system_accent_color, wallpaper::get_wallpaper_backdrop, taskbar::get_system_status, taskbar::shell_action, toggle_tray_panel, get_tray_items, activate_tray_item, close_tray_panel, launcher::launcher_apps, launcher::launcher_state, launcher::launch_app, launcher::toggle_pin, launcher::open_location, launcher::power_action, toggle_start_menu, toggle_search_menu, report_dock_top, close_popup, search::search_all, search::open_file, search::open_setting, search::open_web_search])
         .setup(|app| {
             for label in ["notch", "dock"] {
                 if let Some(hwnd) = app.get_webview_window(label).and_then(|w| w.hwnd().ok()) {

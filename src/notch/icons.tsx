@@ -41,6 +41,16 @@ export function SkipForwardIcon({ size = 28, className }: IconProps) {
   );
 }
 
+export function SpeakerIcon({ size = 14, level = "high", className }: IconProps & { level?: "low" | "high" }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" className={className} style={{ opacity: 0.65 }} aria-hidden>
+      <path d="M4 9.5v5h3.2l4.3 3.6a.8.8 0 0 0 1.3-.6V6.5a.8.8 0 0 0-1.3-.6L7.2 9.5H4Z" />
+      <path d="M15.2 9a4.2 4.2 0 0 1 0 6" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+      {level === "high" && <path d="M17.7 6.6a7.6 7.6 0 0 1 0 10.8" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />}
+    </svg>
+  );
+}
+
 export function MusicNoteIcon({ size = 32, className }: IconProps) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" className={className} aria-hidden>

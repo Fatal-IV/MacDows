@@ -4,14 +4,14 @@
 // concave "bridge" corners that join the notch to the screen edge.
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { getMedia, mediaNext, mediaPrev, mediaToggle, onMediaChanged, type MediaInfo } from "../bridge";
+import { getMedia, getVolume, mediaNext, mediaPrev, mediaSeek, mediaToggle, onMediaChanged, setVolume, type MediaInfo } from "../bridge";
 import { useT } from "../i18n";
 import { useUpdateStatus } from "../updates";
 import { useSystemStatus } from "../system";
 import { initTheme } from "../appearance/theme";
 import { SurfaceShape } from "../appearance/SurfaceShape";
 import "../appearance/surfaces.css";
-import { MusicNoteIcon, PauseIcon, PlayIcon, SkipBackIcon, SkipForwardIcon } from "./icons";
+import { MusicNoteIcon, PauseIcon, PlayIcon, SkipBackIcon, SkipForwardIcon, SpeakerIcon } from "./icons";
 import "./Notch.css";
 
 type Mode = "status" | "music";
@@ -67,6 +67,100 @@ function TitleMarquee({ title }: { title: string }) {
       >
         {title}
       </span>
+    </div>
+  );
+}
+
+const clock = (ms: number) => {
+  const s = Math.max(0, Math.floor(ms / 1000));
+  const h = Math.floor(s / 3600);
+  const mm = String(Math.floor((s % 3600) / 60)).padStart(h ? 2 : 1, "0");
+  const ss = String(s % 60).padStart(2, "0");
+  return h ? `${h}:${mm}:${ss}` : `${mm}:${ss}`;
+};
+
+/** Elapsed and remaining time with a bar; clicking the bar seeks when the player allows it. */
+function Progress({ media }: { media: MediaInfo }) {
+  const [now, setNow] = useState(Date.now());
+  const [dragTo, setDragTo] = useState<number | null>(null);
+  // The position just sought to: shown until the player reports a newer one.
+  const [sought, setSought] = useState<{ ms: number; at: number } | null>(null);
+  useEffect(() => {
+    if (!media.playing) return;
+    const id = setInterval(() => setNow(Date.now()), 500);
+    return () => clearInterval(id);
+  }, [media.playing]);
+
+  const sinceUpdate = media.playing && media.updated_at_ms > 0 ? Math.max(0, now - media.updated_at_ms) : 0;
+  const fromSeek = sought !== null && media.updated_at_ms < sought.at;
+  const base = fromSeek ? sought.ms + (media.playing ? Math.max(0, now - sought.at) : 0) : media.position_ms + sinceUpdate;
+  const elapsed = Math.min(media.duration_ms, dragTo ?? base);
+  const ratio = media.duration_ms > 0 ? elapsed / media.duration_ms : 0;
+
+  const at = (e: React.PointerEvent<HTMLDivElement>) => {
+    const r = e.currentTarget.getBoundingClientRect();
+    return Math.round(Math.min(1, Math.max(0, (e.clientX - r.left) / r.width)) * media.duration_ms);
+  };
+  const canSeek = media.seek_enabled && media.duration_ms > 0;
+  return (
+    <div className="progress">
+      <span className="time-text">{clock(elapsed)}</span>
+      <div
+        className={`bar-track${canSeek ? " seekable" : ""}`}
+        onPointerDown={(e) => {
+          if (!canSeek) return;
+          e.currentTarget.setPointerCapture(e.pointerId);
+          setDragTo(at(e));
+        }}
+        onPointerMove={(e) => dragTo !== null && setDragTo(at(e))}
+        onPointerUp={(e) => {
+          if (dragTo === null) return;
+          const target = at(e);
+          mediaSeek(target);
+          setSought({ ms: target, at: Date.now() });
+          setDragTo(null);
+        }}
+      >
+        <div className="bar-fill" style={{ width: `${ratio * 100}%` }} />
+      </div>
+      <span className="time-text">-{clock(media.duration_ms - elapsed)}</span>
+    </div>
+  );
+}
+
+/** The system output volume. */
+function VolumeRow() {
+  const [level, setLevel] = useState<number | null>(null);
+  const pending = useRef<number | null>(null);
+  useEffect(() => {
+    getVolume().then((v) => v && setLevel(v.level)).catch(() => {});
+  }, []);
+  const change = (v: number) => {
+    setLevel(v);
+    // At most one call in flight while dragging; the last value always goes out.
+    if (pending.current !== null) {
+      pending.current = v;
+      return;
+    }
+    pending.current = v;
+    const send = () => {
+      const value = pending.current!;
+      setVolume(value).finally(() => {
+        if (pending.current === value) pending.current = null;
+        else send();
+      });
+    };
+    send();
+  };
+  if (level === null) return <div className="volume-row" />;
+  return (
+    <div className="volume-row" onWheel={(e) => change(Math.min(1, Math.max(0, level - Math.sign(e.deltaY) * 0.04)))}>
+      <SpeakerIcon size={14} level="low" />
+      <div className="slider">
+        <input type="range" min="0" max="1" step="0.01" value={level} onChange={(e) => change(parseFloat(e.target.value))} onPointerDown={(e) => e.stopPropagation()} />
+        <div className="slider-fill" style={{ width: `${level * 100}%` }} />
+      </div>
+      <SpeakerIcon size={16} level="high" />
     </div>
   );
 }
@@ -220,7 +314,7 @@ export default function Notch() {
   const battery = system?.battery_percent ?? null;
 
   const width = !ready ? 34 : isMusic ? (hovered ? 340 : 140 + (playing ? 30 : 0) + 30) : hovered ? (battery != null ? 200 : 170) : 140;
-  const height = !ready ? 34 : isMusic && hovered ? 120 : 36;
+  const height = !ready ? 34 : isMusic && hovered ? (media!.duration_ms > 0 ? 134 : 120) : 36;
 
   return (
     <div className="screen" style={{ zoom: scale }}>
@@ -299,6 +393,8 @@ export default function Notch() {
                     <SkipForwardIcon size={32} />
                   </motion.button>
                 </div>
+                {media!.duration_ms > 0 && <Progress media={media!} />}
+                <VolumeRow />
               </div>
             </motion.div>
           ) : (
