@@ -45,12 +45,14 @@
   padding: 0;
   border: 0;
   border-radius: 11px;
-  background: transparent;
+  /* soft grey layer behind the app icon */
+  background: rgba(255, 255, 255, 0.09);
   cursor: default;
   display: flex;
   align-items: center;
   justify-content: center;
 }
+.light-mode .dock-item { background: rgba(0, 0, 0, 0.06); }
 
 .dock-item img { width: 32px; height: 32px; object-fit: contain; }
 
