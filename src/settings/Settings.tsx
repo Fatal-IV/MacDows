@@ -180,77 +180,58 @@ const ITEMS: Item[] = [
   },
 ];
 
-type View = "home" | Category;
+const FIRST: Category = "general";
 
 export default function Settings() {
   const s = useSettings();
   const t = useT();
   const update = useUpdateStatus();
   const version = useAppVersion();
-  const [view, setView] = useState<View>("home");
+  // Settings always opens on General.
+  const [category, setCategory] = useState<Category>(FIRST);
   const [ringOpen, setRingOpen] = useState(false);
 
   // Follows the app theme: Windows's light or dark look unless the user picked one.
   useEffect(() => initTheme(), []);
 
-  // Esc closes the ring, or goes from a page back to the ring.
+  // Esc closes the category ring.
   useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key !== "Escape") return;
-      if (view !== "home") {
-        setView("home");
-        setRingOpen(true);
-      } else if (ringOpen) setRingOpen(false);
-    };
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && setRingOpen(false);
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [view, ringOpen]);
+  }, []);
 
   if (!s) return null;
   const used = CATEGORIES.filter((c) => ITEMS.some((i) => i.category === c.id));
+  const active = used.some((c) => c.id === category) ? category : FIRST;
   const ctx: Ctx = { s, t, update, version };
 
   return (
     <div className="settings-app">
       <WindowControls />
       <AnimatePresence mode="wait" initial={false}>
-        {view === "home" ? (
-          <motion.div key="home" className="settings-home" initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.98 }} transition={{ duration: 0.14 }}>
-            <RadialMenu
-              items={used.map((c) => ({ id: c.id, label: t(`settings.cat.${c.id}`), icon: c.icon }))}
-              open={ringOpen}
-              onToggle={() => setRingOpen((o) => !o)}
-              onPick={(id) => setView(id as Category)}
-              toggleLabel={t("settings.title")}
-              hint={t("settings.homeHint")}
-            />
-          </motion.div>
-        ) : (
-          <motion.main key={view} className="settings-page" initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 14 }} transition={{ duration: 0.16 }}>
-            <header className="page-head">
-              <button
-                type="button"
-                className="back"
-                onClick={() => {
-                  setView("home");
-                  setRingOpen(true);
-                }}
-              >
-                <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden>
-                  <path d="M15 6l-6 6 6 6" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-                {t("settings.back")}
-              </button>
-              <h1>{t(`settings.cat.${view}`)}</h1>
-            </header>
-            <div className="page-body">
-              {ITEMS.filter((i) => i.category === view).map((i) => (
-                <div className="item" key={i.id}>{i.render(ctx)}</div>
-              ))}
-            </div>
-          </motion.main>
-        )}
+        <motion.main key={active} className="settings-page" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 12 }} transition={{ duration: 0.15 }}>
+          <header className="page-head">
+            <h1>{t(`settings.cat.${active}`)}</h1>
+          </header>
+          <div className="page-body">
+            {ITEMS.filter((i) => i.category === active).map((i) => (
+              <div className="item" key={i.id}>{i.render(ctx)}</div>
+            ))}
+          </div>
+        </motion.main>
       </AnimatePresence>
+      <RadialMenu
+        items={used.map((c) => ({ id: c.id, label: t(`settings.cat.${c.id}`), icon: c.icon }))}
+        activeId={active}
+        open={ringOpen}
+        onToggle={() => setRingOpen((o) => !o)}
+        onPick={(id) => {
+          setCategory(id as Category);
+          setRingOpen(false);
+        }}
+        toggleLabel={t("settings.categories")}
+      />
     </div>
   );
 }

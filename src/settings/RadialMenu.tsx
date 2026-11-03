@@ -9,27 +9,31 @@ export interface RadialItem {
 }
 
 const ITEM_WIDTH = 104;
-const CIRCLE = 66;
-const CENTER = 92;
+const CIRCLE = 62;
+const CENTER = 60;
+const MARGIN_BOTTOM = 22;
 
-/** A button in the middle; when it is pressed the items fan out in a circle around it. */
+/**
+ * A button at the bottom center of the window. When it is pressed the items fan out around it in an arc, and the
+ * rest of the window is dimmed; picking an item, pressing the button again or clicking outside closes it.
+ */
 export default function RadialMenu({
   items,
+  activeId,
   open,
   onToggle,
   onPick,
   toggleLabel,
-  hint,
 }: {
   items: RadialItem[];
+  activeId: string;
   open: boolean;
   onToggle: () => void;
   onPick: (id: string) => void;
   toggleLabel: string;
-  hint: string;
 }) {
   const stage = useRef<HTMLDivElement>(null);
-  const [size, setSize] = useState({ w: 760, h: 560 });
+  const [size, setSize] = useState({ w: 860, h: 620 });
 
   useEffect(() => {
     const el = stage.current;
@@ -41,33 +45,38 @@ export default function RadialMenu({
     return () => observer.disconnect();
   }, []);
 
-  // The ring has to fit in the window, whatever its size.
-  const radius = Math.max(110, Math.min(200, size.w / 2 - ITEM_WIDTH / 2 - 24, size.h * 0.46 - CIRCLE - 24));
-  const cy = size.h * 0.46;
+  // The arc has to fit in the window, whatever its size: wider than tall, like a rainbow.
+  const radiusX = Math.max(140, Math.min(270, size.w / 2 - ITEM_WIDTH / 2 - 16));
+  const radiusY = Math.max(110, Math.min(200, size.h - CENTER - MARGIN_BOTTOM - CIRCLE - 56));
+  const cy = size.h - MARGIN_BOTTOM - CENTER / 2;
 
   return (
     <div className="radial" ref={stage}>
       <motion.div
-        className="radial-guide"
-        style={{ top: cy, width: radius * 2, height: radius * 2 }}
+        className="radial-scrim"
         initial={false}
-        animate={{ opacity: open ? 1 : 0, scale: open ? 1 : 0.4 }}
-        transition={{ type: "spring", stiffness: 260, damping: 26 }}
+        animate={{ opacity: open ? 1 : 0 }}
+        transition={{ duration: 0.18 }}
+        style={{ pointerEvents: open ? "auto" : "none" }}
+        onClick={onToggle}
       />
       {items.map((item, i) => {
-        const angle = (-90 + (360 / items.length) * i) * (Math.PI / 180);
+        // From just above the left edge to just above the right edge.
+        const angle = (180 + (180 / (items.length + 1)) * (i + 1)) * (Math.PI / 180);
+        const active = item.id === activeId;
         return (
           <motion.button
             key={item.id}
             type="button"
-            className="radial-item"
+            className={`radial-item${active ? " active" : ""}`}
             style={{ top: cy - CIRCLE / 2, width: ITEM_WIDTH, marginLeft: -ITEM_WIDTH / 2, pointerEvents: open ? "auto" : "none" }}
             tabIndex={open ? 0 : -1}
             aria-hidden={!open}
+            aria-current={active ? "page" : undefined}
             initial={false}
             animate={{
-              x: open ? Math.cos(angle) * radius : 0,
-              y: open ? Math.sin(angle) * radius : 0,
+              x: open ? Math.cos(angle) * radiusX : 0,
+              y: open ? Math.sin(angle) * radiusY : 0,
               scale: open ? 1 : 0.3,
               opacity: open ? 1 : 0,
             }}
@@ -77,7 +86,7 @@ export default function RadialMenu({
             onClick={() => open && onPick(item.id)}
           >
             <span className="radial-circle">
-              <svg viewBox="0 0 24 24" width="26" height="26" aria-hidden>
+              <svg viewBox="0 0 24 24" width="24" height="24" aria-hidden>
                 {item.icon}
               </svg>
             </span>
@@ -92,17 +101,15 @@ export default function RadialMenu({
         style={{ top: cy - CENTER / 2, width: CENTER, height: CENTER, marginLeft: -CENTER / 2 }}
         aria-expanded={open}
         aria-label={toggleLabel}
+        title={toggleLabel}
         onClick={onToggle}
-        whileHover={{ scale: 1.05 }}
-        whileTap={{ scale: 0.95 }}
+        whileHover={{ scale: 1.06 }}
+        whileTap={{ scale: 0.94 }}
       >
-        <motion.svg viewBox="0 0 24 24" width="34" height="34" aria-hidden animate={{ rotate: open ? 135 : 0 }} transition={{ type: "spring", stiffness: 260, damping: 20 }}>
+        <motion.svg viewBox="0 0 24 24" width="26" height="26" aria-hidden animate={{ rotate: open ? 135 : 0 }} transition={{ type: "spring", stiffness: 260, damping: 20 }}>
           <path d="M12 5v14M5 12h14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
         </motion.svg>
       </motion.button>
-      <motion.p className="radial-hint" style={{ top: cy + CENTER / 2 + 14 }} initial={false} animate={{ opacity: open ? 0 : 1 }}>
-        {hint}
-      </motion.p>
     </div>
   );
 }

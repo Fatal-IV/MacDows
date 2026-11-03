@@ -72,7 +72,6 @@
   "system.showDesktop": "Masaüstünü göster",
   "settings.showDesktop": "Masaüstü düğmesi",
   "settings.showDesktopHelp": "Dock'un sonuna, sizi hızlıca masaüstüne götüren bir düğme ekler. Tekrar basınca pencereleriniz geri gelir.",
-  "settings.back": "Geri",
-  "settings.homeHint": "Kategorileri açmak için düğmeye dokunun",
-  "window.controls": "Pencere düğmeleri"
+  "window.controls": "Pencere düğmeleri",
+  "settings.categories": "Kategoriler"
 }

@@ -72,7 +72,6 @@
   "system.showDesktop": "Show desktop",
   "settings.showDesktop": "Show desktop button",
   "settings.showDesktopHelp": "Adds a button at the end of the dock that jumps to the desktop. Press it again to bring your windows back.",
-  "settings.back": "Back",
-  "settings.homeHint": "Tap the button to open the categories",
-  "window.controls": "Window controls"
+  "window.controls": "Window controls",
+  "settings.categories": "Categories"
 }
