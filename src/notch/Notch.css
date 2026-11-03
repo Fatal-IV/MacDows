@@ -450,9 +450,9 @@ img { -webkit-user-drag: none; user-select: none; }
 .custom button:disabled { opacity: 0.4; cursor: default; }
 
 /* ── Quick settings screen: wide glass tiles (2 x 2) beside stacked sliders ── */
-.quick { display: grid; grid-template-columns: 1.9fr 1fr; gap: 18px; height: 100%; box-sizing: border-box; padding: 30px 30px 24px; color: var(--nectar-text, #fff); }
-.quick-tiles { display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; gap: 12px; }
-.quick-sliders { display: flex; flex-direction: column; justify-content: center; gap: 14px; }
+.quick { display: flex; flex-direction: column; gap: 12px; height: 100%; box-sizing: border-box; padding: 26px 30px 18px; color: var(--nectar-text, #fff); }
+.quick-tiles { display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; gap: 10px; flex: 1; min-height: 0; }
+.quick-sliders { display: flex; flex-direction: column; gap: 8px; flex: none; }
 
 .glass-tile, .glass-slider {
   position: relative; overflow: hidden;
@@ -480,11 +480,12 @@ img { -webkit-user-drag: none; user-select: none; }
 .glass-name { font-size: 12px; font-weight: 600; line-height: 1.15; }
 .glass-state { font-size: 10px; opacity: 0.7; }
 
-.glass-slider { display: flex; align-items: center; gap: 10px; padding: 12px 14px; }
+.glass-slider { display: flex; align-items: center; gap: 12px; padding: 9px 14px; }
 .glass-slider.off { opacity: 0.45; }
 .slider-icon { display: flex; flex: none; opacity: 0.9; }
-.slider-body { display: flex; flex-direction: column; gap: 6px; flex: 1; min-width: 0; }
-.slider-name { font-size: 11px; font-weight: 600; opacity: 0.85; }
+.slider-body { display: flex; flex-direction: row; align-items: center; gap: 12px; flex: 1; min-width: 0; }
+.slider-body input { flex: 1; }
+.slider-name { font-size: 11px; font-weight: 600; opacity: 0.85; min-width: 58px; }
 .slider-value { font-size: 10px; opacity: 0.7; min-width: 22px; text-align: right; }
 .glass-slider input[type="range"] { -webkit-appearance: none; appearance: none; width: 100%; height: 6px; border-radius: 3px; margin: 0; outline: none; cursor: pointer;
   background: linear-gradient(to right, rgba(255, 255, 255, 0.9) var(--v, 0%), rgba(255, 255, 255, 0.2) var(--v, 0%)); }
