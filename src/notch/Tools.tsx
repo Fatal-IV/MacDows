@@ -104,16 +104,10 @@ function PomodoroView({ p }: { p: Pomodoro }) {
 }
 
 export function ToolsPanel({ pomodoro }: { pomodoro: Pomodoro }) {
-  const t = useT();
-  const [tab, setTab] = useState<"calendar" | "pomodoro">("calendar");
   return (
     <div className="tools">
-      <div className="tabs">
-        <button className={tab === "calendar" ? "on" : ""} onClick={() => setTab("calendar")}>{t("tools.calendar")}</button>
-        <span className="sep">|</span>
-        <button className={tab === "pomodoro" ? "on" : ""} onClick={() => setTab("pomodoro")}>{t("tools.pomodoro")}</button>
-      </div>
-      {tab === "calendar" ? <Calendar /> : <PomodoroView p={pomodoro} />}
+      <Calendar />
+      <PomodoroView p={pomodoro} />
     </div>
   );
 }
