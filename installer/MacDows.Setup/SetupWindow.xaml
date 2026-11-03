@@ -102,9 +102,9 @@
                 <Border Width="52" Height="52" CornerRadius="26" Background="#2E9E6B" HorizontalAlignment="Center">
                     <TextBlock Text="✓" Foreground="White" FontSize="28" HorizontalAlignment="Center" VerticalAlignment="Center" />
                 </Border>
-                <TextBlock Text="Hazır" Style="{StaticResource Wordmark}" FontSize="34" Margin="0,16,0,0" />
-                <TextBlock Text="MacDows kuruldu." Style="{StaticResource Muted}" Margin="0,6,0,0" />
-                <Button Content="MacDows'u aç" Style="{StaticResource AccentButton}" Margin="0,24,0,0" HorizontalAlignment="Center" Click="OnLaunchClick" IsDefault="True" />
+                <TextBlock x:Name="DoneTitle" Text="Hazır" Style="{StaticResource Wordmark}" FontSize="34" Margin="0,16,0,0" />
+                <TextBlock x:Name="DoneText" Text="MacDows kuruldu." Style="{StaticResource Muted}" Margin="0,6,0,0" />
+                <Button x:Name="LaunchButton" Content="MacDows'u aç" Style="{StaticResource AccentButton}" Margin="0,24,0,0" HorizontalAlignment="Center" Click="OnLaunchClick" IsDefault="True" />
             </StackPanel>
 
             <StackPanel x:Name="ErrorPanel" VerticalAlignment="Center" HorizontalAlignment="Center" Width="460" Visibility="Collapsed">

@@ -74,9 +74,29 @@ public partial class SetupWindow : Window
 
     private void OnLaunchClick(object s, RoutedEventArgs e)
     {
-        Process.Start(new ProcessStartInfo(InstalledExe) { UseShellExecute = true, WorkingDirectory = Path.GetDirectoryName(InstalledExe) });
-        Close();
+        if (_launched)
+        {
+            Close();
+            return;
+        }
+
+        try
+        {
+            // A second copy exits on its own when MacDows is already running, so this is safe either way.
+            Process.Start(new ProcessStartInfo(InstalledExe) { UseShellExecute = true, WorkingDirectory = Path.GetDirectoryName(InstalledExe) });
+            _launched = true;
+            DoneTitle.Text = "MacDows açıldı";
+            DoneText.Text = "Çentik ekranın üst kenarında, dock alt kenarında. Görünmüyorsa fareyi kenara götürün (Ayarlar'dan her zaman görünür yapabilirsiniz).";
+            LaunchButton.Content = "Kapat";
+        }
+        catch (Exception ex)
+        {
+            DoneTitle.Text = "Açılamadı";
+            DoneText.Text = ex.Message;
+        }
     }
+
+    private bool _launched;
 
     private void Show(FrameworkElement panel)
     {
