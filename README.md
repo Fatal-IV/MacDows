@@ -32,4 +32,4 @@ bun run tauri dev
 
 Build the installer: `node scripts/build-installer.mjs` (needs `TAURI_SIGNING_PRIVATE_KEY`). Regenerate the icons from `branding/*.svg`: `bun run icons`.
 
-License: MIT
+License: [GPL-3.0](LICENSE). The notch behavior and styling are adapted from [Nectar](https://github.com/kua8/Nectar) by kua8 (GPL-3.0); see [NOTICE](NOTICE).

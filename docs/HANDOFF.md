@@ -21,7 +21,7 @@ Settings live in `%APPDATA%\MacDows\settings.json`. The tray icon is in the hidd
 - The private key file was created on the work PC at `~/.macdows-keys/updater.key` (empty password). It is NOT in the repo. Back it up: if it is lost, signed updates cannot be produced. Public key is in `src-tauri/tauri.conf.json`.
 
 ## Decisions to keep
-- Written from scratch, MIT. Never copy code or CSS from Nectar (GPL-3.0); only visual ideas from its public screenshots.
+- Licensed GPL-3.0-only (changed from MIT on 2026-11-03). The notch behavior and styling are adapted from Nectar (kua8, GPL-3.0), so the whole project had to move to GPL-3.0; keep the attribution in `NOTICE`. Do not copy Nectar's SF Symbols SVGs (Apple license); MacDows draws its own icons.
 - Commits show only `Fatal-IV`. Use the repo-local identity `Fatal-IV <72112242+Fatal-IV@users.noreply.github.com>`; no co-author or generated-by lines.
 - Default visibility is Fixed: bars always visible, hidden only for fullscreen apps. Smart and Peek are opt-in.
 - The Windows taskbar is untouched in v0.1. Hiding or replacing it is v0.2 and needs a guard process that restores it.

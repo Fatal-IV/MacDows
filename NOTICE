@@ -1,0 +1,10 @@
+MacDows is licensed under the GNU General Public License v3.0 (see LICENSE).
+
+Portions of the notch (src/notch/Notch.tsx, src/notch/Notch.css) are adapted from
+Nectar, https://github.com/kua8/Nectar, Copyright (c) kua8 and Nectar contributors,
+licensed under GPL-3.0. Adapted: hover/expand behavior and springs, the status and
+music panels and how they switch, the concave screen-edge corners, the album glow and
+the expanded player layout and styling.
+
+Not taken from Nectar: its SF Symbols icon glyphs (Apple's license does not allow
+redistribution outside Apple platforms). MacDows draws its own icons in src/notch/icons.tsx.
