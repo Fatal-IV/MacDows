@@ -373,7 +373,7 @@ export default function Notch() {
   }, [hasMedia]);
   const battery = system?.battery_percent ?? null;
 
-  const width = !ready ? 34 : tools ? 400 : musicOpen ? 360 : isMusic ? 200 : hovered ? (battery != null ? 200 : 170) : hasMedia ? 170 : 140;
+  const width = !ready ? 34 : tools ? 400 : musicOpen ? 340 : isMusic ? 200 : hovered ? (battery != null ? 200 : 170) : hasMedia ? 170 : 140;
   const height = !ready ? 34 : tools ? 166 : musicOpen ? (media!.duration_ms > 0 ? 126 : 108) : 36;
 
   return (

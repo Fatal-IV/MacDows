@@ -32,5 +32,8 @@ export function useT(): (key: string) => string {
 
 /** The app language as a locale tag for dates and numbers. */
 export function useLocale(): string {
-  return useSettings()?.language === "tr" ? "tr-TR" : "en-US";
+  const language = useSettings()?.language;
+  // Until the settings load, the system language is the best guess.
+  if (!language) return navigator.language.toLowerCase().startsWith("tr") ? "tr-TR" : "en-US";
+  return language === "tr" ? "tr-TR" : "en-US";
 }
