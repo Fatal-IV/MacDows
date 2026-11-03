@@ -18,7 +18,7 @@ import { QuickSettingsScreen } from "./QuickSettings";
 import { NotificationBanner } from "./NotificationBanner";
 import { DropZone, ShelfScreen } from "./Shelf";
 import { getCurrentWebview } from "@tauri-apps/api/webview";
-import "./Notch.css";
+import "./DynamicIsland.css";
 
 type Mode = "status" | "music";
 

@@ -1,7 +1,7 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
 import { getCurrentWindow } from "@tauri-apps/api/window";
-import Notch from "./notch/Notch";
+import Notch from "./notch/DynamicIsland";
 import Dock from "./dock/Dock";
 import Settings from "./settings/Settings";
 import TrayPanel from "./tray/TrayPanel";
