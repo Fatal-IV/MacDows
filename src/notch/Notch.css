@@ -450,7 +450,7 @@ img { -webkit-user-drag: none; user-select: none; }
 .custom button:disabled { opacity: 0.4; cursor: default; }
 
 /* ── Quick settings screen: wide glass tiles (2 x 2) beside stacked sliders ── */
-.quick { display: grid; grid-template-columns: 1.25fr 1fr; gap: 22px; height: 100%; box-sizing: border-box; padding: 30px 30px 24px; color: var(--nectar-text, #fff); }
+.quick { display: grid; grid-template-columns: 1.9fr 1fr; gap: 18px; height: 100%; box-sizing: border-box; padding: 30px 30px 24px; color: var(--nectar-text, #fff); }
 .quick-tiles { display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; gap: 12px; }
 .quick-sliders { display: flex; flex-direction: column; justify-content: center; gap: 14px; }
 
@@ -465,7 +465,7 @@ img { -webkit-user-drag: none; user-select: none; }
   color: inherit; font: inherit;
 }
 .glass-tile::before, .glass-slider::before { content: ""; position: absolute; inset: 0 0 55% 0; background: linear-gradient(180deg, rgba(255, 255, 255, 0.16), transparent); pointer-events: none; }
-.glass-tile { display: flex; flex-direction: row; align-items: center; gap: 10px; padding: 0 14px; text-align: left; cursor: pointer; transition: transform 0.15s, background 0.2s, border-color 0.2s, box-shadow 0.2s; }
+.glass-tile { display: flex; flex-direction: row; align-items: center; gap: 10px; padding: 0 12px; text-align: left; cursor: pointer; transition: transform 0.15s, background 0.2s, border-color 0.2s, box-shadow 0.2s; }
 .glass-tile:hover { transform: translateY(-1px); border-color: rgba(255, 255, 255, 0.32); }
 .glass-tile:active { transform: scale(0.97); }
 .glass-tile:disabled { opacity: 0.45; cursor: default; transform: none; }
@@ -477,7 +477,7 @@ img { -webkit-user-drag: none; user-select: none; }
 }
 .glass-icon { display: flex; flex: none; }
 .glass-text { display: flex; flex-direction: column; min-width: 0; }
-.glass-name { font-size: 12px; font-weight: 600; line-height: 1.15; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.glass-name { font-size: 12px; font-weight: 600; line-height: 1.15; }
 .glass-state { font-size: 10px; opacity: 0.7; }
 
 .glass-slider { display: flex; align-items: center; gap: 10px; padding: 12px 14px; }
