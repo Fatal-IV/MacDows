@@ -5,7 +5,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { listen } from "@tauri-apps/api/event";
-import { getMedia, mediaNext, mediaPrev, mediaSeek, mediaToggle, onMediaChanged, type MediaInfo } from "../bridge";
+import { getMedia, mediaNext, mediaPrev, mediaSeek, mediaToggle, onMediaChanged, onNotificationNew, type MediaInfo, type Notice } from "../bridge";
 import { useT } from "../i18n";
 import { useUpdateStatus } from "../updates";
 import { useSystemStatus } from "../system";
@@ -15,6 +15,7 @@ import "../appearance/surfaces.css";
 import { MusicNoteIcon, PauseIcon, PlayIcon, SkipBackIcon, SkipForwardIcon } from "./icons";
 import { ToolsPanel, useTimer } from "./Tools";
 import { QuickSettingsScreen } from "./QuickSettings";
+import { NotificationBanner } from "./NotificationBanner";
 import "./Notch.css";
 
 type Mode = "status" | "music";
@@ -24,6 +25,7 @@ const SHELL_SPRING = { type: "spring", stiffness: 400, damping: 40 } as const;
 const WHEEL_STEP = 60;
 const WHEEL_IDLE_MS = 180;
 const MUSIC_IDLE_BACK_MS = 5000;
+const BANNER_MS = 5000;
 const MARQUEE_SPEED = 30; // px/s
 const MARQUEE_MIN_SECONDS = 5;
 
@@ -247,6 +249,8 @@ export default function Notch() {
   const [tools, setTools] = useState(false);
   // A click opens the quick settings: its own screen, separate from the player and the tools.
   const [quick, setQuick] = useState(false);
+  // The newest notification, shown for a few seconds (and while the pointer rests on it).
+  const [banner, setBanner] = useState<Notice | null>(null);
   const timer = useTimer();
 
   const hasMedia = media !== null;
@@ -259,6 +263,18 @@ export default function Notch() {
   const lastTrack = useRef<string | null>(null);
   const lastPlaying = useRef(false);
   const wheel = useRef({ sum: 0, timer: 0 as unknown as ReturnType<typeof setTimeout> });
+
+  useEffect(() => {
+    const un = onNotificationNew(setBanner);
+    return () => {
+      un.then((f) => f());
+    };
+  }, []);
+  useEffect(() => {
+    if (!banner || hovered) return;
+    const id = setTimeout(() => setBanner(null), BANNER_MS);
+    return () => clearTimeout(id);
+  }, [banner, hovered]);
 
   useEffect(() => {
     getMedia().then(setMedia).catch(() => setMedia(null));
@@ -365,6 +381,7 @@ export default function Notch() {
 
   const isMusic = hasMedia && mode === "music";
   const musicOpen = isMusic && open && !tools && !quick;
+  const bannerOpen = banner !== null && !open && !tools && !quick;
   const toggleTools = () => {
     setTools((v) => !v);
     setOpen(false);
@@ -372,6 +389,7 @@ export default function Notch() {
   };
   const openQuick = () => {
     if (open || tools || quick) return;
+    setBanner(null);
     setQuick(true);
   };
   useEffect(() => {
@@ -379,8 +397,8 @@ export default function Notch() {
   }, [hasMedia]);
   const battery = system?.battery_percent ?? null;
 
-  const width = !ready ? 34 : tools || quick ? 520 : musicOpen ? 340 : isMusic ? 200 : hovered ? (battery != null ? 200 : 170) : hasMedia ? 170 : 140;
-  const height = !ready ? 34 : tools ? 280 : quick ? 312 : musicOpen ? (media!.duration_ms > 0 ? 126 : 108) : 36;
+  const width = !ready ? 34 : tools || quick ? 520 : bannerOpen ? 380 : musicOpen ? 340 : isMusic ? 200 : hovered ? (battery != null ? 200 : 170) : hasMedia ? 170 : 140;
+  const height = !ready ? 34 : tools ? 280 : quick ? 312 : bannerOpen ? 76 : musicOpen ? (media!.duration_ms > 0 ? 126 : 108) : 36;
 
   return (
     <div className="screen" style={{ zoom: scale }}>
@@ -444,7 +462,11 @@ export default function Notch() {
         </AnimatePresence>
 
         <AnimatePresence mode="wait" initial={false}>
-          {quick ? (
+          {bannerOpen ? (
+            <motion.div key="banner" className="tools-wrap" initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.98, transition: { duration: 0.1 } }} transition={{ type: "spring", stiffness: 500, damping: 30 }}>
+              <NotificationBanner notice={banner!} onDismiss={() => setBanner(null)} />
+            </motion.div>
+          ) : quick ? (
             <motion.div key="quick" className="tools-wrap" initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.98, transition: { duration: 0.1 } }} transition={{ type: "spring", stiffness: 500, damping: 30 }}>
               <QuickSettingsScreen />
               <button

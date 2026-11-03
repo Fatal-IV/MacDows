@@ -45,6 +45,13 @@ pub fn is_shell_menu(exe: &str) -> bool {
 
 static LAST_SHELL_MENU_MS: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
 
+static NOTCH_HOLD_UNTIL_MS: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+
+/// Keeps the notch on screen for `ms` milliseconds even when it would be hidden (a notification banner is showing).
+pub fn hold_notch(ms: u64) {
+    NOTCH_HOLD_UNTIL_MS.store(now_ms() + ms, std::sync::atomic::Ordering::Relaxed);
+}
+
 fn now_ms() -> u64 {
     std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map(|d| d.as_millis() as u64).unwrap_or(0)
 }
@@ -136,7 +143,8 @@ pub fn start(app: AppHandle) {
                 let overlapped = others.iter().any(|o| rect_intersects(*o, probe));
                 // Show the bars for a few seconds after launch so the user sees the app started.
                 let grace = started.elapsed() < Duration::from_secs(4) && fs != Some(true);
-                let want = grace || is_visible(Inputs { vis, fullscreen: fs, overlapped, cursor_near: near });
+                let held = label == "notch" && now_ms() < NOTCH_HOLD_UNTIL_MS.load(std::sync::atomic::Ordering::Relaxed);
+                let want = grace || held || is_visible(Inputs { vis, fullscreen: fs, overlapped, cursor_near: near });
                 if shown[i] != Some(want) {
                     unsafe {
                         let _ = ShowWindow(hwnd, if want { SW_SHOWNOACTIVATE } else { SW_HIDE });

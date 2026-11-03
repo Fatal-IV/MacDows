@@ -64,7 +64,7 @@ static MANAGER: OnceLock<Manager> = OnceLock::new();
 static LAST: Mutex<Option<MediaInfo>> = Mutex::new(None);
 static ATTACHED: Mutex<Option<(Session, i64, i64, i64)>> = Mutex::new(None);
 
-fn read_thumbnail(r: IRandomAccessStreamReference) -> Option<Vec<u8>> {
+pub fn read_thumbnail(r: IRandomAccessStreamReference) -> Option<Vec<u8>> {
     let stream = r.OpenReadAsync().ok()?.get().ok()?;
     let size = stream.Size().ok()? as u32;
     if size == 0 {

@@ -487,3 +487,14 @@ img { -webkit-user-drag: none; user-select: none; }
 .shortcut { display: flex; align-items: center; justify-content: center; width: 40px; height: 32px; padding: 0; border: 0; border-radius: 16px; background: rgba(255, 255, 255, 0.1); color: inherit; cursor: pointer; transition: background 0.15s, transform 0.15s; }
 .shortcut:hover { background: rgba(255, 255, 255, 0.2); }
 .shortcut:active { transform: scale(0.94); }
+
+/* ── Notification banner in the notch ── */
+.banner { display: flex; align-items: center; gap: 12px; height: 100%; box-sizing: border-box; padding: 14px 18px 12px; color: var(--nectar-text, #fff); cursor: default; }
+.banner-icon { display: flex; align-items: center; justify-content: center; flex: none; width: 40px; height: 40px; border-radius: 10px; background: rgba(255, 255, 255, 0.12); overflow: hidden; font-weight: 700; }
+.banner-icon img { width: 100%; height: 100%; object-fit: contain; }
+.banner-text { display: flex; flex-direction: column; min-width: 0; flex: 1; gap: 1px; }
+.banner-app { font-size: 10px; letter-spacing: 0.04em; text-transform: uppercase; opacity: 0.6; }
+.banner-title { font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.banner-body { font-size: 11.5px; opacity: 0.75; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.banner-close { flex: none; width: 24px; height: 24px; border: 0; border-radius: 50%; background: rgba(255, 255, 255, 0.1); color: inherit; font-size: 10px; cursor: pointer; }
+.banner-close:hover { background: rgba(255, 255, 255, 0.2); }

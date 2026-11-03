@@ -82,3 +82,19 @@ export const onMediaChanged = (cb: (m: MediaInfo | null) => void): Promise<Unlis
 
 export const onSettingsChanged = (cb: (s: Settings) => void): Promise<UnlistenFn> =>
   listen<Settings>("settings-changed", (e) => cb(e.payload));
+
+export interface Notice {
+  id: number;
+  app: string;
+  title: string;
+  body: string;
+  /** Unix time in milliseconds. */
+  time_ms: number;
+  icon_png_base64: string | null;
+}
+
+export const getNotifications = () => invoke<Notice[]>("get_notifications");
+export const removeNotification = (id: number) => invoke<void>("remove_notification", { id });
+export const clearNotifications = () => invoke<void>("clear_notifications");
+export const onNotificationNew = (cb: (n: Notice) => void): Promise<UnlistenFn> => listen<Notice>("notification-new", (e) => cb(e.payload));
+export const onNotificationsChanged = (cb: () => void): Promise<UnlistenFn> => listen("notifications-changed", cb);

@@ -105,5 +105,6 @@
   "quick.settings": "Windows Ayarları",
   "quick.taskManager": "Görev Yöneticisi",
   "quick.calculator": "Hesap Makinesi",
-  "quick.lock": "Ekranı kilitle"
+  "quick.lock": "Ekranı kilitle",
+  "notify.dismiss": "Kapat"
 }

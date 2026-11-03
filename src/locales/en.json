@@ -105,5 +105,6 @@
   "quick.settings": "Windows Settings",
   "quick.taskManager": "Task Manager",
   "quick.calculator": "Calculator",
-  "quick.lock": "Lock screen"
+  "quick.lock": "Lock screen",
+  "notify.dismiss": "Dismiss"
 }
