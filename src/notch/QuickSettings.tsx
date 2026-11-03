@@ -1,6 +1,6 @@
 // The quick settings screen of the notch: Wi-Fi, Bluetooth, Do not disturb and Battery saver as wide glass tiles (2 x 2), brightness and volume sliders beside them.
 import { useEffect, useRef, useState, type ReactNode } from "react";
-import { getBrightness, getQuickSettings, getVolume, quickLaunch, setBrightness, setQuickSetting, setVolume, type QuickKey, type QuickSettings, type QuickShortcut } from "../bridge";
+import { getBrightness, getQuickSettings, getVolume, openMacdowsSettings, quickLaunch, setBrightness, setQuickSetting, setVolume, type QuickKey, type QuickSettings, type QuickShortcut } from "../bridge";
 import { useT } from "../i18n";
 
 const svg = (children: ReactNode, size = 22) => (
@@ -101,6 +101,9 @@ export function QuickSettingsScreen({ onOpenShelf }: { onOpenShelf: () => void }
             {icon}
           </button>
         ))}
+        <button className="shortcut" title={t("quick.macdows")} aria-label={t("quick.macdows")} onClick={() => openMacdowsSettings().catch(() => {})}>
+          {svg(<><path d="M4 7h9M17 7h3M4 17h3M11 17h9" /><circle cx="15" cy="7" r="2" /><circle cx="9" cy="17" r="2" /></>, 17)}
+        </button>
         <button className="shortcut" title={t("quick.shelf")} aria-label={t("quick.shelf")} onClick={onOpenShelf}>
           {svg(<><path d="M4 8.5V18a1.5 1.5 0 0 0 1.5 1.5h13A1.5 1.5 0 0 0 20 18V8.5" /><path d="M3 5.5h18v3H3z" /><path d="M10 12.5h4" /></>, 17)}
         </button>

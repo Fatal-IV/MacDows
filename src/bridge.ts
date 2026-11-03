@@ -70,6 +70,7 @@ export const getQuickSettings = () => invoke<QuickSettings>("get_quick_settings"
 export const setQuickSetting = (key: QuickKey, on: boolean) => invoke<QuickSettings>("set_quick_setting", { key, on });
 
 export type QuickShortcut = "screenshot" | "settings" | "task_manager" | "calculator" | "lock";
+export const openMacdowsSettings = () => invoke<void>("open_macdows_settings");
 export const quickLaunch = (id: QuickShortcut) => invoke<void>("quick_launch", { id });
 
 export const getBrightness = () => invoke<number | null>("get_brightness");

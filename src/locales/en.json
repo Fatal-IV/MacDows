@@ -113,5 +113,6 @@
   "shelf.clear": "Clear",
   "shelf.remove": "Remove from shelf",
   "shelf.missing": "File not found",
-  "quick.shelf": "Shelf"
+  "quick.shelf": "Shelf",
+  "quick.macdows": "MacDows Settings"
 }
