@@ -344,6 +344,12 @@ fn shell_open(target: &str) -> Result<(), String> {
     Ok(())
 }
 
+/// The dock asks for a new window of a pinned app (Win+Shift+number).
+#[tauri::command]
+pub fn launch_new_app(id: String, exe: String, aumid: String) {
+    launch_new(&id, &exe, &aumid);
+}
+
 /// Starts a new instance (a new window for most apps) of a pinned or running app.
 pub fn launch_new(id: &str, exe: &str, aumid: &str) {
     let target = if id.starts_with(LOCAL_PREFIX) {

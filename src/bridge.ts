@@ -85,6 +85,12 @@ export interface Drive {
 export const listDrives = () => invoke<Drive[]>("list_drives");
 export const openDrive = (letter: string) => invoke<void>("open_drive", { letter });
 export const onDrivesChanged = (cb: () => void): Promise<UnlistenFn> => listen("drives-changed", cb);
+/** The dock tells Rust how many pinned apps it shows, so Win+number leaves empty slots to Windows. */
+export const setDockPinnedCount = (count: number) => invoke<void>("set_dock_pinned_count", { count });
+export const launchNewApp = (id: string, exe: string, aumid: string) => invoke<void>("launch_new_app", { id, exe, aumid });
+/** Win+number (slot 0 to 8); `new_instance` when Shift was held too. */
+export const onDockShortcut = (cb: (s: { index: number; new_instance: boolean }) => void): Promise<UnlistenFn> =>
+  listen<{ index: number; new_instance: boolean }>("dock-shortcut", (e) => cb(e.payload));
 /** Custom icons (PNG, base64) by lowercase key: a pin's id, or for other apps their program path. */
 export const getCustomIcons = () => invoke<Record<string, string>>("get_custom_icons");
 /** Saves the order the pinned apps were dragged into (their ids, left to right). */

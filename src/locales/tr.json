@@ -79,6 +79,8 @@
   "settings.showDrivesHelp": "Disklerinizi ve USB sürücülerinizi Dock'ta sabit uygulamalardan sonra gösterir. Birine tıklayınca açılır.",
   "dock.drive.local": "Yerel disk",
   "dock.drive.removable": "Çıkarılabilir sürücü",
+  "settings.winNumber": "Win + sayı kısayolları",
+  "settings.winNumberHelp": "Win+1 ile Win+9, Dock'taki sabit uygulamaları sırayla başlatır veya öne getirir; Win+Shift+sayı yeni pencere açar. Bir klavye kancası gerekir; antivirüsünüz şikayet ederse kapatın.",
   "settings.showDesktop": "Masaüstü düğmesi",
   "settings.showDesktopHelp": "Dock'un sonuna, sizi hızlıca masaüstüne götüren bir düğme ekler. Tekrar basınca pencereleriniz geri gelir.",
   "window.controls": "Pencere düğmeleri",

@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { motion, Reorder } from "framer-motion";
 import { invoke } from "@tauri-apps/api/core";
-import { focusWindow, dockMenu, getCustomIcons, launchPinned, listDrives, listPinned, onDrivesChanged, openDrive, setPinnedOrder, listWindows, onPinnedChanged, onWindowsChanged, type AppWindow, type Drive, type PinnedApp } from "../bridge";
+import { focusWindow, dockMenu, getCustomIcons, launchNewApp, launchPinned, listDrives, listPinned, onDockShortcut, onDrivesChanged, openDrive, setDockPinnedCount, setPinnedOrder, listWindows, onPinnedChanged, onWindowsChanged, type AppWindow, type Drive, type PinnedApp } from "../bridge";
 import { mergeDock, type DockEntry } from "./dockItems";
 import { droppedOutside, sameOrder } from "./dockDrag";
 import { useSettings, useT } from "../i18n";
@@ -110,6 +110,34 @@ export default function Dock() {
   const baseIds = pinnedEntries.map((e) => e.pinned!.id);
   const ids = order && sameOrder([...order].sort(), [...baseIds].sort()) ? order : baseIds;
   const byId = new Map(pinnedEntries.map((e) => [e.pinned!.id, e]));
+
+  // Win+1..9: the nth pinned app (in the order shown) comes forward or starts; Shift starts a new window.
+  const shown = ids.map((id) => byId.get(id)).filter((e): e is DockEntry => !!e);
+  const shortcutState = useRef({ shown, cycle: { index: -1, at: 0 } });
+  shortcutState.current.shown = shown;
+  const inCharge = !!system?.taskbar_hidden;
+  useEffect(() => {
+    setDockPinnedCount(inCharge ? shown.length : 0).catch(() => {});
+  }, [shown.length, inCharge]);
+  useEffect(() => {
+    const un = onDockShortcut(({ index, new_instance }) => {
+      const st = shortcutState.current;
+      const entry = st.shown[index];
+      if (!entry) return;
+      if (new_instance) {
+        launchNewApp(entry.pinned?.id ?? "", entry.exe, entry.aumid).catch(() => {});
+      } else if (entry.windows.length > 0) {
+        // Pressing the same number again walks through the app's windows.
+        st.cycle = { index, at: st.cycle.index === index ? (st.cycle.at + 1) % entry.windows.length : 0 };
+        focusWindow(entry.windows[st.cycle.at].id);
+      } else if (entry.pinned) {
+        launchPinned(entry.pinned.id).catch(() => {});
+      }
+    });
+    return () => {
+      un.then((f) => f());
+    };
+  }, []);
 
   const onDragStart = () => {
     dragFrom.current = ids;
