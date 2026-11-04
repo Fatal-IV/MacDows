@@ -10,7 +10,7 @@ Format: [Keep a Changelog](https://keepachangelog.com/), versioning: [SemVer](ht
 First public release. A Dynamic Island at the top of the screen and a dock at the bottom that take the place of the Windows taskbar (it comes back whenever you quit MacDows or turn the switch off). Windows's own Start, Search and quick settings stay.
 
 ### Added
-- The dock shows the apps pinned to the Windows taskbar (programs, File Explorer and Store apps) in Windows's order, and follows Windows when something is pinned or unpinned. A running pinned app keeps its place and gets a dot; a click brings it forward or starts it. Settings > Dynamic Island and dock > "Show pinned apps".
+- The dock shows the apps pinned to the Windows taskbar (programs, File Explorer and Store apps) in Windows's order, and follows Windows when something is pinned or unpinned. A running pinned app keeps its place and gets a dot; a click brings it forward or starts it. Settings > Dock > "Show pinned apps".
 - Right-click menu in the dock: new window, unpin from the taskbar, pin to the taskbar, change or reset the icon, quit the app, and (on the empty dock) add app, MacDows settings and Task Manager. Windows often refuses to pin for other programs; then MacDows keeps the pin itself.
 - Drag the pinned apps to reorder them (only the order in the dock changes, not the Windows taskbar), and give any dock app a custom icon from a picture or a program.
 - Window previews: hover a running app to see its windows as small live pictures; click one to bring it forward or close it. A badge shows the window count from two windows. Can be turned off in settings.
