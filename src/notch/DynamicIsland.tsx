@@ -653,18 +653,6 @@ export default function Notch() {
               <div className="art-large">
                 <Art url={art} />
               </div>
-              {screenOn(island, "tools") && (
-                <button
-                  className="corner-arrow"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    toggleTools();
-                  }}
-                  aria-label={t("notch.openTools")}
-                >
-                  ⌃
-                </button>
-              )}
               <div className="meta-col">
                 <div className="track-row">
                   <div className="track-info">
