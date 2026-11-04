@@ -64,8 +64,17 @@ export interface PinnedApp {
 }
 export const listPinned = () => invoke<PinnedApp[]>("list_pinned");
 export const launchPinned = (id: string) => invoke<void>("launch_pinned", { id });
-/** Shows the right-click menu ("Unpin from taskbar") of a pinned dock icon. */
-export const pinnedMenu = (id: string) => invoke<void>("pinned_menu", { id });
+/** What the dock tells Rust about the icon (or empty dock area) that was right-clicked. */
+export interface DockMenuTarget {
+  kind: "pinned" | "running" | "empty";
+  id: string;
+  exe: string;
+  aumid: string;
+  name: string;
+  hwnds: number[];
+}
+/** Shows the dock's right-click menu at the pointer. */
+export const dockMenu = (target: DockMenuTarget) => invoke<void>("dock_menu", { target });
 export const onPinnedChanged = (cb: () => void): Promise<UnlistenFn> => listen("pinned-changed", cb);
 export const onWindowsChanged = (cb: () => void): Promise<UnlistenFn> => listen("windows-changed", cb);
 

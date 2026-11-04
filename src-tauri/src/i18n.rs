@@ -14,11 +14,29 @@ pub fn tray_restore_label(lang: &str) -> &'static str {
     }
 }
 
-/// Right-click item of a pinned dock icon.
-pub fn unpin_label(lang: &str) -> &'static str {
-    match lang {
-        "tr" => "Görev çubuğundan kaldır",
-        _ => "Unpin from taskbar",
+/// Label of a dock right-click menu item, by the action's id; unknown ids give an empty label.
+pub fn dock_menu_label(lang: &str, action: &str) -> &'static str {
+    let tr = lang == "tr";
+    match (action, tr) {
+        ("new_window", true) => "Yeni pencere",
+        ("new_window", false) => "New window",
+        ("unpin", true) => "Görev çubuğundan kaldır",
+        ("unpin", false) => "Unpin from taskbar",
+        ("pin", true) => "Görev çubuğuna sabitle",
+        ("pin", false) => "Pin to taskbar",
+        ("change_icon", true) => "Simgeyi değiştir",
+        ("change_icon", false) => "Change icon",
+        ("reset_icon", true) => "Simgeyi sıfırla",
+        ("reset_icon", false) => "Reset icon",
+        ("quit", true) => "Uygulamadan çık",
+        ("quit", false) => "Quit app",
+        ("add_app", true) => "Uygulama ekle",
+        ("add_app", false) => "Add app",
+        ("macdows_settings", true) => "MacDows Ayarları",
+        ("macdows_settings", false) => "MacDows Settings",
+        ("task_manager", true) => "Görev Yöneticisi",
+        ("task_manager", false) => "Task Manager",
+        _ => "",
     }
 }
 

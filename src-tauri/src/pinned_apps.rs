@@ -4,14 +4,13 @@
 //! MacDows reads both and follows changes; removing a pin goes through the Windows command first.
 use serde::Serialize;
 use std::path::PathBuf;
-use tauri::menu::{ContextMenu, Menu, MenuItem};
 use tauri::{AppHandle, Emitter, Manager};
 use windows::core::{w, PCWSTR};
-use windows::Win32::Foundation::SIZE;
+use windows::Win32::Foundation::{HWND, LPARAM, SIZE, WPARAM};
 use windows::Win32::Storage::FileSystem::{GetShortPathNameW, WIN32_FIND_DATAW};
 use windows::Win32::System::Com::{CoCreateInstance, CoInitializeEx, CoTaskMemFree, IPersistFile, CLSCTX_INPROC_SERVER, COINIT_APARTMENTTHREADED, STGM_READ};
 use windows::Win32::UI::Shell::{IShellItem, IShellItemImageFactory, IShellLinkW, SHCreateItemFromParsingName, ShellExecuteExW, ShellExecuteW, ShellLink, SHELLEXECUTEINFOW, SIGDN_NORMALDISPLAY, SIIGBF_ICONONLY};
-use windows::Win32::UI::WindowsAndMessaging::{SW_HIDE, SW_SHOWNORMAL};
+use windows::Win32::UI::WindowsAndMessaging::{PostMessageW, SW_HIDE, SW_SHOWNORMAL, WM_CLOSE};
 
 const APPS_FOLDER: &str = r"shell:AppsFolder\";
 
@@ -231,12 +230,74 @@ fn read_pinned() -> Vec<PinnedApp> {
         .collect()
 }
 
-/// Pins the user hid in the dock (see `unpin`) are left out.
+/// Paths compare ignoring case and slash style.
+fn norm(path: &str) -> String {
+    path.replace('/', "\\").to_lowercase()
+}
+
+/// Is this pin the program `exe` or the Store app `aumid`? Empty values never match.
+pub fn same_app(pin: &PinnedApp, exe: &str, aumid: &str) -> bool {
+    (!exe.is_empty() && !pin.exe.is_empty() && norm(&pin.exe) == norm(exe)) || (!aumid.is_empty() && !pin.aumid.is_empty() && pin.aumid.eq_ignore_ascii_case(aumid))
+}
+
+/// The pins only MacDows has (Windows refused to pin them) follow the Windows pins; one Windows has since pinned is not listed twice.
+/// Local pins come without an icon; `list_pinned` fills it in.
+pub fn merge_local(mut pins: Vec<PinnedApp>, local: &[crate::settings::LocalPin]) -> Vec<PinnedApp> {
+    for l in local {
+        if pins.iter().any(|p| same_app(p, &l.exe, &l.aumid)) {
+            continue;
+        }
+        pins.push(PinnedApp { id: l.id.clone(), name: l.name.clone(), exe: l.exe.clone(), aumid: l.aumid.clone(), icon_png_base64: None });
+    }
+    pins
+}
+
+fn fill_local_icons(pins: &mut [PinnedApp]) {
+    for p in pins.iter_mut().filter(|p| p.id.starts_with(LOCAL_PREFIX) && p.icon_png_base64.is_none()) {
+        p.icon_png_base64 = if p.aumid.is_empty() { crate::windows_list::icon_png_base64(&p.exe) } else { store_info(&p.aumid).and_then(|(_, icon)| icon) };
+    }
+}
+
+const LOCAL_PREFIX: &str = "local:";
+
+/// Pins the user hid in the dock (see `unpin`) are left out; pins only MacDows has come after the Windows ones.
 #[tauri::command]
 pub async fn list_pinned(app: AppHandle) -> Vec<PinnedApp> {
-    let hidden: Vec<String> = app.state::<crate::AppSettings>().0.lock().unwrap().hidden_pinned.iter().map(|h| h.to_lowercase()).collect();
-    let all = tauri::async_runtime::spawn_blocking(read_pinned).await.unwrap_or_default();
+    let (hidden, local): (Vec<String>, Vec<crate::settings::LocalPin>) = {
+        let state = app.state::<crate::AppSettings>();
+        let g = state.0.lock().unwrap();
+        (g.hidden_pinned.iter().map(|h| h.to_lowercase()).collect(), g.dock.local_pins.clone())
+    };
+    let all = tauri::async_runtime::spawn_blocking(move || {
+        let mut merged = merge_local(read_pinned(), &local);
+        fill_local_icons(&mut merged);
+        merged
+    })
+    .await
+    .unwrap_or_default();
     all.into_iter().filter(|p| !hidden.contains(&p.id.to_lowercase())).collect()
+}
+
+/// What to hand to the shell to start (a new instance of) an app: a Windows pin's own id, or for a program only MacDows
+/// knows (local pin, running window) its Store app id or exe.
+pub fn launch_target(id: &str, exe: &str, aumid: &str) -> Option<String> {
+    if !id.is_empty() && !id.starts_with(LOCAL_PREFIX) {
+        return Some(id.to_string());
+    }
+    if !aumid.is_empty() {
+        return Some(format!("{APPS_FOLDER}{aumid}"));
+    }
+    (!exe.is_empty()).then(|| exe.to_string())
+}
+
+/// What the "pin to taskbar" command is given: a Store app is pinned by its app id (its windows are hosted by
+/// `ApplicationFrameHost.exe`, which must never be pinned), anything else by its exe.
+pub fn pin_source(exe: &str, aumid: &str) -> Option<String> {
+    let host = exe.to_lowercase().ends_with("applicationframehost.exe");
+    if !exe.is_empty() && !host {
+        return Some(exe.to_string());
+    }
+    (!aumid.is_empty()).then(|| format!("{APPS_FOLDER}{aumid}"))
 }
 
 /// Is this id one of the pins Windows has right now? Commands only act on listed pins.
@@ -250,15 +311,45 @@ fn is_listed(id: &str) -> bool {
 
 /// Starts a pinned app.
 #[tauri::command]
-pub fn launch_pinned(id: String) -> Result<(), String> {
+pub fn launch_pinned(app: AppHandle, id: String) -> Result<(), String> {
+    if let Some(local) = id.starts_with(LOCAL_PREFIX).then(|| app.state::<crate::AppSettings>().0.lock().unwrap().dock.local_pins.iter().find(|l| l.id.eq_ignore_ascii_case(&id)).cloned()).flatten() {
+        return shell_open(&launch_target(&id, &local.exe, &local.aumid).ok_or("nothing to start")?);
+    }
     if !is_listed(&id) {
         return Err("not a pinned app".into());
     }
-    let wide: Vec<u16> = id.encode_utf16().chain(std::iter::once(0)).collect();
+    shell_open(&id)
+}
+
+fn shell_open(target: &str) -> Result<(), String> {
+    let wide: Vec<u16> = target.encode_utf16().chain(std::iter::once(0)).collect();
     unsafe {
         ShellExecuteW(None, w!("open"), PCWSTR(wide.as_ptr()), PCWSTR::null(), PCWSTR::null(), SW_SHOWNORMAL);
     }
     Ok(())
+}
+
+/// Starts a new instance (a new window for most apps) of a pinned or running app.
+pub fn launch_new(id: &str, exe: &str, aumid: &str) {
+    let target = if id.starts_with(LOCAL_PREFIX) {
+        launch_target(id, exe, aumid)
+    } else if !id.is_empty() && !is_listed(id) {
+        None
+    } else {
+        launch_target(id, exe, aumid)
+    };
+    if let Some(target) = target {
+        let _ = shell_open(&target);
+    }
+}
+
+/// Asks every window to close (the app may ask to save first); nothing is killed.
+pub fn close_windows(hwnds: &[isize]) {
+    for &h in hwnds {
+        unsafe {
+            let _ = PostMessageW(Some(HWND(h as *mut _)), WM_CLOSE, WPARAM(0), LPARAM(0));
+        }
+    }
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -297,22 +388,25 @@ pub fn start(app: AppHandle) {
 // Removing a pin (right click in the dock)
 // ---------------------------------------------------------------------------------------------
 
-const UNPIN_PREFIX: &str = "pinned-unpin:";
-
-/// Asks Windows to unpin through its own "Unpin from taskbar" command. Returns whether the call was accepted.
-fn windows_unpin(id: &str) -> bool {
-    let wide: Vec<u16> = id.encode_utf16().chain(std::iter::once(0)).collect();
-    let mut info = SHELLEXECUTEINFOW { cbSize: std::mem::size_of::<SHELLEXECUTEINFOW>() as u32, lpVerb: w!("taskbarunpin"), lpFile: PCWSTR(wide.as_ptr()), nShow: SW_HIDE.0, ..Default::default() };
+/// Asks the shell to pin or unpin through its own taskbar command (`taskbarpin`, `taskbarunpin`). Returns whether the call was accepted.
+fn windows_verb(verb: PCWSTR, target: &str) -> bool {
+    let wide: Vec<u16> = target.encode_utf16().chain(std::iter::once(0)).collect();
+    let mut info = SHELLEXECUTEINFOW { cbSize: std::mem::size_of::<SHELLEXECUTEINFOW>() as u32, lpVerb: verb, lpFile: PCWSTR(wide.as_ptr()), nShow: SW_HIDE.0, ..Default::default() };
     unsafe { ShellExecuteExW(&mut info).is_ok() }
 }
 
-/// Removes a pin: first Windows's own command; when Windows does not honor it (Windows 11 often refuses
+/// Removes a pin: Windows's own command first; when Windows does not honor it (Windows 11 often refuses
 /// other programs), the pin is hidden in the dock only and the Windows taskbar list is left alone.
-fn unpin(app: &AppHandle, id: String) {
+/// A pin only MacDows has is simply deleted from its own list.
+pub fn remove_pin(app: &AppHandle, id: String) {
+    if id.starts_with(LOCAL_PREFIX) {
+        update_settings(app, |s| s.dock.local_pins.retain(|l| !l.id.eq_ignore_ascii_case(&id)));
+        return;
+    }
     if !is_listed(&id) {
         return;
     }
-    let accepted = windows_unpin(&id);
+    let accepted = windows_verb(w!("taskbarunpin"), &id);
     // Explorer updates its list a moment after the command.
     for _ in 0..6 {
         std::thread::sleep(std::time::Duration::from_millis(500));
@@ -323,34 +417,65 @@ fn unpin(app: &AppHandle, id: String) {
         }
     }
     eprintln!("[pinned] {id}: Windows kept it (command accepted: {accepted}); hidden in the dock only");
+    update_settings(app, |s| {
+        if !s.hidden_pinned.iter().any(|h| h.eq_ignore_ascii_case(&id)) {
+            s.hidden_pinned.push(id.clone());
+        }
+    });
+}
+
+/// Does Windows list this program or Store app as pinned right now?
+fn windows_has(exe: &str, aumid: &str) -> bool {
+    if !aumid.is_empty() && scan_aumids(&favorites_blob()).iter().any(|(_, a)| a.eq_ignore_ascii_case(aumid)) {
+        return true;
+    }
+    if exe.is_empty() {
+        return false;
+    }
+    let dir = pinned_dir();
+    let Ok(read) = std::fs::read_dir(&dir) else { return false };
+    read.flatten().filter(|e| e.file_name().to_str().is_some_and(is_shortcut)).any(|e| shortcut_target(&e.path()).is_some_and(|t| norm(&t) == norm(exe)))
+}
+
+/// Pins a running app: Windows's own command first; when Windows does not pin it, MacDows keeps the pin itself
+/// and the dock shows it all the same.
+pub fn pin_app(app: &AppHandle, exe: &str, aumid: &str, name: &str) {
+    let Some(source) = pin_source(exe, aumid) else { return };
+    // A Store app is pinned (and later matched) by its app id, so the check must not use the host program's exe.
+    let by_aumid = source.starts_with(APPS_FOLDER);
+    let (check_exe, check_aumid) = if by_aumid { ("", aumid) } else { (exe, "") };
+    if windows_has(check_exe, check_aumid) {
+        return;
+    }
+    let accepted = windows_verb(w!("taskbarpin"), &source);
+    for _ in 0..6 {
+        std::thread::sleep(std::time::Duration::from_millis(500));
+        if windows_has(check_exe, check_aumid) {
+            eprintln!("[pinned] {source}: pinned through Windows");
+            let _ = app.emit("pinned-changed", ());
+            return;
+        }
+    }
+    eprintln!("[pinned] {source}: Windows did not pin it (command accepted: {accepted}); kept by MacDows");
+    let key = if by_aumid { aumid.to_lowercase() } else { norm(exe) };
+    let local = crate::settings::LocalPin { id: format!("{LOCAL_PREFIX}{key}"), name: name.to_string(), exe: if by_aumid { String::new() } else { exe.to_string() }, aumid: if by_aumid { aumid.to_string() } else { String::new() } };
+    update_settings(app, |s| {
+        if !s.dock.local_pins.iter().any(|l| l.id.eq_ignore_ascii_case(&local.id)) {
+            s.dock.local_pins.push(local.clone());
+        }
+    });
+}
+
+/// Changes the settings, saves them and tells the windows (the dock reloads its pins).
+fn update_settings(app: &AppHandle, change: impl FnOnce(&mut crate::settings::Settings)) {
     let state = app.state::<crate::AppSettings>();
     let mut guard = state.0.lock().unwrap();
-    if !guard.hidden_pinned.iter().any(|h| h.eq_ignore_ascii_case(&id)) {
-        guard.hidden_pinned.push(id);
-    }
+    change(&mut guard);
     let _ = crate::settings::save(&guard);
     let updated = guard.clone();
     drop(guard);
     let _ = app.emit("settings-changed", updated);
     let _ = app.emit("pinned-changed", ());
-}
-
-/// Shows the right-click menu of a pinned dock icon.
-#[tauri::command]
-pub fn pinned_menu(app: AppHandle, id: String) -> Result<(), String> {
-    let lang = app.state::<crate::AppSettings>().0.lock().unwrap().language.clone();
-    let item = MenuItem::with_id(&app, format!("{UNPIN_PREFIX}{id}"), crate::i18n::unpin_label(&lang), true, None::<&str>).map_err(|e| e.to_string())?;
-    let menu = Menu::with_items(&app, &[&item]).map_err(|e| e.to_string())?;
-    let window = app.get_webview_window("dock").ok_or("no dock window")?;
-    menu.popup(window.as_ref().window().clone()).map_err(|e| e.to_string())
-}
-
-/// App-wide menu events: the dock's "Unpin from taskbar".
-pub fn on_menu_event(app: &AppHandle, menu_id: &str) {
-    if let Some(id) = menu_id.strip_prefix(UNPIN_PREFIX) {
-        let (app, id) = (app.clone(), id.to_string());
-        std::thread::spawn(move || unpin(&app, id));
-    }
 }
 
 #[cfg(test)]
@@ -422,5 +547,75 @@ mod tests {
     fn only_listed_pins_are_acted_on() {
         assert!(!is_listed(r"C:\Windows\System32\cmd.exe"));
         assert!(!is_listed(r"shell:AppsFolder\Not.Pinned_8wekyb3d8bbwe!App"));
+    }
+
+    fn app(id: &str, exe: &str, aumid: &str) -> PinnedApp {
+        PinnedApp { id: id.into(), name: id.into(), exe: exe.into(), aumid: aumid.into(), icon_png_base64: None }
+    }
+
+    #[test]
+    fn local_pins_follow_the_windows_pins() {
+        let local = vec![crate::settings::LocalPin { id: "local:calc".into(), name: "Calc".into(), exe: "C:/calc.exe".into(), aumid: String::new() }];
+        let merged = merge_local(vec![app("a", "C:/a.exe", "")], &local);
+        assert_eq!(merged.iter().map(|p| p.id.as_str()).collect::<Vec<_>>(), ["a", "local:calc"]);
+    }
+
+    #[test]
+    fn a_local_pin_windows_now_has_is_not_listed_twice() {
+        let local = vec![crate::settings::LocalPin { id: "local:calc".into(), name: "Calc".into(), exe: r"c:\CALC.exe".into(), aumid: String::new() }];
+        let merged = merge_local(vec![app("a", "C:/calc.exe", "")], &local);
+        assert_eq!(merged.len(), 1);
+    }
+
+    #[test]
+    fn apps_match_by_program_or_by_app_id() {
+        assert!(same_app(&app("a", "C:/x/Edge.exe", ""), r"c:\x\edge.exe", ""));
+        assert!(same_app(&app("s", "", "Pkg_8wekyb3d8bbwe!App"), "", "pkg_8wekyb3d8bbwe!app"));
+        assert!(!same_app(&app("a", "C:/a.exe", ""), "", ""));
+    }
+
+    #[test]
+    fn launching_uses_the_pin_itself_or_the_exe_or_the_app_id() {
+        assert_eq!(launch_target("C:/pins/Edge.lnk", "", ""), Some("C:/pins/Edge.lnk".to_string()));
+        assert_eq!(launch_target("", "C:/x/app.exe", ""), Some("C:/x/app.exe".to_string()));
+        assert_eq!(launch_target("local:x", "C:/x/app.exe", "Pkg_8wekyb3d8bbwe!App"), Some(r"shell:AppsFolder\Pkg_8wekyb3d8bbwe!App".to_string()));
+        assert_eq!(launch_target("", "", ""), None);
+    }
+
+    #[test]
+    fn a_store_apps_host_program_is_never_pinned() {
+        assert_eq!(pin_source(r"C:\Windows\System32\ApplicationFrameHost.exe", "Pkg_8wekyb3d8bbwe!App"), Some(r"shell:AppsFolder\Pkg_8wekyb3d8bbwe!App".to_string()));
+        assert_eq!(pin_source(r"C:\Apps\app.exe", "Pkg_8wekyb3d8bbwe!App"), Some(r"C:\Apps\app.exe".to_string()));
+        assert_eq!(pin_source(r"C:\Windows\System32\ApplicationFrameHost.exe", ""), None);
+        assert_eq!(pin_source("", ""), None);
+    }
+
+    /// Run by hand (`cargo test pinning_through_windows -- --ignored --nocapture`): pins Character Map through
+    /// the Windows command and unpins it again, to see whether Windows honors `taskbarpin` for other programs.
+    #[test]
+    #[ignore]
+    fn pinning_through_windows() {
+        let exe = r"C:\Windows\System32\charmap.exe";
+        assert!(!windows_has(exe, ""), "Character Map is already pinned; unpin it first");
+        let accepted = windows_verb(w!("taskbarpin"), exe);
+        let mut pinned = false;
+        for _ in 0..10 {
+            std::thread::sleep(std::time::Duration::from_millis(500));
+            if windows_has(exe, "") {
+                pinned = true;
+                break;
+            }
+        }
+        println!("taskbarpin accepted: {accepted}, pinned by Windows: {pinned}");
+        if pinned {
+            let dir = pinned_dir();
+            for e in std::fs::read_dir(&dir).unwrap().flatten() {
+                if shortcut_target(&e.path()).is_some_and(|t| norm(&t) == norm(exe)) {
+                    println!("unpin accepted: {}", windows_verb(w!("taskbarunpin"), &e.path().to_string_lossy()));
+                }
+            }
+            std::thread::sleep(std::time::Duration::from_secs(3));
+            println!("still pinned after cleanup: {}", windows_has(exe, ""));
+        }
     }
 }

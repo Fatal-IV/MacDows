@@ -11,6 +11,9 @@ export interface DockEntry {
   windows: AppWindow[];
   /** A pinned app that has a window shows a dot under its icon. */
   running: boolean;
+  /** The program and Store app id, for the right-click menu. */
+  exe: string;
+  aumid: string;
 }
 
 const same = (a: string, b: string) => a !== "" && b !== "" && a.replace(/\//g, "\\").toLowerCase() === b.replace(/\//g, "\\").toLowerCase();
@@ -23,10 +26,10 @@ export function mergeDock(pinned: PinnedApp[], windows: AppWindow[]): DockEntry[
   const entries: DockEntry[] = pinned.map((p) => {
     const own = windows.filter((w) => belongs(w, p));
     own.forEach((w) => claimed.add(w.id));
-    return { key: `pin:${p.id}`, title: p.name, icon: p.icon_png_base64, pinned: p, windows: own, running: own.length > 0 };
+    return { key: `pin:${p.id}`, title: p.name, icon: p.icon_png_base64, pinned: p, windows: own, running: own.length > 0, exe: p.exe, aumid: p.aumid };
   });
   for (const w of windows) {
-    if (!claimed.has(w.id)) entries.push({ key: `win:${w.id}`, title: w.title, icon: w.icon_png_base64, pinned: null, windows: [w], running: false });
+    if (!claimed.has(w.id)) entries.push({ key: `win:${w.id}`, title: w.title, icon: w.icon_png_base64, pinned: null, windows: [w], running: false, exe: w.exe, aumid: w.aumid });
   }
   return entries;
 }

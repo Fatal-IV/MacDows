@@ -46,3 +46,12 @@ test("an empty app id never matches another empty app id", () => {
   assert.equal(out[0].running, false);
   assert.equal(out.length, 2);
 });
+
+test("entries carry the program, app id and window handles the right-click menu needs", () => {
+  const out = mergeDock([pin("Edge", "C:/e/msedge.exe", "MSEdge")], [win(5, "C:/e/msedge.exe"), win(6, "C:/o/other.exe", "Other_8wekyb3d8bbwe!App")]);
+  assert.equal(out[0].exe, "C:/e/msedge.exe");
+  assert.equal(out[0].aumid, "MSEdge");
+  assert.deepEqual(out[0].windows.map((w) => w.id), [5]);
+  assert.equal(out[1].exe, "C:/o/other.exe");
+  assert.equal(out[1].aumid, "Other_8wekyb3d8bbwe!App");
+});

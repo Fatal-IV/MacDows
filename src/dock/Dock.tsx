@@ -1,7 +1,7 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { motion } from "framer-motion";
 import { invoke } from "@tauri-apps/api/core";
-import { focusWindow, launchPinned, listPinned, pinnedMenu, listWindows, onPinnedChanged, onWindowsChanged, type AppWindow, type PinnedApp } from "../bridge";
+import { focusWindow, dockMenu, launchPinned, listPinned, listWindows, onPinnedChanged, onWindowsChanged, type AppWindow, type PinnedApp } from "../bridge";
 import { mergeDock, type DockEntry } from "./dockItems";
 import { useSettings, useT } from "../i18n";
 import { initTheme } from "../appearance/theme";
@@ -57,7 +57,14 @@ export default function Dock() {
   };
 
   return (
-    <div className="dock-stage">
+    <div
+      className="dock-stage"
+      onContextMenu={(ev) => {
+        // Right-click on the dock's empty space (not on an icon).
+        ev.preventDefault();
+        dockMenu({ kind: "empty", id: "", exe: "", aumid: "", name: "", hwnds: [] }).catch(() => {});
+      }}
+    >
       <motion.div className="dock" layout>
         {system?.taskbar_hidden && (
           <>
@@ -78,9 +85,9 @@ export default function Dock() {
             transition={{ type: "spring", stiffness: 400, damping: 22 }}
             onClick={() => open(e)}
             onContextMenu={(ev) => {
-              if (!e.pinned) return;
               ev.preventDefault();
-              pinnedMenu(e.pinned.id).catch(() => {});
+              ev.stopPropagation();
+              dockMenu({ kind: e.pinned ? "pinned" : "running", id: e.pinned?.id ?? "", exe: e.exe, aumid: e.aumid, name: e.title, hwnds: e.windows.map((w) => w.id) }).catch(() => {});
             }}
           >
             {e.icon ? <img src={`data:image/png;base64,${e.icon}`} alt="" draggable={false} /> : <span className="dock-fallback">{e.title.slice(0, 1).toUpperCase()}</span>}
