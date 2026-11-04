@@ -19,9 +19,90 @@ export interface Dock {
   win_number: boolean;
 }
 
+export type FullscreenMode = "edge" | "hidden";
+export type ClickMode = "smart" | "quick" | "player";
+export type ScreenId = "status" | "music" | "tools" | "quick" | "notifications" | "shelf";
+export const SCREEN_IDS: ScreenId[] = ["status", "music", "tools", "quick", "notifications", "shelf"];
+
+export interface StatusCfg {
+  enabled: boolean;
+  clock_12h: boolean;
+  battery_percent: boolean;
+}
+export interface MusicCfg {
+  enabled: boolean;
+  visualizer: boolean;
+  album_glow: boolean;
+  progress: boolean;
+  auto_open: boolean;
+  artwork: boolean;
+}
+export interface ToolsCfg {
+  enabled: boolean;
+  calendar: boolean;
+  week_starts_monday: boolean;
+  timer: boolean;
+  timer_sound: boolean;
+  timer_progress: boolean;
+  stopwatch: boolean;
+}
+export interface QuickCfg {
+  enabled: boolean;
+  wifi: boolean;
+  bluetooth: boolean;
+  dnd: boolean;
+  battery_saver: boolean;
+  airplane: boolean;
+  hotspot: boolean;
+  accessibility: boolean;
+  brightness: boolean;
+  volume: boolean;
+  lock: boolean;
+  macdows_settings: boolean;
+  windows_settings: boolean;
+}
+export interface NotifCfg {
+  enabled: boolean;
+  banner: boolean;
+  /** 3 to 10. */
+  banner_seconds: number;
+  save_history: boolean;
+  /** 25, 50 or 100. */
+  history_max: number;
+  muted_apps: string[];
+}
+export interface ShelfCfg {
+  enabled: boolean;
+  persist: boolean;
+  max_items: number;
+  auto_open: boolean;
+}
+export interface Screens {
+  status: StatusCfg;
+  music: MusicCfg;
+  tools: ToolsCfg;
+  quick: QuickCfg;
+  notifications: NotifCfg;
+  shelf: ShelfCfg;
+}
+export interface Nav {
+  wheel: boolean;
+  /** Every screen id once. */
+  order: ScreenId[];
+  click: ClickMode;
+  middle: boolean;
+  remember: boolean;
+}
+/** The Dynamic Island: its screens, what each offers, how it is navigated. */
+export interface Island {
+  visibility: Visibility;
+  fullscreen: FullscreenMode;
+  nav: Nav;
+  screens: Screens;
+}
+
 export interface Settings {
   language: string;
-  notch_visibility: Visibility;
   dock_visibility: Visibility;
   check_updates: boolean;
   last_update_check: number | null;
@@ -33,6 +114,7 @@ export interface Settings {
   /** Pins hidden in the dock because Windows would not unpin them. */
   hidden_pinned: string[];
   dock: Dock;
+  island: Island;
 }
 
 export const getSettings = () => invoke<Settings>("get_settings");

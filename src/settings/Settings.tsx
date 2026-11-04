@@ -97,7 +97,7 @@ const ITEMS: Item[] = [
     render: ({ s, t }) => (
       <Group>
         <Row title={t("settings.notch")} description={t("settings.visibilityHelp")}>
-          <Select label={t("settings.notch")} value={s.notch_visibility} onChange={(v) => setSetting("notch_visibility", v)} options={VISIBILITIES.map((v) => ({ value: v, label: t(`vis.${v}`) }))} />
+          <Select label={t("settings.notch")} value={s.island.visibility} onChange={(v) => setSetting("island", { ...s.island, visibility: v })} options={VISIBILITIES.map((v) => ({ value: v, label: t(`vis.${v}`) }))} />
         </Row>
       </Group>
     ),

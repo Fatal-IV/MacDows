@@ -26,6 +26,7 @@ mod app_catalog;
 mod appearance;
 mod fullscreen;
 mod settings;
+mod island_settings;
 use std::sync::Mutex;
 use tauri::menu::{Menu, MenuItem};
 use tauri::tray::TrayIconBuilder;
@@ -43,7 +44,8 @@ fn set_setting(app: AppHandle, state: State<AppSettings>, key: String, value: se
     let mut guard = state.0.lock().unwrap();
     let mut json = serde_json::to_value(&*guard).map_err(|e| e.to_string())?;
     json.as_object_mut().ok_or("settings not an object")?.insert(key.clone(), value);
-    let updated: settings::Settings = serde_json::from_value(json).map_err(|e| e.to_string())?;
+    let mut updated: settings::Settings = serde_json::from_value(json).map_err(|e| e.to_string())?;
+    updated.island.normalize();
     settings::save(&updated).map_err(|e| e.to_string())?;
     *guard = updated.clone();
     drop(guard);

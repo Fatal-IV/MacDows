@@ -121,18 +121,18 @@ pub fn start(app: AppHandle) {
         let started = std::time::Instant::now();
         loop {
             let s = app.state::<AppSettings>().0.lock().unwrap().clone();
-            let both_fixed = s.notch_visibility == Visibility::Fixed && s.dock_visibility == Visibility::Fixed;
+            let both_fixed = s.island.visibility == Visibility::Fixed && s.dock_visibility == Visibility::Fixed;
             std::thread::sleep(Duration::from_millis(if both_fixed { 250 } else { 100 }));
             let fs = fullscreen::state();
             let cur = cursor();
-            let needs_overlap = s.notch_visibility == Visibility::Smart || s.dock_visibility == Visibility::Smart;
+            let needs_overlap = s.island.visibility == Visibility::Smart || s.dock_visibility == Visibility::Smart;
             let others = if needs_overlap { windows_list::visible_rects() } else { Vec::new() };
             // While one of Windows's own menus is open (Start, Search, quick settings) the dock stays in view under it.
             let shell_menu_open = foreground_exe().is_some_and(|exe| is_shell_menu(&exe));
             if shell_menu_open {
                 LAST_SHELL_MENU_MS.store(now_ms(), std::sync::atomic::Ordering::Relaxed);
             }
-            for (i, (label, vis)) in [("notch", s.notch_visibility), ("dock", s.dock_visibility)].into_iter().enumerate() {
+            for (i, (label, vis)) in [("notch", s.island.visibility), ("dock", s.dock_visibility)].into_iter().enumerate() {
                 let Some(win) = app.get_webview_window(label) else { continue };
                 let Ok(hwnd) = win.hwnd() else { continue };
                 let hwnd = HWND(hwnd.0);
