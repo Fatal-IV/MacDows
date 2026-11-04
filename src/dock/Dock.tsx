@@ -20,6 +20,13 @@ export default function Dock() {
 
   useEffect(() => initTheme({ backdrop: true }), []);
 
+  // The browser's own right-click menu ("Save image as", "Inspect"...) makes no sense on a dock.
+  useEffect(() => {
+    const block = (e: MouseEvent) => e.preventDefault();
+    document.addEventListener("contextmenu", block);
+    return () => document.removeEventListener("contextmenu", block);
+  }, []);
+
   useEffect(() => {
     const refresh = () => listWindows().then(setWindows).catch(() => setWindows([]));
     refresh();

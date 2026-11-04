@@ -322,6 +322,13 @@ export default function Notch() {
     };
   }, []);
 
+  // The browser's own right-click menu makes no sense on the island.
+  useEffect(() => {
+    const block = (e: MouseEvent) => e.preventDefault();
+    document.addEventListener("contextmenu", block);
+    return () => document.removeEventListener("contextmenu", block);
+  }, []);
+
   // Theme (colors, glass style, wallpaper backdrop) and UI scale come from the settings window.
   useEffect(() => initTheme({ backdrop: true, syncSystem: true }), []);
   const [scale, setScale] = useState(readScale);
