@@ -38,7 +38,8 @@ pub enum Auth {
     Wpa3Personal,
 }
 
-/// 0-100 signal quality to 0-4 bars.
+/// 0-100 signal quality to 0-4 bars (the page draws them from the same thresholds).
+#[allow(dead_code)]
 pub fn signal_bars(quality: u8) -> u8 {
     match quality {
         0 => 0,
