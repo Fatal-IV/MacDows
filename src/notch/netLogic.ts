@@ -20,3 +20,14 @@ const ERROR_KEYS = ["not_found", "failed", "timeout", "needs_password", "enterpr
 export function errorText(key: string, t: (key: string) => string): string {
   return t(`net.err.${ERROR_KEYS.includes(key) ? key : "failed"}`);
 }
+
+export type WifiAuth = "open" | "wpa2" | "wpa3";
+
+/** Whether the join form can be sent: an SSID, and a password of the right length for the security type. */
+export function canSubmit(ssid: string, auth: WifiAuth, password: string): boolean {
+  if (ssid.trim().length === 0) return false;
+  const n = [...password].length;
+  if (auth === "wpa2") return n >= 8 && n <= 63;
+  if (auth === "wpa3") return n >= 1;
+  return true;
+}

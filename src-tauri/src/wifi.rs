@@ -328,6 +328,79 @@ fn forget_blocking(ssid: &str) -> Result<(), String> {
     Ok(())
 }
 
+/// A secured network that never reaches the connected state after a connect request almost always has a wrong key:
+/// Windows reports the key mismatch only through an asynchronous notification, which we do not listen to.
+pub fn failure_key(secured: bool, key: &str) -> String {
+    if secured && key == "timeout" { "wrong_password".to_string() } else { key.to_string() }
+}
+
+pub fn parse_auth(name: &str) -> Option<Auth> {
+    match name {
+        "open" => Some(Auth::Open),
+        "wpa2" => Some(Auth::Wpa2Personal),
+        "wpa3" => Some(Auth::Wpa3Personal),
+        _ => None,
+    }
+}
+
+/// The network that is connected now, as (adapter, profile name, ssid), so it can be restored after a failed attempt.
+fn current_connection(client: &Client) -> Option<(windows::core::GUID, String, String)> {
+    let ssid = current_state().networks.into_iter().find(|n| n.connected)?.ssid;
+    let found = find_network(client, &ssid)?;
+    Some((found.guid, found.profile?, ssid))
+}
+
+/// Saves a profile for the typed network and connects. The password only lives in this function's profile XML.
+/// A failed attempt deletes the profile it just made and reconnects to the network that was connected before.
+fn connect_new_blocking(ssid: &str, password: Option<&str>, auth: &str, hidden: bool) -> Result<(), String> {
+    let auth = parse_auth(auth).ok_or("failed")?;
+    let client = open().ok_or("failed")?;
+    let existing = find_network(&client, ssid);
+    if existing.as_ref().is_some_and(|f| f.enterprise) {
+        return Err("enterprise".into());
+    }
+    let guid = match &existing {
+        Some(f) => f.guid,
+        None => *interfaces(&client).first().ok_or("failed")?,
+    };
+    let had_profile = existing.as_ref().is_some_and(|f| f.profile.is_some());
+    let previous = current_connection(&client).filter(|(_, _, prev_ssid)| prev_ssid != ssid);
+    let xml = wide(&profile_xml(ssid, auth, password, hidden));
+    let mut reason = 0u32;
+    let err = unsafe { WlanSetProfile(client.0, &guid, 0, PCWSTR(xml.as_ptr()), PCWSTR::null(), true, None, &mut reason) };
+    if err != 0 {
+        return Err(error_key(err).to_string());
+    }
+    match connect_profile(&client, &guid, ssid, ssid) {
+        Ok(()) => Ok(()),
+        Err(key) => {
+            if !had_profile {
+                let name = wide(ssid);
+                unsafe { WlanDeleteProfile(client.0, &guid, PCWSTR(name.as_ptr()), None) };
+            }
+            if let Some((prev_guid, prev_profile, _)) = previous {
+                let name = wide(&prev_profile);
+                let params = WLAN_CONNECTION_PARAMETERS {
+                    wlanConnectionMode: wlan_connection_mode_profile,
+                    strProfile: PCWSTR(name.as_ptr()),
+                    pDot11Ssid: std::ptr::null_mut(),
+                    pDesiredBssidList: std::ptr::null_mut(),
+                    dot11BssType: dot11_BSS_type_any,
+                    dwFlags: 0,
+                };
+                unsafe { WlanConnect(client.0, &prev_guid, &params, None) };
+            }
+            Err(failure_key(auth != Auth::Open, &key))
+        }
+    }
+}
+
+/// Joins a network with a typed password (or a hidden network by name).
+#[tauri::command]
+pub async fn wifi_connect_new(ssid: String, password: Option<String>, auth: String, hidden: bool) -> Result<(), String> {
+    tauri::async_runtime::spawn_blocking(move || connect_new_blocking(&ssid, password.as_deref(), &auth, hidden)).await.map_err(|_| "failed".to_string())?
+}
+
 /// Connects to a saved or open network the user clicked.
 #[tauri::command]
 pub async fn wifi_connect(ssid: String) -> Result<(), String> {
@@ -406,6 +479,22 @@ mod tests {
         assert_eq!(error_key(1460), "timeout");
         assert_eq!(error_key(5), "failed");
         assert_eq!(error_key(99999), "failed");
+    }
+
+    #[test]
+    fn a_secured_network_that_never_connects_reads_as_a_wrong_password() {
+        assert_eq!(failure_key(true, "timeout"), "wrong_password");
+        assert_eq!(failure_key(false, "timeout"), "timeout");
+        assert_eq!(failure_key(true, "not_found"), "not_found");
+        assert_eq!(failure_key(true, "failed"), "failed");
+    }
+
+    #[test]
+    fn auth_names_parse() {
+        assert_eq!(parse_auth("open"), Some(Auth::Open));
+        assert_eq!(parse_auth("wpa2"), Some(Auth::Wpa2Personal));
+        assert_eq!(parse_auth("wpa3"), Some(Auth::Wpa3Personal));
+        assert_eq!(parse_auth("wep"), None);
     }
 
     #[test]

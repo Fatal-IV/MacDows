@@ -304,6 +304,19 @@ fn place_dock(app: &tauri::AppHandle) {
     let _ = win.set_position(PhysicalPosition::new(x, y));
 }
 
+/// While a text field in the island is being typed in, the island takes keyboard focus and stays on screen.
+#[tauri::command]
+fn island_focus(app: tauri::AppHandle, on: bool) {
+    if on {
+        visibility::hold_notch(10 * 60 * 1000);
+        if let Some(win) = app.get_webview_window("notch") {
+            let _ = win.set_focus();
+        }
+    } else {
+        visibility::hold_notch(0);
+    }
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     let args: Vec<String> = std::env::args().skip(1).collect();
@@ -329,7 +342,7 @@ pub fn run() {
         .on_menu_event(|app, event| dock_menu::on_menu_event(app, event.id().as_ref()))
         .manage(AppSettings(Mutex::new(settings::load())))
         .manage(updates::UpdateState::default())
-        .invoke_handler(tauri::generate_handler![get_settings, set_setting, windows_list::list_windows, windows_list::focus_window, pinned_apps::list_pinned, pinned_apps::launch_pinned, pinned_apps::set_pinned_order, dock_menu::dock_menu, custom_icons::get_custom_icons, hotkeys::set_dock_pinned_count, app_catalog::get_catalog, app_catalog::pin_catalog_app, app_catalog::close_add_app_panel, preview::show_preview, preview::preview_hover, preview::preview_items, preview::close_preview, preview::preview_activate, preview::preview_close_window, pinned_apps::launch_new_app, drives::list_drives, drives::open_drive, media::get_media, media::media_toggle, media::media_next, media::media_prev, media::media_seek, media::get_media_sources, media::select_media_source, volume::get_volume, volume::set_volume, quick_settings::get_quick_settings, quick_settings::set_quick_setting, quick_settings::get_brightness, quick_settings::quick_launch, open_macdows_settings, notifications::get_notifications, notifications::remove_notification, notifications::clear_notifications, notifications::get_notification_history, notifications::clear_notification_history, bluetooth::get_bluetooth_devices, bluetooth::set_bluetooth_connection, wifi::wifi_state, wifi::wifi_scan, wifi::wifi_connect, wifi::wifi_disconnect, wifi::wifi_forget, shelf::get_shelf, shelf::add_to_shelf, shelf::remove_from_shelf, shelf::clear_shelf, shelf::open_shelf_item, shelf::reveal_shelf_item, quick_settings::set_brightness, updates::get_update_status, updates::check_for_update, updates::install_update, appearance::get_system_accent_color, wallpaper::get_wallpaper_backdrop, taskbar::get_system_status, taskbar::shell_action, toggle_tray_panel, get_tray_items, activate_tray_item, close_tray_panel, system_theme::sync_system_theme])
+        .invoke_handler(tauri::generate_handler![get_settings, set_setting, windows_list::list_windows, windows_list::focus_window, pinned_apps::list_pinned, pinned_apps::launch_pinned, pinned_apps::set_pinned_order, dock_menu::dock_menu, custom_icons::get_custom_icons, hotkeys::set_dock_pinned_count, app_catalog::get_catalog, app_catalog::pin_catalog_app, app_catalog::close_add_app_panel, preview::show_preview, preview::preview_hover, preview::preview_items, preview::close_preview, preview::preview_activate, preview::preview_close_window, pinned_apps::launch_new_app, drives::list_drives, drives::open_drive, media::get_media, media::media_toggle, media::media_next, media::media_prev, media::media_seek, media::get_media_sources, media::select_media_source, volume::get_volume, volume::set_volume, quick_settings::get_quick_settings, quick_settings::set_quick_setting, quick_settings::get_brightness, quick_settings::quick_launch, open_macdows_settings, notifications::get_notifications, notifications::remove_notification, notifications::clear_notifications, notifications::get_notification_history, notifications::clear_notification_history, bluetooth::get_bluetooth_devices, bluetooth::set_bluetooth_connection, wifi::wifi_state, wifi::wifi_scan, wifi::wifi_connect, wifi::wifi_connect_new, island_focus, wifi::wifi_disconnect, wifi::wifi_forget, shelf::get_shelf, shelf::add_to_shelf, shelf::remove_from_shelf, shelf::clear_shelf, shelf::open_shelf_item, shelf::reveal_shelf_item, quick_settings::set_brightness, updates::get_update_status, updates::check_for_update, updates::install_update, appearance::get_system_accent_color, wallpaper::get_wallpaper_backdrop, taskbar::get_system_status, taskbar::shell_action, toggle_tray_panel, get_tray_items, activate_tray_item, close_tray_panel, system_theme::sync_system_theme])
         .setup(|app| {
             for label in ["notch", "dock"] {
                 if let Some(hwnd) = app.get_webview_window(label).and_then(|w| w.hwnd().ok()) {

@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { signalBars, securityLabel, errorText } from "./netLogic.ts";
+import { signalBars, securityLabel, errorText, canSubmit } from "./netLogic.ts";
 
 test("signal maps to 0-4 bars", () => {
   const cases: Array<[number, number]> = [[0, 0], [1, 1], [25, 1], [26, 2], [50, 2], [51, 3], [75, 3], [76, 4], [100, 4]];
@@ -19,4 +19,17 @@ test("every backend error key has a text and unknown ones fall back to failed", 
   const t = (k: string) => k;
   for (const key of ["not_found", "failed", "timeout", "needs_password", "enterprise", "wrong_password"]) assert.equal(errorText(key, t), `net.err.${key}`);
   assert.equal(errorText("surprise", t), "net.err.failed");
+});
+
+test("canSubmit: SSID required, WPA2 8-63 characters, WPA3 at least 1, open needs none", () => {
+  assert.equal(canSubmit("", "open", ""), false);
+  assert.equal(canSubmit("TestNet", "open", ""), true);
+  assert.equal(canSubmit("TestNet", "wpa2", "1234567"), false, "7 characters");
+  assert.equal(canSubmit("TestNet", "wpa2", "12345678"), true, "8 characters");
+  assert.equal(canSubmit("TestNet", "wpa2", "x".repeat(63)), true, "63 characters");
+  assert.equal(canSubmit("TestNet", "wpa2", "x".repeat(64)), false, "64 characters");
+  assert.equal(canSubmit("TestNet", "wpa2", "with some spaces"), true, "spaces are allowed");
+  assert.equal(canSubmit("TestNet", "wpa3", ""), false);
+  assert.equal(canSubmit("TestNet", "wpa3", "a"), true);
+  assert.equal(canSubmit("   ", "open", ""), false, "blank SSID");
 });

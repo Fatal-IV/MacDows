@@ -5,7 +5,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { listen } from "@tauri-apps/api/event";
-import { getMedia, getMediaSources, selectMediaSource, mediaNext, mediaPrev, mediaSeek, mediaToggle, onMediaChanged, onNotificationNew, addToShelf, clearShelf, getShelf, removeFromShelf, type MediaInfo, type MediaSource, type Notice, type ShelfItem } from "../bridge";
+import { getMedia, getMediaSources, selectMediaSource, mediaNext, mediaPrev, mediaSeek, mediaToggle, onMediaChanged, islandFocus, onNotificationNew, addToShelf, clearShelf, getShelf, removeFromShelf, type MediaInfo, type MediaSource, type Notice, type ShelfItem } from "../bridge";
 import { useSettings, useT } from "../i18n";
 import { buildStops, clickTarget, restingStop, screenOn, type Stop } from "./islandLogic";
 import { defaultIsland } from "./islandDefaults";
@@ -438,7 +438,11 @@ export default function Notch() {
   // Where the island was when the pointer left, for "return to the last screen".
   const lastStop = useRef<Stop | null>(null);
 
+  // While a text field is being typed in, the island stays open even if the pointer leaves; it closes when typing ends.
+  const editing = useRef(false);
+  const leftWhileEditing = useRef(false);
   const onHoverStart = () => {
+    leftWhileEditing.current = false;
     setHovered(true);
     const back = lastStop.current;
     if (island.nav.remember && back && stops().includes(back)) goTo(back);
@@ -447,6 +451,10 @@ export default function Notch() {
     else setMode(restingMode());
   };
   const onHoverEnd = () => {
+    if (editing.current) {
+      leftWhileEditing.current = true;
+      return;
+    }
     lastStop.current = currentStop();
     setHovered(false);
     setOpen(false);
@@ -455,6 +463,15 @@ export default function Notch() {
     setShelfOpen(false);
     setHistoryOpen(false);
     setMode(restingMode());
+  };
+
+  const setEditing = (on: boolean) => {
+    editing.current = on;
+    islandFocus(on).catch(() => {});
+    if (!on && leftWhileEditing.current) {
+      leftWhileEditing.current = false;
+      onHoverEnd();
+    }
   };
 
   const isMusic = hasMedia && mode === "music";
@@ -614,7 +631,7 @@ export default function Notch() {
             </motion.div>
           ) : quick ? (
             <motion.div key="quick" className="tools-wrap" initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.98, transition: { duration: 0.1 } }} transition={{ type: "spring", stiffness: 500, damping: 30 }}>
-              <QuickSettingsScreen wifiPage={island.screens.quick.wifi_page} />
+              <QuickSettingsScreen wifiPage={island.screens.quick.wifi_page} onEditing={setEditing} />
               <button
                 className="corner-arrow"
                 onClick={(e) => {

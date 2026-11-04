@@ -583,3 +583,8 @@ img { -webkit-user-drag: none; user-select: none; }
 /* A paused program fades, unless it is the one being shown. */
 .source-btn.paused:not(.on) { opacity: 0.55; }
 .source-btn:hover { background: rgba(255, 255, 255, 0.2); }
+
+.net-input { flex: 1; min-width: 0; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.18); color: #fff; border-radius: 8px; padding: 5px 8px; font-size: 12px; font-family: inherit; outline: none; }
+.net-input:focus { border-color: rgba(255,255,255,0.55); }
+.net-select { flex: 0 0 auto; }
+.net-select option { background: #1c1c1e; color: #fff; }

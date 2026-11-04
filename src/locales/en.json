@@ -206,5 +206,14 @@
   "net.err.timeout": "No answer from the network",
   "net.err.needs_password": "A password is needed",
   "net.err.enterprise": "Use Windows settings for this network",
-  "net.err.wrong_password": "Wrong password"
+  "net.err.wrong_password": "Wrong password",
+  "net.password": "Password",
+  "net.join": "Join",
+  "net.hidden": "Join a hidden network",
+  "net.ssid": "Network name",
+  "net.secWpa2": "WPA2",
+  "net.secWpa3": "WPA3",
+  "net.secOpen": "Open",
+  "net.show": "Show",
+  "net.hide": "Hide"
 }

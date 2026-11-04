@@ -345,5 +345,7 @@ export interface WifiState {
 export const getWifiState = () => invoke<WifiState>("wifi_state");
 export const wifiScan = () => invoke<void>("wifi_scan");
 export const wifiConnect = (ssid: string) => invoke<void>("wifi_connect", { ssid });
+export const wifiConnectNew = (ssid: string, password: string | null, auth: "open" | "wpa2" | "wpa3", hidden: boolean) => invoke<void>("wifi_connect_new", { ssid, password, auth, hidden });
+export const islandFocus = (on: boolean) => invoke<void>("island_focus", { on });
 export const wifiDisconnect = () => invoke<void>("wifi_disconnect");
 export const wifiForget = (ssid: string) => invoke<void>("wifi_forget", { ssid });

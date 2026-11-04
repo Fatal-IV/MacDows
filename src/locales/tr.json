@@ -206,5 +206,14 @@
   "net.err.timeout": "Ağdan yanıt gelmedi",
   "net.err.needs_password": "Parola gerekli",
   "net.err.enterprise": "Bu ağ için Windows ayarlarını kullan",
-  "net.err.wrong_password": "Parola yanlış"
+  "net.err.wrong_password": "Parola yanlış",
+  "net.password": "Parola",
+  "net.join": "Katıl",
+  "net.hidden": "Gizli bir ağa katıl",
+  "net.ssid": "Ağ adı",
+  "net.secWpa2": "WPA2",
+  "net.secWpa3": "WPA3",
+  "net.secOpen": "Açık",
+  "net.show": "Göster",
+  "net.hide": "Gizle"
 }
