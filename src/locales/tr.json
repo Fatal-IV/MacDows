@@ -182,5 +182,8 @@
   "history.countLabel": "bildirim",
   "quick.airplane": "Uçak modu",
   "quick.accessibility": "Erişilebilirlik",
-  "quick.hotspot": "Mobil etkin nokta"
+  "quick.hotspot": "Mobil etkin nokta",
+  "net.open": "Açık",
+  "net.secured": "Korumalı",
+  "net.enterprise": "Kurumsal"
 }

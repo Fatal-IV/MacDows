@@ -325,3 +325,20 @@ export interface BtDevice {
 }
 export const getBluetoothDevices = () => invoke<BtDevice[]>("get_bluetooth_devices");
 export const setBluetoothConnection = (address: string, connect: boolean) => invoke<BtDevice[]>("set_bluetooth_connection", { address, connect });
+
+export interface WifiNetwork {
+  ssid: string;
+  /** 0-100 */
+  signal: number;
+  secured: boolean;
+  enterprise: boolean;
+  saved: boolean;
+  connected: boolean;
+}
+export interface WifiState {
+  available: boolean;
+  enabled: boolean;
+  networks: WifiNetwork[];
+}
+export const getWifiState = () => invoke<WifiState>("wifi_state");
+export const wifiScan = () => invoke<void>("wifi_scan");

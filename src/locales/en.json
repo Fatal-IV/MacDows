@@ -182,5 +182,8 @@
   "history.countLabel": "notifications",
   "quick.airplane": "Airplane mode",
   "quick.accessibility": "Accessibility",
-  "quick.hotspot": "Mobile hotspot"
+  "quick.hotspot": "Mobile hotspot",
+  "net.open": "Open",
+  "net.secured": "Secured",
+  "net.enterprise": "Enterprise"
 }
