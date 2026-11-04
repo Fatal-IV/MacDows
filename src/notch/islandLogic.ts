@@ -1,0 +1,55 @@
+// Which screens of the Dynamic Island can be reached, in what order, and where a click goes. Pure functions of the
+// island settings, so the island component only asks questions.
+import type { Island, ScreenId } from "../bridge";
+
+/** One place the wheel can stop: the two pill states, the player, and the other screens. */
+export type Stop = "status" | "music" | "player" | "tools" | "quick" | "history" | "shelf";
+
+export const screenOn = (island: Island, id: ScreenId): boolean => island.screens[id].enabled;
+
+/** The stops of the wheel in the user's order, leaving out screens that are off. The music screen gives the music
+ *  pill and the player, and only while media exists; the notifications screen is the history page. */
+export function buildStops(island: Island, hasMedia: boolean): Stop[] {
+  const out: Stop[] = [];
+  for (const id of island.nav.order) {
+    if (!screenOn(island, id)) continue;
+    if (id === "music") {
+      if (hasMedia) out.push("music", "player");
+    } else if (id === "notifications") {
+      out.push("history");
+    } else {
+      out.push(id);
+    }
+  }
+  return out;
+}
+
+/** Where a click on the island goes, or null when there is nowhere to go. */
+export function clickTarget(island: Island, hasMedia: boolean, playing: boolean): Stop | null {
+  const stops = buildStops(island, hasMedia);
+  const has = (s: Stop) => stops.includes(s);
+  const mode = island.nav.click;
+  const wanted: Stop = mode === "player" ? "player" : mode === "quick" ? "quick" : playing && has("player") ? "player" : "quick";
+  if (has(wanted)) return wanted;
+  // The player has no media behind it: the quick settings are the natural place.
+  if (wanted === "player" && has("quick")) return "quick";
+  // Otherwise the next screen that is on (the pill states are not places to open).
+  return stops.find((s) => s !== "status" && s !== "music") ?? null;
+}
+
+/** The pill the island rests on: music while media plays (and that screen is on), otherwise the status pill. */
+export function restingStop(island: Island, hasMedia: boolean, playing: boolean): "status" | "music" {
+  return hasMedia && playing && screenOn(island, "music") ? "music" : "status";
+}
+
+/** The last screen that is on cannot be switched off; anything else can. */
+export function canDisable(island: Island, id: ScreenId): boolean {
+  if (!screenOn(island, id)) return true;
+  return (Object.keys(island.screens) as ScreenId[]).filter((s) => screenOn(island, s)).length > 1;
+}
+
+/** Notifications of this app get no banner (compared ignoring case). */
+export function mutedApp(island: Island, app: string): boolean {
+  const name = app.toLowerCase();
+  return island.screens.notifications.muted_apps.some((m) => m.toLowerCase() === name);
+}
