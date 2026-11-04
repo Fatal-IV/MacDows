@@ -39,6 +39,12 @@ pub fn is_noise(name: &str) -> bool {
     ["uninstall", "kaldır", "readme", "release notes", "documentation", "help", "yardım", "website", "web sitesi", "manual", "license"].iter().any(|bad| n.contains(bad))
 }
 
+/// Start menu shortcuts to a folder or a settings page start `explorer.exe`; they are not programs of their own
+/// (and would be mistaken for File Explorer itself).
+pub fn is_shell_host(exe: &str) -> bool {
+    exe.replace('/', "\\").rsplit('\\').next().is_some_and(|file| file.eq_ignore_ascii_case("explorer.exe"))
+}
+
 /// Apps whose name contains the query (case-insensitive; an empty query matches all): running ones first, then
 /// alphabetical.
 pub fn filter_apps(apps: &[CatalogApp], query: &str) -> Vec<CatalogApp> {
@@ -139,7 +145,7 @@ fn read_installed() -> Vec<CatalogApp> {
             continue;
         }
         let Some(exe) = crate::pinned_apps::lnk_target(&lnk) else { continue };
-        if !exe.to_lowercase().ends_with(".exe") || !Path::new(&exe).exists() {
+        if !exe.to_lowercase().ends_with(".exe") || is_shell_host(&exe) || !Path::new(&exe).exists() {
             continue;
         }
         let icon = crate::windows_list::icon_png_base64(&exe);
@@ -288,6 +294,14 @@ mod tests {
         for good in ["Calculator", "Visual Studio Code", "Paint"] {
             assert!(!is_noise(good), "{good}");
         }
+    }
+
+    #[test]
+    fn folder_shortcuts_that_start_explorer_are_not_apps() {
+        assert!(is_shell_host(r"C:\WINDOWS\explorer.exe"));
+        assert!(is_shell_host("c:/windows/Explorer.EXE"));
+        assert!(!is_shell_host(r"C:\Program Files\Foo\explorer_helper.exe"));
+        assert!(!is_shell_host(r"C:\Program Files\Foo\foo.exe"));
     }
 
     #[test]
