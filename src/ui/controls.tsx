@@ -3,9 +3,9 @@ import { AnimatePresence, motion } from "framer-motion";
 import "./ui.css";
 
 /** An on/off switch. */
-export function Toggle({ checked, onChange, label }: { checked: boolean; onChange: (checked: boolean) => void; label: string }) {
+export function Toggle({ checked, onChange, label, disabled }: { checked: boolean; onChange: (checked: boolean) => void; label: string; disabled?: boolean }) {
   return (
-    <button type="button" role="switch" aria-checked={checked} aria-label={label} className={`ui-toggle${checked ? " on" : ""}`} onClick={() => onChange(!checked)}>
+    <button type="button" role="switch" aria-checked={checked} aria-label={label} disabled={disabled} className={`ui-toggle${checked ? " on" : ""}`} onClick={() => onChange(!checked)}>
       <span className="ui-toggle-knob" />
     </button>
   );
