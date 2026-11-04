@@ -215,4 +215,13 @@ mod tests {
         assert_eq!(freshest(&[]), None);
         assert_eq!(freshest(&[(40, 7), (60, 7)]), Some(40));
     }
+
+    /// Run by hand with a headset connected (`cargo test prints_the_paired_devices -- --ignored --nocapture`).
+    #[test]
+    #[ignore]
+    fn prints_the_paired_devices() {
+        for d in read_devices() {
+            println!("{} | connected: {} | battery: {:?}", d.name, d.connected, d.battery);
+        }
+    }
 }
