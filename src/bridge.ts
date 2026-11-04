@@ -75,6 +75,8 @@ export interface DockMenuTarget {
 }
 /** Shows the dock's right-click menu at the pointer. */
 export const dockMenu = (target: DockMenuTarget) => invoke<void>("dock_menu", { target });
+/** Custom icons (PNG, base64) by lowercase key: a pin's id, or for other apps their program path. */
+export const getCustomIcons = () => invoke<Record<string, string>>("get_custom_icons");
 /** Saves the order the pinned apps were dragged into (their ids, left to right). */
 export const setPinnedOrder = (ids: string[]) => invoke<void>("set_pinned_order", { ids });
 export const onPinnedChanged = (cb: () => void): Promise<UnlistenFn> => listen("pinned-changed", cb);

@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { motion, Reorder } from "framer-motion";
 import { invoke } from "@tauri-apps/api/core";
-import { focusWindow, dockMenu, launchPinned, listPinned, setPinnedOrder, listWindows, onPinnedChanged, onWindowsChanged, type AppWindow, type PinnedApp } from "../bridge";
+import { focusWindow, dockMenu, getCustomIcons, launchPinned, listPinned, setPinnedOrder, listWindows, onPinnedChanged, onWindowsChanged, type AppWindow, type PinnedApp } from "../bridge";
 import { mergeDock, type DockEntry } from "./dockItems";
 import { droppedOutside, sameOrder } from "./dockDrag";
 import { useSettings, useT } from "../i18n";
@@ -18,6 +18,9 @@ export default function Dock() {
   const showPinned = settings?.show_pinned_apps ?? true;
   // The dock reloads the pins when the list of ones hidden in the dock changes.
   const hiddenKey = (settings?.hidden_pinned ?? []).join("|");
+  // Icons the user picked; reloaded when the list of them changes.
+  const [customIcons, setCustomIcons] = useState<Record<string, string>>({});
+  const iconsKey = JSON.stringify(settings?.dock?.custom_icons ?? {});
 
   useEffect(() => initTheme({ backdrop: true }), []);
 
@@ -36,6 +39,10 @@ export default function Dock() {
       un.then((f) => f());
     };
   }, []);
+
+  useEffect(() => {
+    getCustomIcons().then(setCustomIcons).catch(() => setCustomIcons({}));
+  }, [iconsKey]);
 
   // The apps pinned to the Windows taskbar; reloaded when Windows changes them.
   useEffect(() => {
@@ -114,7 +121,10 @@ export default function Dock() {
     ev.stopPropagation();
     dockMenu({ kind: e.pinned ? "pinned" : "running", id: e.pinned?.id ?? "", exe: e.exe, aumid: e.aumid, name: e.title, hwnds: e.windows.map((w) => w.id) }).catch(() => {});
   };
-  const iconOf = (e: DockEntry) => (e.icon ? <img src={`data:image/png;base64,${e.icon}`} alt="" draggable={false} /> : <span className="dock-fallback">{e.title.slice(0, 1).toUpperCase()}</span>);
+  const iconOf = (e: DockEntry) => {
+    const icon = customIcons[(e.pinned?.id ?? e.exe).toLowerCase()] ?? e.icon;
+    return icon ? <img src={`data:image/png;base64,${icon}`} alt="" draggable={false} /> : <span className="dock-fallback">{e.title.slice(0, 1).toUpperCase()}</span>;
+  };
   const itemTransition = { type: "spring", stiffness: 400, damping: 22 } as const;
 
   return (

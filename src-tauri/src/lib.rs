@@ -18,6 +18,7 @@ mod media;
 mod windows_list;
 mod pinned_apps;
 mod dock_menu;
+mod custom_icons;
 mod appearance;
 mod fullscreen;
 mod settings;
@@ -320,7 +321,7 @@ pub fn run() {
         .on_menu_event(|app, event| dock_menu::on_menu_event(app, event.id().as_ref()))
         .manage(AppSettings(Mutex::new(settings::load())))
         .manage(updates::UpdateState::default())
-        .invoke_handler(tauri::generate_handler![get_settings, set_setting, windows_list::list_windows, windows_list::focus_window, pinned_apps::list_pinned, pinned_apps::launch_pinned, pinned_apps::set_pinned_order, dock_menu::dock_menu, media::get_media, media::media_toggle, media::media_next, media::media_prev, media::media_seek, volume::get_volume, volume::set_volume, quick_settings::get_quick_settings, quick_settings::set_quick_setting, quick_settings::get_brightness, quick_settings::quick_launch, open_macdows_settings, notifications::get_notifications, notifications::remove_notification, notifications::clear_notifications, notifications::get_notification_history, notifications::clear_notification_history, bluetooth::get_bluetooth_devices, bluetooth::set_bluetooth_connection, shelf::get_shelf, shelf::add_to_shelf, shelf::remove_from_shelf, shelf::clear_shelf, shelf::open_shelf_item, shelf::reveal_shelf_item, quick_settings::set_brightness, updates::get_update_status, updates::check_for_update, updates::install_update, appearance::get_system_accent_color, wallpaper::get_wallpaper_backdrop, taskbar::get_system_status, taskbar::shell_action, toggle_tray_panel, get_tray_items, activate_tray_item, close_tray_panel, system_theme::sync_system_theme])
+        .invoke_handler(tauri::generate_handler![get_settings, set_setting, windows_list::list_windows, windows_list::focus_window, pinned_apps::list_pinned, pinned_apps::launch_pinned, pinned_apps::set_pinned_order, dock_menu::dock_menu, custom_icons::get_custom_icons, media::get_media, media::media_toggle, media::media_next, media::media_prev, media::media_seek, volume::get_volume, volume::set_volume, quick_settings::get_quick_settings, quick_settings::set_quick_setting, quick_settings::get_brightness, quick_settings::quick_launch, open_macdows_settings, notifications::get_notifications, notifications::remove_notification, notifications::clear_notifications, notifications::get_notification_history, notifications::clear_notification_history, bluetooth::get_bluetooth_devices, bluetooth::set_bluetooth_connection, shelf::get_shelf, shelf::add_to_shelf, shelf::remove_from_shelf, shelf::clear_shelf, shelf::open_shelf_item, shelf::reveal_shelf_item, quick_settings::set_brightness, updates::get_update_status, updates::check_for_update, updates::install_update, appearance::get_system_accent_color, wallpaper::get_wallpaper_backdrop, taskbar::get_system_status, taskbar::shell_action, toggle_tray_panel, get_tray_items, activate_tray_item, close_tray_panel, system_theme::sync_system_theme])
         .setup(|app| {
             for label in ["notch", "dock"] {
                 if let Some(hwnd) = app.get_webview_window(label).and_then(|w| w.hwnd().ok()) {

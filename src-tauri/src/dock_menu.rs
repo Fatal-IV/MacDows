@@ -66,9 +66,9 @@ impl MenuAction {
         ALL_ACTIONS.into_iter().find(|a| a.id() == id)
     }
 
-    /// Actions whose features exist yet; the others (custom icons, the Add app panel) are built later and stay out of the menu until then.
+    /// Actions whose features exist yet; the Add app panel is built later and stays out of the menu until then.
     fn available(self) -> bool {
-        !matches!(self, MenuAction::ChangeIcon | MenuAction::ResetIcon | MenuAction::AddApp)
+        !matches!(self, MenuAction::AddApp)
     }
 }
 
@@ -145,10 +145,57 @@ pub fn on_menu_event(app: &AppHandle, menu_id: &str) {
             MenuAction::TaskManager => {
                 let _ = crate::quick_settings::quick_launch("task_manager".into());
             }
-            MenuAction::ChangeIcon | MenuAction::ResetIcon | MenuAction::AddApp => {}
+            MenuAction::ChangeIcon => change_icon(&app, &target),
+            MenuAction::ResetIcon => reset_icon(&app, &target),
+            MenuAction::AddApp => {}
         }
         let _ = app.emit("dock-menu-closed", ());
     });
+}
+
+/// What a custom icon is saved under: the pin's id, or for a running app that is not pinned its program.
+pub fn icon_key(target: &DockMenuTarget) -> String {
+    if target.id.is_empty() { target.exe.to_lowercase() } else { target.id.to_lowercase() }
+}
+
+fn change_icon(app: &AppHandle, target: &DockMenuTarget) {
+    let key = icon_key(target);
+    if key.is_empty() {
+        return;
+    }
+    let Some(source) = crate::custom_icons::choose_file() else { return };
+    match crate::custom_icons::save(&key, &source) {
+        Ok(file) => crate::pinned_apps::update_settings(app, |s| {
+            s.dock.custom_icons.insert(key.clone(), file.clone());
+        }),
+        Err(reason) => {
+            let lang = app.state::<crate::AppSettings>().0.lock().unwrap().language.clone();
+            warn(crate::i18n::icon_error(&lang, &reason));
+        }
+    }
+}
+
+fn reset_icon(app: &AppHandle, target: &DockMenuTarget) {
+    let key = icon_key(target);
+    crate::pinned_apps::update_settings(app, |s| {
+        let found: Vec<String> = s.dock.custom_icons.keys().filter(|k| k.eq_ignore_ascii_case(&key)).cloned().collect();
+        for k in found {
+            if let Some(file) = s.dock.custom_icons.remove(&k) {
+                crate::custom_icons::remove(&file);
+            }
+        }
+    });
+}
+
+/// A small message box (the dock has no room for text).
+fn warn(text: String) {
+    use windows::core::PCWSTR;
+    use windows::Win32::UI::WindowsAndMessaging::{MessageBoxW, MB_ICONWARNING, MB_OK};
+    let wide: Vec<u16> = text.encode_utf16().chain(std::iter::once(0)).collect();
+    let title: Vec<u16> = "MacDows".encode_utf16().chain(std::iter::once(0)).collect();
+    unsafe {
+        MessageBoxW(None, PCWSTR(wide.as_ptr()), PCWSTR(title.as_ptr()), MB_OK | MB_ICONWARNING);
+    }
 }
 
 #[cfg(test)]
@@ -184,6 +231,14 @@ mod tests {
             assert_eq!(MenuAction::from_id(a.id()), Some(a));
         }
         assert_eq!(MenuAction::from_id("nope"), None);
+    }
+
+    #[test]
+    fn icons_are_saved_under_the_pin_or_for_other_apps_under_the_program() {
+        let pinned = DockMenuTarget { id: "C:/Pins/Edge.lnk".into(), exe: "C:/E/msedge.exe".into(), ..Default::default() };
+        assert_eq!(icon_key(&pinned), "c:/pins/edge.lnk");
+        let running = DockMenuTarget { exe: "C:/Apps/App.EXE".into(), ..Default::default() };
+        assert_eq!(icon_key(&running), "c:/apps/app.exe");
     }
 
     #[test]

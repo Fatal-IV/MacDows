@@ -482,7 +482,7 @@ pub fn pin_app(app: &AppHandle, exe: &str, aumid: &str, name: &str) {
 }
 
 /// Changes the settings, saves them and tells the windows (the dock reloads its pins).
-fn update_settings(app: &AppHandle, change: impl FnOnce(&mut crate::settings::Settings)) {
+pub fn update_settings(app: &AppHandle, change: impl FnOnce(&mut crate::settings::Settings)) {
     let state = app.state::<crate::AppSettings>();
     let mut guard = state.0.lock().unwrap();
     change(&mut guard);

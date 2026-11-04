@@ -14,6 +14,23 @@ pub fn tray_restore_label(lang: &str) -> &'static str {
     }
 }
 
+/// Why a custom icon could not be set, for the message box. `reason` is the English reason from `custom_icons::save`.
+pub fn icon_error(lang: &str, reason: &str) -> String {
+    let what = match (lang == "tr", reason) {
+        (true, "not an image") => "Seçilen dosya bir resim değil.".to_string(),
+        (true, "file is too big") => "Dosya çok büyük (en fazla 10 MB).".to_string(),
+        (true, "file not found") => "Dosya bulunamadı.".to_string(),
+        (true, "this program has no icon") => "Bu programın simgesi yok.".to_string(),
+        (true, other) => other.to_string(),
+        (false, "not an image") => "The chosen file is not an image.".to_string(),
+        (false, "file is too big") => "The file is too big (10 MB at most).".to_string(),
+        (false, "file not found") => "The file was not found.".to_string(),
+        (false, "this program has no icon") => "This program has no icon.".to_string(),
+        (false, other) => other.to_string(),
+    };
+    if lang == "tr" { format!("Simge değiştirilemedi. {what}") } else { format!("The icon could not be changed. {what}") }
+}
+
 /// Label of a dock right-click menu item, by the action's id; unknown ids give an empty label.
 pub fn dock_menu_label(lang: &str, action: &str) -> &'static str {
     let tr = lang == "tr";
