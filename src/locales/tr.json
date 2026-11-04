@@ -215,5 +215,17 @@
   "net.secWpa3": "WPA3",
   "net.secOpen": "Açık",
   "net.show": "Göster",
-  "net.hide": "Gizle"
+  "net.hide": "Gizle",
+  "vpn.title": "VPN",
+  "vpn.on": "Açık",
+  "vpn.off": "Kapalı",
+  "vpn.onApp": "Açık (uygulama)",
+  "vpn.connecting": "Bağlanıyor…",
+  "vpn.connected": "Bağlı",
+  "vpn.disconnected": "Bağlı değil",
+  "vpn.empty": "Windows'ta VPN bağlantısı yok",
+  "vpn.settings": "Windows ayarları",
+  "vpn.appOn": "Bir VPN uygulaması bağlı",
+  "vpn.credentials": "Kayıtlı oturum bilgisi gerekli: Windows ayarlarından ekle",
+  "vpn.failed": "Bağlanılamadı"
 }

@@ -215,5 +215,17 @@
   "net.secWpa3": "WPA3",
   "net.secOpen": "Open",
   "net.show": "Show",
-  "net.hide": "Hide"
+  "net.hide": "Hide",
+  "vpn.title": "VPN",
+  "vpn.on": "On",
+  "vpn.off": "Off",
+  "vpn.onApp": "On (app)",
+  "vpn.connecting": "Connecting…",
+  "vpn.connected": "Connected",
+  "vpn.disconnected": "Not connected",
+  "vpn.empty": "No VPN connections in Windows",
+  "vpn.settings": "Windows settings",
+  "vpn.appOn": "A VPN app is connected",
+  "vpn.credentials": "Needs a saved sign-in: set it up in Windows settings",
+  "vpn.failed": "Could not connect"
 }

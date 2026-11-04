@@ -1,9 +1,11 @@
 // The quick settings screen of the notch: Wi-Fi, Bluetooth, Do not disturb and Battery saver as wide glass tiles (2 x 2), brightness and volume sliders beside them.
 import { useEffect, useRef, useState, type ReactNode } from "react";
-import { getBluetoothDevices, getBrightness, getQuickSettings, getVolume, openMacdowsSettings, quickLaunch, setBrightness, setQuickSetting, setVolume, type BtDevice, type QuickKey, type QuickSettings, type QuickShortcut } from "../bridge";
+import { getBluetoothDevices, getVpnState, vpnConnect, vpnDisconnect, type VpnState, getBrightness, getQuickSettings, getVolume, openMacdowsSettings, quickLaunch, setBrightness, setQuickSetting, setVolume, type BtDevice, type QuickKey, type QuickSettings, type QuickShortcut } from "../bridge";
 import { useT } from "../i18n";
 import { BluetoothPage } from "./BluetoothPage";
 import { WifiPage } from "./WifiPage";
+import { VpnPage } from "./VpnPage";
+import { vpnLabel } from "./netLogic";
 import { connectedLabel } from "./bluetoothLabel";
 
 const svg = (children: ReactNode, size = 22) => (
@@ -48,13 +50,43 @@ const SWITCHES: { key: QuickKey; label: string }[] = [
   { key: "hotspot", label: "quick.hotspot" },
 ];
 
-export function QuickSettingsScreen({ wifiPage = true, onEditing }: { wifiPage?: boolean; onEditing?: (on: boolean) => void }) {
+export function QuickSettingsScreen({ wifiPage = true, vpn = true, onEditing }: { wifiPage?: boolean; vpn?: boolean; onEditing?: (on: boolean) => void }) {
   const t = useT();
   const [state, setState] = useState<QuickSettings | null>(null);
   const [busy, setBusy] = useState<QuickKey | null>(null);
   const [failed, setFailed] = useState<QuickKey | null>(null);
   // Wi-Fi and Bluetooth open a page of their own; the arrow on the tile leads there.
-  const [page, setPage] = useState<QuickKey | null>(null);
+  const [page, setPage] = useState<QuickKey | "vpn" | null>(null);
+  // The VPN card: Windows VPN connections and whether an app has a tunnel up.
+  const [vpnState, setVpnState] = useState<VpnState | null>(null);
+  const [vpnBusy, setVpnBusy] = useState(false);
+  useEffect(() => {
+    if (!vpn || page === "vpn") return;
+    let alive = true;
+    const load = () => getVpnState().then((s) => alive && setVpnState(s)).catch(() => {});
+    load();
+    const id = setInterval(load, 5000);
+    return () => {
+      alive = false;
+      clearInterval(id);
+    };
+  }, [vpn, page]);
+  // One Windows VPN: the card switches it on and off. Zero or several: the card opens the page.
+  const vpnToggle = async () => {
+    const entries = vpnState?.entries ?? [];
+    if (entries.length !== 1) return setPage("vpn");
+    if (vpnBusy) return;
+    setVpnBusy(true);
+    try {
+      if (entries[0].state === "connected") await vpnDisconnect(entries[0].name);
+      else await vpnConnect(entries[0].name);
+    } catch {
+      setPage("vpn");
+    } finally {
+      setVpnBusy(false);
+      getVpnState().then(setVpnState).catch(() => {});
+    }
+  };
   // Who is connected, for the Bluetooth tile. Listing devices also reads batteries, so it runs less often than the tiles.
   const [btDevices, setBtDevices] = useState<BtDevice[] | null>(null);
   const btOn = !!state?.bluetooth.on && !!state?.bluetooth.available;
@@ -97,11 +129,12 @@ export function QuickSettingsScreen({ wifiPage = true, onEditing }: { wifiPage?:
   };
 
   if (page === "bluetooth") return <BluetoothPage onBack={() => setPage(null)} />;
+  if (page === "vpn" && vpn) return <VpnPage onBack={() => setPage(null)} />;
   if (page === "wifi" && wifiPage) return <WifiPage onBack={() => setPage(null)} onEditing={onEditing} />;
 
   return (
     <div className="quick">
-      <div className="quick-tiles">
+      <div className={`quick-tiles${vpn ? " has-vpn" : ""}`}>
       {ORDER.map(({ key, label }) => {
         const tile = state?.[key];
         const unavailable = tile ? !tile.available : false;
@@ -123,6 +156,20 @@ export function QuickSettingsScreen({ wifiPage = true, onEditing }: { wifiPage?:
           </div>
         );
       })}
+      {vpn && (
+        <div className={`glass-tile${vpnLabel(vpnState, (k) => k) === "vpn.on" || vpnLabel(vpnState, (k) => k) === "vpn.onApp" ? " on" : ""}${vpnBusy ? " busy" : ""}`}>
+          <button className="tile-main" onClick={vpnToggle}>
+            <span className="glass-icon">{svg(<path d="M12 3l7.5 3v5.5c0 4.6-3.1 8.2-7.5 9.5-4.4-1.3-7.5-4.9-7.5-9.5V6L12 3Z" />)}</span>
+            <span className="glass-text">
+              <span className="glass-name">{t("vpn.title")}</span>
+              <span className="glass-state">{vpnBusy ? t("vpn.connecting") : vpnLabel(vpnState, t)}</span>
+            </span>
+          </button>
+          <button className="tile-more" aria-label={t("common.more")} title={t("common.more")} onClick={() => setPage("vpn")}>
+            ›
+          </button>
+        </div>
+      )}
       </div>
       <div className="quick-sliders">
         <GlassSlider label="quick.brightness" icon={SUN} read={getBrightness} write={setBrightness} />

@@ -1,4 +1,4 @@
-import type { WifiNetwork } from "../bridge";
+import type { VpnState, WifiNetwork } from "../bridge";
 
 /** 0-100 signal quality to 0-4 bars (same thresholds as the Rust side). */
 export function signalBars(signal: number): number {
@@ -30,4 +30,12 @@ export function canSubmit(ssid: string, auth: WifiAuth, password: string): boole
   if (auth === "wpa2") return n >= 8 && n <= 63;
   if (auth === "wpa3") return n >= 1;
   return true;
+}
+
+/** The VPN card's state line: connecting, on, on through an app, or off. */
+export function vpnLabel(state: VpnState | null, t: (key: string) => string): string {
+  if (!state) return t("vpn.off");
+  if (state.entries.some((e) => e.state === "connecting")) return t("vpn.connecting");
+  if (state.entries.some((e) => e.state === "connected")) return t("vpn.on");
+  return state.app_vpn_active ? t("vpn.onApp") : t("vpn.off");
 }

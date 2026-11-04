@@ -64,6 +64,8 @@ export interface QuickCfg {
   windows_settings: boolean;
   /** The Wi-Fi page behind the Wi-Fi tile's arrow. */
   wifi_page: boolean;
+  /** The VPN card and page. */
+  vpn: boolean;
 }
 export interface NotifCfg {
   enabled: boolean;
@@ -265,7 +267,7 @@ export type QuickKey = keyof QuickSettings;
 export const getQuickSettings = () => invoke<QuickSettings>("get_quick_settings");
 export const setQuickSetting = (key: QuickKey, on: boolean) => invoke<QuickSettings>("set_quick_setting", { key, on });
 
-export type QuickShortcut = "screenshot" | "settings" | "task_manager" | "calculator" | "lock" | "bluetooth_settings" | "wifi_settings" | "accessibility";
+export type QuickShortcut = "screenshot" | "settings" | "task_manager" | "calculator" | "lock" | "bluetooth_settings" | "wifi_settings" | "vpn_settings" | "accessibility";
 export const openMacdowsSettings = () => invoke<void>("open_macdows_settings");
 export const quickLaunch = (id: QuickShortcut) => invoke<void>("quick_launch", { id });
 
@@ -349,3 +351,15 @@ export const wifiConnectNew = (ssid: string, password: string | null, auth: "ope
 export const islandFocus = (on: boolean) => invoke<void>("island_focus", { on });
 export const wifiDisconnect = () => invoke<void>("wifi_disconnect");
 export const wifiForget = (ssid: string) => invoke<void>("wifi_forget", { ssid });
+
+export interface VpnEntry {
+  name: string;
+  state: "connected" | "disconnected" | "connecting" | string;
+}
+export interface VpnState {
+  entries: VpnEntry[];
+  app_vpn_active: boolean;
+}
+export const getVpnState = () => invoke<VpnState>("vpn_state");
+export const vpnConnect = (name: string) => invoke<void>("vpn_connect", { name });
+export const vpnDisconnect = (name: string) => invoke<void>("vpn_disconnect", { name });

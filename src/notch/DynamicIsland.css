@@ -588,3 +588,6 @@ img { -webkit-user-drag: none; user-select: none; }
 .net-input:focus { border-color: rgba(255,255,255,0.55); }
 .net-select { flex: 0 0 auto; }
 .net-select option { background: #1c1c1e; color: #fff; }
+
+/* With the VPN card the four tiles form a plain 2 x 2 grid. */
+.quick-tiles.has-vpn .glass-tile:nth-child(3) { grid-column: auto; }

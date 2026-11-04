@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { signalBars, securityLabel, errorText, canSubmit } from "./netLogic.ts";
+import { signalBars, securityLabel, errorText, canSubmit, vpnLabel } from "./netLogic.ts";
 
 test("signal maps to 0-4 bars", () => {
   const cases: Array<[number, number]> = [[0, 0], [1, 1], [25, 1], [26, 2], [50, 2], [51, 3], [75, 3], [76, 4], [100, 4]];
@@ -32,4 +32,15 @@ test("canSubmit: SSID required, WPA2 8-63 characters, WPA3 at least 1, open need
   assert.equal(canSubmit("TestNet", "wpa3", ""), false);
   assert.equal(canSubmit("TestNet", "wpa3", "a"), true);
   assert.equal(canSubmit("   ", "open", ""), false, "blank SSID");
+});
+
+test("the VPN card reads connecting, on, on (app) or off", () => {
+  const t = (k: string) => k;
+  const e = (state: string) => ({ name: "Work", state });
+  assert.equal(vpnLabel({ entries: [], app_vpn_active: false }, t), "vpn.off");
+  assert.equal(vpnLabel({ entries: [e("disconnected")], app_vpn_active: false }, t), "vpn.off");
+  assert.equal(vpnLabel({ entries: [e("connected")], app_vpn_active: false }, t), "vpn.on");
+  assert.equal(vpnLabel({ entries: [e("connecting")], app_vpn_active: true }, t), "vpn.connecting");
+  assert.equal(vpnLabel({ entries: [e("disconnected")], app_vpn_active: true }, t), "vpn.onApp");
+  assert.equal(vpnLabel(null, t), "vpn.off");
 });
