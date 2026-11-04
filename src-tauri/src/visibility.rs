@@ -138,7 +138,7 @@ pub fn start(app: AppHandle) {
                 let hwnd = HWND(hwnd.0);
                 let Some(r) = rect_of(hwnd) else { continue };
                 let zone = if shown[i].unwrap_or(true) { r } else { reveal_band(label, r) };
-                let near = cur.map(|(x, y)| point_in_rect(x, y, zone)).unwrap_or(false) || (label == "dock" && shell_menu_open);
+                let near = cur.map(|(x, y)| point_in_rect(x, y, zone)).unwrap_or(false) || (label == "dock" && (shell_menu_open || crate::preview::is_open()));
                 let probe = overlap_probe(label, r);
                 let overlapped = others.iter().any(|o| rect_intersects(*o, probe));
                 // Show the bars for a few seconds after launch so the user sees the app started.

@@ -224,7 +224,7 @@ export default function Dock() {
                 value={id}
                 as="button"
                 className={`dock-item${e.running ? " running" : ""}`}
-                title={e.title}
+                title={previewsOn && e.windows.length > 0 ? undefined : e.title}
                 whileHover={{ scale: 1.25, y: -6 }}
                 whileTap={{ scale: 1.1 }}
                 whileDrag={{ scale: 1.15, zIndex: 5 }}
@@ -268,7 +268,7 @@ export default function Dock() {
           </>
         )}
         {otherEntries.map((e) => (
-          <motion.button key={e.key} className="dock-item" title={e.title} layout whileHover={{ scale: 1.25, y: -6 }} whileTap={{ scale: 1.1 }} transition={itemTransition} onClick={() => open(e)} onContextMenu={menuFor(e)} onPointerEnter={(ev) => hoverStart(e, ev.currentTarget as HTMLElement)} onPointerLeave={hoverEnd}>
+          <motion.button key={e.key} className="dock-item" title={previewsOn && e.windows.length > 0 ? undefined : e.title} layout whileHover={{ scale: 1.25, y: -6 }} whileTap={{ scale: 1.1 }} transition={itemTransition} onClick={() => open(e)} onContextMenu={menuFor(e)} onPointerEnter={(ev) => hoverStart(e, ev.currentTarget as HTMLElement)} onPointerLeave={hoverEnd}>
             {iconOf(e)}
             {badge(e)}
           </motion.button>

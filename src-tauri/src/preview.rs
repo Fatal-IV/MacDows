@@ -138,6 +138,24 @@ static DOCK_HOVER: AtomicBool = AtomicBool::new(false);
 static PANEL_HOVER: AtomicBool = AtomicBool::new(false);
 /// Milliseconds (since `now_ms`'s start) when neither had the pointer; 0 while one has it.
 static LEFT_AT: AtomicU64 = AtomicU64::new(0);
+/// True while a panel is open (or about to open); the dock stays in view meanwhile, or moving the pointer from the
+/// icon up to the panel would hide the dock and take the panel with it.
+static PANEL_OPEN: AtomicBool = AtomicBool::new(false);
+
+pub fn is_open() -> bool {
+    PANEL_OPEN.load(Ordering::SeqCst)
+}
+
+/// Clears `PANEL_OPEN` when the monitor of its panel ends, unless a newer panel has taken over.
+struct OpenGuard(u64);
+impl Drop for OpenGuard {
+    fn drop(&mut self) {
+        if GENERATION.load(Ordering::SeqCst) == self.0 {
+            PANEL_OPEN.store(false, Ordering::SeqCst);
+        }
+    }
+}
+
 /// Which panel (by a counter) the monitor thread belongs to; a newer panel retires the older monitor.
 static GENERATION: AtomicU64 = AtomicU64::new(0);
 
@@ -161,11 +179,15 @@ pub fn show_preview(app: AppHandle, center_x: f64, dock_top: f64, icon: Option<S
     }
     DOCK_HOVER.store(true, Ordering::SeqCst);
     LEFT_AT.store(0, Ordering::SeqCst);
+    PANEL_OPEN.store(true, Ordering::SeqCst);
     std::thread::spawn(move || {
         let items = refresh_items(&hwnds, &icon);
         *ITEMS.lock().unwrap() = items;
         let Some(dock) = app.get_webview_window("dock") else { return };
-        let (Ok(pos), Ok(Some(monitor))) = (dock.outer_position(), dock.current_monitor()) else { return };
+        let (Ok(pos), Ok(Some(monitor))) = (dock.outer_position(), dock.current_monitor()) else {
+            PANEL_OPEN.store(false, Ordering::SeqCst);
+            return;
+        };
         let scale = dock.scale_factor().unwrap_or(1.0);
         let (w, h, _) = layout(hwnds.len());
         let work = monitor.work_area();
@@ -208,6 +230,7 @@ pub fn show_preview(app: AppHandle, center_x: f64, dock_top: f64, icon: Option<S
 
 /// Keeps the thumbnails fresh and closes the panel when the pointer has left (or the dock hid).
 fn monitor_panel(app: AppHandle, generation: u64, hwnds: Vec<isize>, icon: Option<String>) {
+    let _guard = OpenGuard(generation);
     let mut last_refresh = now_ms();
     loop {
         std::thread::sleep(std::time::Duration::from_millis(80));
@@ -264,6 +287,7 @@ pub fn preview_items() -> Vec<PreviewItem> {
 
 fn close_panel(app: &AppHandle) {
     GENERATION.fetch_add(1, Ordering::SeqCst);
+    PANEL_OPEN.store(false, Ordering::SeqCst);
     DOCK_HOVER.store(false, Ordering::SeqCst);
     PANEL_HOVER.store(false, Ordering::SeqCst);
     if let Some(w) = app.get_webview_window("preview") {
