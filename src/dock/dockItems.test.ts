@@ -23,10 +23,11 @@ test("a pinned app that is not running has no windows", () => {
   assert.equal(out[0].windows.length, 0);
 });
 
-test("without pinned apps only windows show", () => {
+test("without pinned apps only windows show, and every one of them is running", () => {
   const out = mergeDock([], [win(1, "a.exe"), win(2, "b.exe")]);
   assert.deepEqual(out.map((e) => e.key), ["win:1", "win:2"]);
-  assert.equal(out[0].running, false);
+  assert.equal(out[0].running, true);
+  assert.equal(out[1].running, true);
 });
 
 test("a window with an unknown exe is never merged into a pin", () => {

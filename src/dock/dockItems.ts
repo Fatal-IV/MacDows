@@ -29,7 +29,7 @@ export function mergeDock(pinned: PinnedApp[], windows: AppWindow[]): DockEntry[
     return { key: `pin:${p.id}`, title: p.name, icon: p.icon_png_base64, pinned: p, windows: own, running: own.length > 0, exe: p.exe, aumid: p.aumid };
   });
   for (const w of windows) {
-    if (!claimed.has(w.id)) entries.push({ key: `win:${w.id}`, title: w.title, icon: w.icon_png_base64, pinned: null, windows: [w], running: false, exe: w.exe, aumid: w.aumid });
+    if (!claimed.has(w.id)) entries.push({ key: `win:${w.id}`, title: w.title, icon: w.icon_png_base64, pinned: null, windows: [w], running: true, exe: w.exe, aumid: w.aumid });
   }
   return entries;
 }
