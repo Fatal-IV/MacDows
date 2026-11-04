@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { motion, Reorder } from "framer-motion";
 import { invoke } from "@tauri-apps/api/core";
-import { focusWindow, dockMenu, getCustomIcons, launchPinned, listPinned, setPinnedOrder, listWindows, onPinnedChanged, onWindowsChanged, type AppWindow, type PinnedApp } from "../bridge";
+import { focusWindow, dockMenu, getCustomIcons, launchPinned, listDrives, listPinned, onDrivesChanged, openDrive, setPinnedOrder, listWindows, onPinnedChanged, onWindowsChanged, type AppWindow, type Drive, type PinnedApp } from "../bridge";
 import { mergeDock, type DockEntry } from "./dockItems";
 import { droppedOutside, sameOrder } from "./dockDrag";
 import { useSettings, useT } from "../i18n";
@@ -18,6 +18,8 @@ export default function Dock() {
   const showPinned = settings?.show_pinned_apps ?? true;
   // The dock reloads the pins when the list of ones hidden in the dock changes.
   const hiddenKey = (settings?.hidden_pinned ?? []).join("|");
+  const [drives, setDrives] = useState<Drive[]>([]);
+  const showDrives = settings?.dock?.show_drives ?? true;
   // Icons the user picked; reloaded when the list of them changes.
   const [customIcons, setCustomIcons] = useState<Record<string, string>>({});
   const iconsKey = JSON.stringify(settings?.dock?.custom_icons ?? {});
@@ -43,6 +45,20 @@ export default function Dock() {
   useEffect(() => {
     getCustomIcons().then(setCustomIcons).catch(() => setCustomIcons({}));
   }, [iconsKey]);
+
+  // Local and removable drives; removable ones come and go.
+  useEffect(() => {
+    if (!showDrives) {
+      setDrives([]);
+      return;
+    }
+    const refresh = () => listDrives().then(setDrives).catch(() => setDrives([]));
+    refresh();
+    const un = onDrivesChanged(refresh);
+    return () => {
+      un.then((f) => f());
+    };
+  }, [showDrives]);
 
   // The apps pinned to the Windows taskbar; reloaded when Windows changes them.
   useEffect(() => {
@@ -170,6 +186,31 @@ export default function Dock() {
             );
           })}
         </Reorder.Group>
+        {drives.length > 0 && (
+          <>
+            <span className="dock-sep" />
+            {drives.map((dr) => (
+              <motion.button
+                key={dr.letter}
+                className="dock-item dock-drive"
+                title={`${dr.label || t(dr.kind === "removable" ? "dock.drive.removable" : "dock.drive.local")} (${dr.letter}:)`}
+                layout
+                whileHover={{ scale: 1.25, y: -6 }}
+                whileTap={{ scale: 1.1 }}
+                transition={itemTransition}
+                onClick={() => openDrive(dr.letter).catch(() => {})}
+              >
+                <svg viewBox="0 0 32 32" width="30" height="30" aria-hidden>
+                  <rect x="3" y="9" width="26" height="14" rx="3" fill="none" stroke="currentColor" strokeWidth="1.8" />
+                  <circle cx="24" cy="16" r="1.4" fill={dr.kind === "removable" ? "currentColor" : "none"} stroke="currentColor" strokeWidth="1.4" />
+                  <path d="M7 16h8" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+                </svg>
+                <span className="dock-drive-letter">{dr.letter}</span>
+              </motion.button>
+            ))}
+            <span className="dock-sep" />
+          </>
+        )}
         {otherEntries.map((e) => (
           <motion.button key={e.key} className="dock-item" title={e.title} layout whileHover={{ scale: 1.25, y: -6 }} whileTap={{ scale: 1.1 }} transition={itemTransition} onClick={() => open(e)} onContextMenu={menuFor(e)}>
             {iconOf(e)}

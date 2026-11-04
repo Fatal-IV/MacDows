@@ -120,6 +120,9 @@ const ITEMS: Item[] = [
             <Button onClick={() => setSetting("hidden_pinned", [])}>{t("settings.hiddenPinnedReset")}</Button>
           </Row>
         )}
+        <Row title={t("settings.showDrives")} description={t("settings.showDrivesHelp")}>
+          <Toggle label={t("settings.showDrives")} checked={s.dock.show_drives} onChange={(v) => setSetting("dock", { ...s.dock, show_drives: v })} />
+        </Row>
         <Row title={t("settings.showDesktop")} description={t("settings.showDesktopHelp")}>
           <Toggle label={t("settings.showDesktop")} checked={s.show_desktop_button} onChange={(v) => setSetting("show_desktop_button", v)} />
         </Row>

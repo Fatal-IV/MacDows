@@ -112,3 +112,7 @@
   list-style: none;
 }
 .dock-pins .dock-item { touch-action: none; }
+
+/* A drive: a disk glyph with its letter. */
+.dock-drive { color: var(--nectar-text, #fff); flex-direction: column; gap: 0; }
+.dock-drive-letter { font-size: 10px; font-weight: 600; line-height: 1; margin-top: -2px; opacity: 0.85; }

@@ -75,6 +75,16 @@ export interface DockMenuTarget {
 }
 /** Shows the dock's right-click menu at the pointer. */
 export const dockMenu = (target: DockMenuTarget) => invoke<void>("dock_menu", { target });
+export interface Drive {
+  /** "C" (no colon). */
+  letter: string;
+  kind: "local" | "removable";
+  /** The volume's name, "" when it has none. */
+  label: string;
+}
+export const listDrives = () => invoke<Drive[]>("list_drives");
+export const openDrive = (letter: string) => invoke<void>("open_drive", { letter });
+export const onDrivesChanged = (cb: () => void): Promise<UnlistenFn> => listen("drives-changed", cb);
 /** Custom icons (PNG, base64) by lowercase key: a pin's id, or for other apps their program path. */
 export const getCustomIcons = () => invoke<Record<string, string>>("get_custom_icons");
 /** Saves the order the pinned apps were dragged into (their ids, left to right). */
