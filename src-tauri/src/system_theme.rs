@@ -63,8 +63,8 @@ pub struct Tint {
     pub accent_menu: u32,
     /// The color of Start and Search (`StartColorMenu`).
     pub start_menu: u32,
-    /// The same color for the Start entry of the accent palette, which the current Start menu reads instead.
-    pub start_rgb: (u8, u8, u8),
+    /// The two palette entries Start reads (see `palette_with_start`), darkest last.
+    pub start_rgb: [(u8, u8, u8); 2],
 }
 
 #[derive(Debug, PartialEq)]
@@ -84,21 +84,25 @@ pub fn plan(light: bool, surface: (u8, u8, u8), tint: bool) -> Plan {
         prevalence: 1,
         accent_menu: abgr(shade(surface, SHADES[3])),
         start_menu: abgr(shade(surface, SHADES[4])),
-        start_rgb: shade(surface, SHADES[4]),
+        start_rgb: [shade(surface, SHADES[4]), shade(surface, SHADES[5])],
     });
     Plan { system_light: light as u32, tint }
 }
 
-/// The accent palette with only its Start entry (the fifth of eight, bytes 16 to 18) set to `rgb`; the other seven
-/// entries, which apps and windows read, stay as they are. `None` when the palette is not the 32 bytes Windows writes.
-pub fn palette_with_start(palette: &[u8], rgb: (u8, u8, u8)) -> Option<Vec<u8>> {
+/// The accent palette with only the entries Start reads painted: the fifth of eight (bytes 16 to 18) on older
+/// Windows 11 builds and the sixth (bytes 20 to 22) on current ones (checked on build 26300, where painting the fifth
+/// did nothing and the sixth made Start black). The other six entries, which apps and windows read, stay as they are.
+/// `None` when the palette is not the 32 bytes Windows writes.
+pub fn palette_with_start(palette: &[u8], rgb: [(u8, u8, u8); 2]) -> Option<Vec<u8>> {
     if palette.len() != 32 {
         return None;
     }
     let mut out = palette.to_vec();
-    out[16] = rgb.0;
-    out[17] = rgb.1;
-    out[18] = rgb.2;
+    for (entry, (r, g, b)) in [4usize, 5].into_iter().zip(rgb) {
+        out[entry * 4] = r;
+        out[entry * 4 + 1] = g;
+        out[entry * 4 + 2] = b;
+    }
     Some(out)
 }
 
@@ -244,8 +248,8 @@ pub fn apply(light: bool, surface_hex: &str, tint: bool) {
             write_u32(&ac, "AccentColorMenu", Some(t.accent_menu));
             write_u32(&ac, "StartColorMenu", Some(t.start_menu));
             if let Some(b) = read_backup_file() {
-                // The current Start menu takes its color from the Start entry of the accent palette (not from
-                // `StartColorMenu`), so that one entry is painted. The rest of the palette and the window colors stay
+                // The current Start menu takes its color from entries of the accent palette (not from
+                // `StartColorMenu`), so those two are painted. The rest of the palette and the window colors stay
                 // the user's own, so apps keep their accent color.
                 let palette = b.palette.as_deref().and_then(|p| palette_with_start(p, t.start_rgb)).or_else(|| b.palette.clone());
                 write_palette(&ac, palette.as_deref());
@@ -307,27 +311,29 @@ mod tests {
     use super::*;
 
     #[test]
-    fn only_the_start_entry_of_the_palette_is_painted() {
+    fn only_the_two_start_entries_of_the_palette_are_painted() {
         let original: Vec<u8> = (0..32).collect();
-        let painted = palette_with_start(&original, (1, 2, 3)).unwrap();
+        let painted = palette_with_start(&original, [(1, 2, 3), (4, 5, 6)]).unwrap();
         assert_eq!(&painted[16..19], &[1, 2, 3]);
-        // Every other byte, including the Start entry's fourth one, is the user's own.
-        for i in (0..16).chain(19..32) {
+        assert_eq!(&painted[20..23], &[4, 5, 6]);
+        // Every other byte, including the fourth byte of each painted entry, is the user's own.
+        for i in (0..16).chain([19]).chain(23..32) {
             assert_eq!(painted[i], original[i], "byte {i}");
         }
     }
 
     #[test]
     fn a_palette_of_the_wrong_size_is_left_alone() {
-        assert_eq!(palette_with_start(&[0; 31], (1, 2, 3)), None);
-        assert_eq!(palette_with_start(&[], (1, 2, 3)), None);
+        assert_eq!(palette_with_start(&[0; 31], [(1, 2, 3), (4, 5, 6)]), None);
+        assert_eq!(palette_with_start(&[], [(1, 2, 3), (4, 5, 6)]), None);
     }
 
     #[test]
-    fn the_start_palette_color_is_the_start_menu_shade() {
+    fn the_start_palette_colors_are_the_two_darkest_start_shades() {
         let t = plan(false, (0x20, 0x20, 0x24), true).tint.unwrap();
-        assert_eq!(t.start_rgb, shade((0x20, 0x20, 0x24), 0.9));
-        assert_eq!(abgr(t.start_rgb), t.start_menu);
+        assert_eq!(t.start_rgb[0], shade((0x20, 0x20, 0x24), 0.9));
+        assert_eq!(t.start_rgb[1], shade((0x20, 0x20, 0x24), 0.8));
+        assert_eq!(abgr(t.start_rgb[0]), t.start_menu);
     }
 
     #[test]
