@@ -36,31 +36,21 @@ function statusLine(t: (key: string) => string, status: UpdateStatus): string {
 // Every setting says which category it belongs to; the left menu and the pages are built from that list. A new
 // setting only needs an entry in ITEMS, and a category with no settings does not show up in the menu.
 // ---------------------------------------------------------------------------------------------
-type Category = "general" | "bars" | "appearance" | "taskbar" | "updates" | "about";
+type Category = "general" | "island" | "dock" | "appearance" | "updates" | "about";
 
 const stroke = (d: string) => <path d={d} fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />;
 
 const CATEGORIES: { id: Category; icon: ReactNode }[] = [
   { id: "general", icon: stroke("M5 7h8m4 0h2M5 17h2m4 0h8M13 4v6m-4 4v6") },
   {
-    id: "bars",
-    icon: (
-      <>
-        <rect x="3.5" y="4" width="17" height="4" rx="1.5" fill="none" stroke="currentColor" strokeWidth="1.7" />
-        <rect x="6.5" y="16" width="11" height="4" rx="1.5" fill="none" stroke="currentColor" strokeWidth="1.7" />
-      </>
-    ),
+    id: "island",
+    icon: <rect x="3.5" y="4" width="17" height="5" rx="2.5" fill="none" stroke="currentColor" strokeWidth="1.7" />,
+  },
+  {
+    id: "dock",
+    icon: <rect x="5.5" y="15" width="13" height="5" rx="2" fill="none" stroke="currentColor" strokeWidth="1.7" />,
   },
   { id: "appearance", icon: stroke("M12 3c3.5 4 6 6.5 6 10a6 6 0 0 1-12 0c0-3.5 2.5-6 6-10Z") },
-  {
-    id: "taskbar",
-    icon: (
-      <>
-        <rect x="3" y="5" width="18" height="12" rx="2" fill="none" stroke="currentColor" strokeWidth="1.7" />
-        {stroke("M8 21h8M12 17v4")}
-      </>
-    ),
-  },
   { id: "updates", icon: stroke("M20 7v5h-5M4 17v-5h5M6.3 9A7 7 0 0 1 18 7.5M17.7 15A7 7 0 0 1 6 16.5") },
   {
     id: "about",
@@ -102,14 +92,33 @@ const ITEMS: Item[] = [
     ),
   },
   {
-    id: "bars",
-    category: "bars",
+    id: "island",
+    category: "island",
     render: ({ s, t }) => (
       <Group>
         <Row title={t("settings.notch")} description={t("settings.visibilityHelp")}>
           <Select label={t("settings.notch")} value={s.notch_visibility} onChange={(v) => setSetting("notch_visibility", v)} options={VISIBILITIES.map((v) => ({ value: v, label: t(`vis.${v}`) }))} />
         </Row>
-        <Row title={t("settings.dock")}>
+      </Group>
+    ),
+  },
+  {
+    id: "dock-taskbar",
+    category: "dock",
+    render: ({ s, t }) => (
+      <Group>
+        <Row title={t("settings.replaceTaskbar")} description={t("settings.replaceTaskbarHelp")}>
+          <Toggle label={t("settings.replaceTaskbar")} checked={s.replace_taskbar} onChange={(v) => setSetting("replace_taskbar", v)} />
+        </Row>
+      </Group>
+    ),
+  },
+  {
+    id: "dock",
+    category: "dock",
+    render: ({ s, t }) => (
+      <Group>
+        <Row title={t("settings.dock")} description={t("settings.visibilityHelp")}>
           <Select label={t("settings.dock")} value={s.dock_visibility} onChange={(v) => setSetting("dock_visibility", v)} options={VISIBILITIES.map((v) => ({ value: v, label: t(`vis.${v}`) }))} />
         </Row>
         <Row title={t("settings.showPinned")} description={t("settings.showPinnedHelp")}>
@@ -136,17 +145,6 @@ const ITEMS: Item[] = [
     ),
   },
   { id: "appearance", category: "appearance", render: () => <Appearance /> },
-  {
-    id: "replace-taskbar",
-    category: "taskbar",
-    render: ({ s, t }) => (
-      <Group>
-        <Row title={t("settings.replaceTaskbar")} description={t("settings.replaceTaskbarHelp")}>
-          <Toggle label={t("settings.replaceTaskbar")} checked={s.replace_taskbar} onChange={(v) => setSetting("replace_taskbar", v)} />
-        </Row>
-      </Group>
-    ),
-  },
   {
     id: "updates",
     category: "updates",
