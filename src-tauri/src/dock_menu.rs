@@ -3,6 +3,9 @@ use serde::Deserialize;
 use std::sync::Mutex;
 use tauri::menu::{ContextMenu, IsMenuItem, Menu, MenuItem};
 use tauri::{AppHandle, Emitter, Manager};
+use windows::Win32::Foundation::HWND;
+
+mod window_menu;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum MenuTarget {
@@ -29,19 +32,17 @@ pub enum MenuAction {
     Pin,
     ChangeIcon,
     ResetIcon,
-    Quit,
     AddApp,
     MacdowsSettings,
     TaskManager,
 }
 
-const ALL_ACTIONS: [MenuAction; 9] = [
+const ALL_ACTIONS: [MenuAction; 8] = [
     MenuAction::NewWindow,
     MenuAction::Unpin,
     MenuAction::Pin,
     MenuAction::ChangeIcon,
     MenuAction::ResetIcon,
-    MenuAction::Quit,
     MenuAction::AddApp,
     MenuAction::MacdowsSettings,
     MenuAction::TaskManager,
@@ -55,7 +56,6 @@ impl MenuAction {
             MenuAction::Pin => "pin",
             MenuAction::ChangeIcon => "change_icon",
             MenuAction::ResetIcon => "reset_icon",
-            MenuAction::Quit => "quit",
             MenuAction::AddApp => "add_app",
             MenuAction::MacdowsSettings => "macdows_settings",
             MenuAction::TaskManager => "task_manager",
@@ -73,7 +73,7 @@ impl MenuAction {
 }
 
 /// What the menu offers, in order.
-pub fn menu_plan(target: MenuTarget, running: bool, has_custom_icon: bool) -> Vec<MenuAction> {
+pub fn menu_plan(target: MenuTarget, has_custom_icon: bool) -> Vec<MenuAction> {
     let mut out = match target {
         MenuTarget::Empty => return vec![MenuAction::AddApp, MenuAction::MacdowsSettings, MenuAction::TaskManager],
         MenuTarget::Pinned => vec![MenuAction::NewWindow, MenuAction::Unpin, MenuAction::ChangeIcon],
@@ -81,9 +81,6 @@ pub fn menu_plan(target: MenuTarget, running: bool, has_custom_icon: bool) -> Ve
     };
     if has_custom_icon {
         out.push(MenuAction::ResetIcon);
-    }
-    if running {
-        out.push(MenuAction::Quit);
     }
     out
 }
@@ -114,8 +111,22 @@ pub fn dock_menu(app: AppHandle, target: DockMenuTarget) -> Result<(), String> {
         let custom = g.dock.custom_icons.keys().any(|k| k.eq_ignore_ascii_case(&target.id) || (!target.exe.is_empty() && k.eq_ignore_ascii_case(&target.exe)));
         (g.language.clone(), custom)
     };
-    let actions: Vec<MenuAction> = menu_plan(kind, !target.hwnds.is_empty(), custom).into_iter().filter(|a| a.available()).collect();
+    let actions: Vec<MenuAction> = menu_plan(kind, custom).into_iter().filter(|a| a.available()).collect();
     if actions.is_empty() {
+        return Ok(());
+    }
+    if let Some(&hwnd) = target.hwnds.first() {
+        // A running app: the dock's own items first, then the window's own Windows menu (Restore, Move, Size, Minimize, Maximize, Close).
+        let window = app.get_webview_window("dock").ok_or("no dock window")?;
+        let owner = HWND(window.hwnd().map_err(|e| e.to_string())?.0 as *mut _);
+        let labels: Vec<String> = actions.iter().map(|a| crate::i18n::dock_menu_label(&lang, a.id()).to_string()).collect();
+        let chosen = window_menu::popup(owner, HWND(hwnd as *mut _), &labels);
+        *CURRENT.lock().unwrap() = Some(target.clone());
+        match window_menu::classify(chosen, actions.len()) {
+            window_menu::Choice::Dock(i) => run_action(&app, actions[i], target),
+            window_menu::Choice::System(id) => window_menu::send_system_command(HWND(hwnd as *mut _), id),
+            window_menu::Choice::None => {}
+        }
         return Ok(());
     }
     let items: Vec<MenuItem<_>> = actions
@@ -134,13 +145,16 @@ pub fn dock_menu(app: AppHandle, target: DockMenuTarget) -> Result<(), String> {
 pub fn on_menu_event(app: &AppHandle, menu_id: &str) {
     let Some(action) = menu_id.strip_prefix(PREFIX).and_then(MenuAction::from_id) else { return };
     let Some(target) = CURRENT.lock().unwrap().clone() else { return };
+    run_action(app, action, target);
+}
+
+fn run_action(app: &AppHandle, action: MenuAction, target: DockMenuTarget) {
     let app = app.clone();
     std::thread::spawn(move || {
         match action {
             MenuAction::NewWindow => crate::pinned_apps::launch_new(&target.id, &target.exe, &target.aumid),
             MenuAction::Unpin => crate::pinned_apps::remove_pin(&app, target.id),
             MenuAction::Pin => crate::pinned_apps::pin_app(&app, &target.exe, &target.aumid, &target.name),
-            MenuAction::Quit => crate::pinned_apps::close_windows(&target.hwnds),
             MenuAction::MacdowsSettings => crate::open_settings(&app),
             MenuAction::TaskManager => {
                 let _ = crate::quick_settings::quick_launch("task_manager".into());
@@ -204,25 +218,25 @@ mod tests {
 
     #[test]
     fn a_pinned_app_gets_new_window_unpin_and_change_icon() {
-        assert_eq!(menu_plan(MenuTarget::Pinned, false, false), vec![MenuAction::NewWindow, MenuAction::Unpin, MenuAction::ChangeIcon]);
+        assert_eq!(menu_plan(MenuTarget::Pinned, false), vec![MenuAction::NewWindow, MenuAction::Unpin, MenuAction::ChangeIcon]);
     }
 
     #[test]
-    fn a_running_pinned_app_can_also_quit_and_a_custom_icon_can_be_reset() {
+    fn a_custom_icon_can_be_reset() {
         assert_eq!(
-            menu_plan(MenuTarget::Pinned, true, true),
-            vec![MenuAction::NewWindow, MenuAction::Unpin, MenuAction::ChangeIcon, MenuAction::ResetIcon, MenuAction::Quit]
+            menu_plan(MenuTarget::Pinned, true),
+            vec![MenuAction::NewWindow, MenuAction::Unpin, MenuAction::ChangeIcon, MenuAction::ResetIcon]
         );
     }
 
     #[test]
     fn a_running_unpinned_app_can_be_pinned() {
-        assert_eq!(menu_plan(MenuTarget::Running, true, false), vec![MenuAction::NewWindow, MenuAction::Pin, MenuAction::ChangeIcon, MenuAction::Quit]);
+        assert_eq!(menu_plan(MenuTarget::Running, false), vec![MenuAction::NewWindow, MenuAction::Pin, MenuAction::ChangeIcon]);
     }
 
     #[test]
     fn the_empty_dock_offers_add_app_settings_and_task_manager() {
-        assert_eq!(menu_plan(MenuTarget::Empty, false, false), vec![MenuAction::AddApp, MenuAction::MacdowsSettings, MenuAction::TaskManager]);
+        assert_eq!(menu_plan(MenuTarget::Empty, false), vec![MenuAction::AddApp, MenuAction::MacdowsSettings, MenuAction::TaskManager]);
     }
 
     #[test]
