@@ -36,6 +36,8 @@ export interface MusicCfg {
   progress: boolean;
   auto_open: boolean;
   artwork: boolean;
+  /** Buttons to switch between programs that play media (shown from two programs). */
+  sources: boolean;
 }
 export interface ToolsCfg {
   enabled: boolean;
@@ -203,6 +205,18 @@ export interface CatalogApp {
 export const getCatalog = () => invoke<CatalogApp[]>("get_catalog");
 export const pinCatalogApp = (id: string) => invoke<void>("pin_catalog_app", { id });
 export const closeAddAppPanel = () => invoke<void>("close_add_app_panel");
+/** A program with a media session: the buttons in the player switch between these. */
+export interface MediaSource {
+  id: string;
+  name: string;
+  icon_png_base64: string | null;
+  playing: boolean;
+  /** The one the player shows and controls. */
+  selected: boolean;
+}
+export const getMediaSources = () => invoke<MediaSource[]>("get_media_sources");
+/** Shows and controls this program; null follows Windows again. */
+export const selectMediaSource = (id: string | null) => invoke<void>("select_media_source", { id });
 /** Custom icons (PNG, base64) by lowercase key: a pin's id, or for other apps their program path. */
 export const getCustomIcons = () => invoke<Record<string, string>>("get_custom_icons");
 /** Saves the order the pinned apps were dragged into (their ids, left to right). */

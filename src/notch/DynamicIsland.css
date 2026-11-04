@@ -558,3 +558,27 @@ img { -webkit-user-drag: none; user-select: none; }
 .shortcut-sep { flex: none; align-self: center; width: 1px; height: 22px; background: rgba(255, 255, 255, 0.28); }
 .quick-tiles { grid-template-rows: 1fr 1fr; }
 .quick-tiles .glass-tile:nth-child(3) { grid-column: 1 / -1; }
+
+/* The source buttons: one per program that plays media, under the player controls. */
+.music-expanded { flex-wrap: wrap; align-content: center; row-gap: 8px; }
+.source-row { flex: 0 0 100%; display: flex; gap: 6px; justify-content: center; }
+.source-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 26px;
+  max-width: 150px;
+  padding: 0 9px 0 7px;
+  border: 0;
+  border-radius: 13px;
+  background: rgba(255, 255, 255, 0.1);
+  color: inherit;
+  font-size: 11px;
+  cursor: default;
+}
+.source-btn img { width: 16px; height: 16px; object-fit: contain; flex: none; }
+.source-btn .source-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.source-btn .source-state { flex: none; font-size: 8px; opacity: 0.8; }
+.source-btn.on { background: rgba(255, 255, 255, 0.28); }
+.source-btn.paused { opacity: 0.6; }
+.source-btn:hover { background: rgba(255, 255, 255, 0.2); }

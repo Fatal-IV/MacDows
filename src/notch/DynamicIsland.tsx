@@ -5,7 +5,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { listen } from "@tauri-apps/api/event";
-import { getMedia, mediaNext, mediaPrev, mediaSeek, mediaToggle, onMediaChanged, onNotificationNew, addToShelf, clearShelf, getShelf, removeFromShelf, type MediaInfo, type Notice, type ShelfItem } from "../bridge";
+import { getMedia, getMediaSources, selectMediaSource, mediaNext, mediaPrev, mediaSeek, mediaToggle, onMediaChanged, onNotificationNew, addToShelf, clearShelf, getShelf, removeFromShelf, type MediaInfo, type MediaSource, type Notice, type ShelfItem } from "../bridge";
 import { useSettings, useT } from "../i18n";
 import { buildStops, clickTarget, restingStop, screenOn, type Stop } from "./islandLogic";
 import { defaultIsland } from "./islandDefaults";
@@ -459,6 +459,26 @@ export default function Notch() {
 
   const isMusic = hasMedia && mode === "music";
   const musicOpen = isMusic && open && !tools && !quick && !shelfOpen && !historyOpen && !dropping;
+  // The programs that play media; with two or more, the player shows a button for each.
+  const sourcesOn = island.screens.music.sources;
+  const [sources, setSources] = useState<MediaSource[]>([]);
+  useEffect(() => {
+    if (!musicOpen || !sourcesOn) return;
+    let alive = true;
+    const load = () => getMediaSources().then((list) => alive && setSources(list)).catch(() => {});
+    load();
+    const id = setInterval(load, 2000);
+    return () => {
+      alive = false;
+      clearInterval(id);
+    };
+  }, [musicOpen, sourcesOn]);
+  const showSources = musicOpen && sourcesOn && sources.length >= 2;
+  const pickSource = (src: MediaSource) => {
+    selectMediaSource(src.id).catch(() => {});
+    // The player switches right away; the buttons follow a moment later.
+    setTimeout(() => getMediaSources().then(setSources).catch(() => {}), 300);
+  };
   const bannerOpen = banner !== null && !open && !tools && !quick && !shelfOpen && !historyOpen && !dropping;
   const toggleTools = () => {
     setTools((v) => !v);
@@ -480,7 +500,7 @@ export default function Notch() {
   const battery = system?.battery_percent ?? null;
 
   const width = !ready ? 34 : tools || quick || shelfOpen || historyOpen ? 520 : dropping ? 380 : bannerOpen ? 380 : musicOpen ? 340 : isMusic ? 200 : hovered ? (battery != null ? 200 : 170) : hasMedia ? 170 : 140;
-  const height = !ready ? 34 : tools ? 280 : quick ? 312 : shelfOpen || historyOpen ? 312 : dropping ? 110 : bannerOpen ? 76 : musicOpen ? (media!.duration_ms > 0 ? 126 : 108) : 36;
+  const height = !ready ? 34 : tools ? 280 : quick ? 312 : shelfOpen || historyOpen ? 312 : dropping ? 110 : bannerOpen ? 76 : musicOpen ? (media!.duration_ms > 0 ? 126 : 108) + (showSources ? 36 : 0) : 36;
 
   return (
     <div className="screen" style={{ zoom: scale }}>
@@ -670,6 +690,19 @@ export default function Notch() {
                 </div>
                 {media!.duration_ms > 0 && <Progress media={media!} />}
               </div>
+              {showSources && (
+                <div className="source-row" onClick={(e) => e.stopPropagation()}>
+                  {sources.map((src) => (
+                    <button key={src.id} className={`source-btn${src.selected ? " on" : ""}${src.playing ? "" : " paused"}`} title={src.name} onClick={() => pickSource(src)}>
+                      {src.icon_png_base64 && <img src={`data:image/png;base64,${src.icon_png_base64}`} alt="" draggable={false} />}
+                      <span className="source-name">{src.name}</span>
+                      <span className="source-state" aria-hidden>
+                        {src.playing ? "▶" : "❚❚"}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              )}
             </motion.div>
           ) : (
             <motion.div

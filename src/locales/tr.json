@@ -103,6 +103,8 @@
   "island.screen.quick": "Hızlı Ayarlar",
   "island.screen.notifications": "Bildirimler",
   "island.screen.shelf": "Raf",
+  "island.music.sources": "Kaynak butonları",
+  "island.music.sourcesHelp": "İki veya daha fazla program medya oynatır ya da tutarken (Spotify, tarayıcı...) oynatıcı, aralarında geçiş için her biri adına bir buton gösterir.",
   "island.nav.wheel": "Tekerlek ekran değiştirir",
   "island.nav.click": "Tıklama açar",
   "island.click.smart": "Müzik çalarken oynatıcı, yoksa Hızlı Ayarlar",

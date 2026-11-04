@@ -1,10 +1,12 @@
 use base64::Engine;
 use serde::Serialize;
+use std::collections::HashMap;
 use std::sync::{Mutex, OnceLock};
 use tauri::{AppHandle, Emitter};
 use windows::Foundation::TypedEventHandler;
 use windows::Media::Control::{
     CurrentSessionChangedEventArgs, GlobalSystemMediaTransportControlsSession as Session,
+    SessionsChangedEventArgs,
     GlobalSystemMediaTransportControlsSessionManager as Manager,
     GlobalSystemMediaTransportControlsSessionPlaybackStatus as PlaybackStatus, MediaPropertiesChangedEventArgs,
     PlaybackInfoChangedEventArgs, TimelinePropertiesChangedEventArgs,
@@ -77,6 +79,122 @@ pub fn read_thumbnail(r: IRandomAccessStreamReference) -> Option<Vec<u8>> {
     Some(buf)
 }
 
+// ---------------------------------------------------------------------------------------------
+// Sources: every program with a media session (Spotify, a browser tab, a video player...)
+// ---------------------------------------------------------------------------------------------
+
+/// One program that has a media session, for the source buttons in the player.
+#[derive(Debug, Clone, Serialize, PartialEq)]
+pub struct MediaSource {
+    /// The program's AppUserModelID; what `select_media_source` is given back.
+    pub id: String,
+    pub name: String,
+    pub icon_png_base64: Option<String>,
+    pub playing: bool,
+    /// The one the player is showing and controlling.
+    pub selected: bool,
+}
+
+/// A readable name for a media source id when Windows's Apps folder does not know it: well-known programs get
+/// their proper name, anything else its last name part (`Vendor.AppName_hash!App` gives `AppName`).
+pub fn friendly_name(app_id: &str) -> String {
+    let lower = app_id.to_lowercase();
+    for (needle, name) in [
+        ("spotify", "Spotify"),
+        ("msedge", "Microsoft Edge"),
+        ("chrome", "Chrome"),
+        ("firefox", "Firefox"),
+        ("opera", "Opera"),
+        ("brave", "Brave"),
+        ("vlc", "VLC"),
+        ("zunemusic", "Media Player"),
+        ("mediaplayer", "Media Player"),
+        ("wmplayer", "Windows Media Player"),
+        ("applemusic", "Apple Music"),
+        ("itunes", "iTunes"),
+        ("youtube", "YouTube"),
+    ] {
+        if lower.contains(needle) {
+            return name.to_string();
+        }
+    }
+    let before_bang = app_id.split('!').next().unwrap_or(app_id);
+    let family = before_bang.split('_').next().unwrap_or(before_bang);
+    let family = family.strip_suffix(".exe").or_else(|| family.strip_suffix(".EXE")).unwrap_or(family);
+    family.rsplit('.').next().filter(|s| !s.is_empty()).unwrap_or(app_id).to_string()
+}
+
+/// Which listed source the user picked, if it is still there (compared ignoring case); otherwise Windows's own pick.
+pub fn pick_source(ids: &[String], selected: &Option<String>) -> Option<usize> {
+    let wanted = selected.as_ref()?;
+    ids.iter().position(|id| id.eq_ignore_ascii_case(wanted))
+}
+
+/// The source the user chose (`None` follows Windows's current session).
+static SELECTED: Mutex<Option<String>> = Mutex::new(None);
+/// Name and icon per source id, looked up once.
+static SOURCE_INFO: Mutex<Option<HashMap<String, (String, Option<String>)>>> = Mutex::new(None);
+
+/// The session the player shows and controls: the chosen source while it still exists, otherwise Windows's current one.
+fn chosen_session() -> Option<Session> {
+    let manager = MANAGER.get()?;
+    let selected = SELECTED.lock().unwrap().clone();
+    if selected.is_some() {
+        let sessions: Vec<Session> = manager.GetSessions().ok()?.into_iter().collect();
+        let ids: Vec<String> = sessions.iter().map(|s| s.SourceAppUserModelId().map(|i| i.to_string()).unwrap_or_default()).collect();
+        if let Some(at) = pick_source(&ids, &selected) {
+            return sessions.into_iter().nth(at);
+        }
+        // The chosen program closed: back to following Windows.
+        *SELECTED.lock().unwrap() = None;
+    }
+    manager.GetCurrentSession().ok()
+}
+
+fn source_info(id: &str) -> (String, Option<String>) {
+    if let Some(known) = SOURCE_INFO.lock().unwrap().as_ref().and_then(|m| m.get(id)).cloned() {
+        return known;
+    }
+    // Windows's Apps folder knows browsers and Store apps by this id: its name and icon are the right ones.
+    let info = crate::pinned_apps::store_info(id).map(|(name, icon)| (name, icon)).unwrap_or_else(|| (friendly_name(id), None));
+    SOURCE_INFO.lock().unwrap().get_or_insert_with(HashMap::new).insert(id.to_string(), info.clone());
+    info
+}
+
+fn list_sources() -> Vec<MediaSource> {
+    let Some(manager) = MANAGER.get() else { return Vec::new() };
+    let Ok(sessions) = manager.GetSessions() else { return Vec::new() };
+    let chosen = chosen_session().and_then(|s| s.SourceAppUserModelId().ok()).map(|i| i.to_string());
+    let mut out: Vec<MediaSource> = sessions
+        .into_iter()
+        .filter_map(|session| {
+            let id = session.SourceAppUserModelId().ok()?.to_string();
+            let playing = session.GetPlaybackInfo().ok().and_then(|i| i.PlaybackStatus().ok()).is_some_and(|s| s == PlaybackStatus::Playing);
+            let (name, icon) = source_info(&id);
+            let selected = chosen.as_ref().is_some_and(|c| c.eq_ignore_ascii_case(&id));
+            Some(MediaSource { id, name, icon_png_base64: icon, playing, selected })
+        })
+        .collect();
+    out.sort_by(|a, b| a.name.to_lowercase().cmp(&b.name.to_lowercase()));
+    out
+}
+
+/// Every program with a media session, for the source buttons (the buttons show only with two or more).
+#[tauri::command]
+pub async fn get_media_sources() -> Vec<MediaSource> {
+    tauri::async_runtime::spawn_blocking(list_sources).await.unwrap_or_default()
+}
+
+/// Shows and controls this source (`None`: follow Windows again).
+#[tauri::command]
+pub fn select_media_source(id: Option<String>) {
+    *SELECTED.lock().unwrap() = id;
+    std::thread::spawn(|| {
+        attach_current();
+        refresh();
+    });
+}
+
 fn read_info(session: &Session) -> Option<MediaInfo> {
     let props = session.TryGetMediaPropertiesAsync().ok()?.get().ok()?;
     let title = props.Title().ok()?.to_string();
@@ -115,7 +233,7 @@ fn read_info(session: &Session) -> Option<MediaInfo> {
 }
 
 fn refresh() {
-    let info = MANAGER.get().and_then(|m| m.GetCurrentSession().ok()).and_then(|s| read_info(&s));
+    let info = chosen_session().and_then(|s| read_info(&s));
     *LAST.lock().unwrap() = info.clone();
     if let Some(app) = APP.get() {
         let _ = app.emit("media-changed", info);
@@ -129,7 +247,7 @@ fn attach_current() {
         let _ = old.RemovePlaybackInfoChanged(t2);
         let _ = old.RemoveTimelinePropertiesChanged(t3);
     }
-    let Some(session) = MANAGER.get().and_then(|m| m.GetCurrentSession().ok()) else { return };
+    let Some(session) = chosen_session() else { return };
     let h1 = TypedEventHandler::<Session, MediaPropertiesChangedEventArgs>::new(|_, _| {
         refresh();
         Ok(())
@@ -159,7 +277,7 @@ pub fn get_media() -> Option<MediaInfo> {
 }
 
 fn with_session(f: impl FnOnce(&Session)) {
-    if let Some(s) = MANAGER.get().and_then(|m| m.GetCurrentSession().ok()) {
+    if let Some(s) = chosen_session() {
         f(&s);
     }
 }
@@ -216,6 +334,12 @@ pub fn start(app: AppHandle) {
             Ok(())
         });
         let _ = manager.CurrentSessionChanged(&h);
+        let sessions_changed = TypedEventHandler::<Manager, SessionsChangedEventArgs>::new(|_, _| {
+            attach_current();
+            refresh();
+            Ok(())
+        });
+        let _ = manager.SessionsChanged(&sessions_changed);
         attach_current();
         refresh();
         loop {
@@ -273,5 +397,30 @@ mod tests {
     fn unknown_or_empty_defaults_to_png() {
         assert_eq!(sniff_mime(&[]), "image/png");
         assert_eq!(sniff_mime(&[1, 2, 3]), "image/png");
+    }
+
+    #[test]
+    fn well_known_programs_get_their_proper_names() {
+        assert_eq!(friendly_name("SpotifyAB.SpotifyMusic_zpdnekdrzrea0!Spotify"), "Spotify");
+        assert_eq!(friendly_name("Spotify.exe"), "Spotify");
+        assert_eq!(friendly_name("MSEdge"), "Microsoft Edge");
+        assert_eq!(friendly_name("chrome.exe"), "Chrome");
+        assert_eq!(friendly_name("Microsoft.ZuneMusic_8wekyb3d8bbwe!Microsoft.ZuneMusic"), "Media Player");
+    }
+
+    #[test]
+    fn an_unknown_program_is_named_by_the_last_part_of_its_id() {
+        assert_eq!(friendly_name("Vendor.CoolPlayer_abc123!App"), "CoolPlayer");
+        assert_eq!(friendly_name("foo.exe"), "foo");
+        assert_eq!(friendly_name("Plain"), "Plain");
+    }
+
+    #[test]
+    fn the_chosen_source_is_found_ignoring_case_and_a_missing_one_is_not() {
+        let ids = vec!["MSEdge".to_string(), "Spotify.exe".to_string()];
+        assert_eq!(pick_source(&ids, &Some("spotify.EXE".to_string())), Some(1));
+        assert_eq!(pick_source(&ids, &Some("Gone".to_string())), None);
+        assert_eq!(pick_source(&ids, &None), None);
+        assert_eq!(pick_source(&[], &Some("MSEdge".to_string())), None);
     }
 }

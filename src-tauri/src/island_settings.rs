@@ -46,6 +46,8 @@ pub struct MusicCfg {
     /// The music pill comes up by itself on a new track.
     pub auto_open: bool,
     pub artwork: bool,
+    /// Buttons to switch between programs that play media (shown from two programs).
+    pub sources: bool,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -152,7 +154,7 @@ impl Default for StatusCfg {
 }
 impl Default for MusicCfg {
     fn default() -> Self {
-        MusicCfg { enabled: true, visualizer: true, album_glow: true, progress: true, auto_open: true, artwork: true }
+        MusicCfg { enabled: true, visualizer: true, album_glow: true, progress: true, auto_open: true, artwork: true, sources: true }
     }
 }
 impl Default for ToolsCfg {
@@ -241,6 +243,7 @@ mod tests {
         assert_eq!(i.fullscreen, FullscreenMode::Edge);
         assert!(i.enabled_flags().iter().all(|on| *on));
         assert!(!i.screens.status.clock_12h && i.screens.status.battery_percent);
+        assert!(i.screens.music.sources);
         assert!(i.screens.tools.week_starts_monday && i.screens.tools.timer_sound && i.screens.tools.timer_progress);
         assert_eq!((i.screens.notifications.banner_seconds, i.screens.notifications.history_max), (5, 100));
         assert!(!i.screens.shelf.persist);

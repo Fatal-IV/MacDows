@@ -103,6 +103,8 @@
   "island.screen.quick": "Quick settings",
   "island.screen.notifications": "Notifications",
   "island.screen.shelf": "Shelf",
+  "island.music.sources": "Source buttons",
+  "island.music.sourcesHelp": "When two or more programs play or hold media (Spotify, a browser...), the player shows a button for each to switch between them.",
   "island.nav.wheel": "The mouse wheel switches screens",
   "island.nav.click": "A click opens",
   "island.click.smart": "The player while music plays, otherwise quick settings",

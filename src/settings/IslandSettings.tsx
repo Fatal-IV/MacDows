@@ -120,7 +120,13 @@ export default function IslandSettings({ s, t }: { s: AppSettings; t: T }) {
 
       <h2 className="section-title">{t("island.sectionScreens")}</h2>
       {SCREEN_IDS.map((id) => (
-        <ScreenSection key={id} s={s} t={t} id={id} />
+        <ScreenSection key={id} s={s} t={t} id={id}>
+          {id === "music" && (
+            <Row title={t("island.music.sources")} description={t("island.music.sourcesHelp")}>
+              <Toggle label={t("island.music.sources")} checked={s.island.screens.music.sources} onChange={(v) => updateIsland(s, (i) => (i.screens.music.sources = v))} />
+            </Row>
+          )}
+        </ScreenSection>
       ))}
 
       <h2 className="section-title">{t("island.sectionNav")}</h2>
