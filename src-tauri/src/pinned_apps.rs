@@ -252,6 +252,21 @@ pub fn merge_local(mut pins: Vec<PinnedApp>, local: &[crate::settings::LocalPin]
     pins
 }
 
+/// The user's own order (ids saved by dragging; compared ignoring case): listed pins first in that order, the
+/// others after them in their current order, saved ids that are no longer pinned ignored.
+pub fn apply_order(pins: Vec<PinnedApp>, saved: &[String]) -> Vec<PinnedApp> {
+    let rank = |id: &str| saved.iter().position(|s| s.eq_ignore_ascii_case(id)).unwrap_or(usize::MAX);
+    let mut pins = pins;
+    pins.sort_by_key(|p| rank(&p.id)); // stable: unlisted pins keep their relative order at the end
+    pins
+}
+
+/// Saves the order the user dragged the pinned apps into (their ids, left to right). The dock reloads.
+#[tauri::command]
+pub fn set_pinned_order(app: AppHandle, ids: Vec<String>) {
+    update_settings(&app, |s| s.dock.pinned_order = ids);
+}
+
 fn fill_local_icons(pins: &mut [PinnedApp]) {
     for p in pins.iter_mut().filter(|p| p.id.starts_with(LOCAL_PREFIX) && p.icon_png_base64.is_none()) {
         p.icon_png_base64 = if p.aumid.is_empty() { crate::windows_list::icon_png_base64(&p.exe) } else { store_info(&p.aumid).and_then(|(_, icon)| icon) };
@@ -263,15 +278,15 @@ const LOCAL_PREFIX: &str = "local:";
 /// Pins the user hid in the dock (see `unpin`) are left out; pins only MacDows has come after the Windows ones.
 #[tauri::command]
 pub async fn list_pinned(app: AppHandle) -> Vec<PinnedApp> {
-    let (hidden, local): (Vec<String>, Vec<crate::settings::LocalPin>) = {
+    let (hidden, local, order): (Vec<String>, Vec<crate::settings::LocalPin>, Vec<String>) = {
         let state = app.state::<crate::AppSettings>();
         let g = state.0.lock().unwrap();
-        (g.hidden_pinned.iter().map(|h| h.to_lowercase()).collect(), g.dock.local_pins.clone())
+        (g.hidden_pinned.iter().map(|h| h.to_lowercase()).collect(), g.dock.local_pins.clone(), g.dock.pinned_order.clone())
     };
     let all = tauri::async_runtime::spawn_blocking(move || {
         let mut merged = merge_local(read_pinned(), &local);
         fill_local_icons(&mut merged);
-        merged
+        apply_order(merged, &order)
     })
     .await
     .unwrap_or_default();
@@ -588,6 +603,28 @@ mod tests {
         assert_eq!(pin_source(r"C:\Apps\app.exe", "Pkg_8wekyb3d8bbwe!App"), Some(r"C:\Apps\app.exe".to_string()));
         assert_eq!(pin_source(r"C:\Windows\System32\ApplicationFrameHost.exe", ""), None);
         assert_eq!(pin_source("", ""), None);
+    }
+
+    #[test]
+    fn apply_order_keeps_the_saved_order_and_appends_new_pins() {
+        let pins = vec![app("a", "", ""), app("b", "", ""), app("c", "", "")];
+        let ordered = apply_order(pins, &["c".to_string(), "a".to_string()]);
+        assert_eq!(ordered.iter().map(|p| p.id.as_str()).collect::<Vec<_>>(), ["c", "a", "b"]);
+    }
+
+    #[test]
+    fn apply_order_ignores_pins_that_are_gone() {
+        let ordered = apply_order(vec![app("a", "", "")], &["gone".to_string(), "a".to_string()]);
+        assert_eq!(ordered.len(), 1);
+        assert_eq!(ordered[0].id, "a");
+    }
+
+    #[test]
+    fn apply_order_ignores_case_and_leaves_an_empty_order_alone() {
+        let ordered = apply_order(vec![app("A", "", ""), app("B", "", "")], &["b".to_string()]);
+        assert_eq!(ordered.iter().map(|p| p.id.as_str()).collect::<Vec<_>>(), ["B", "A"]);
+        let same = apply_order(vec![app("A", "", ""), app("B", "", "")], &[]);
+        assert_eq!(same.iter().map(|p| p.id.as_str()).collect::<Vec<_>>(), ["A", "B"]);
     }
 
     /// Run by hand (`cargo test pinning_through_windows -- --ignored --nocapture`): pins Character Map through

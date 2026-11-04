@@ -101,3 +101,14 @@
   background: var(--nectar-text, #fff);
   opacity: 0.75;
 }
+
+/* The pinned apps are one row that can be rearranged by dragging. */
+.dock-pins {
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.dock-pins .dock-item { touch-action: none; }

@@ -1,8 +1,9 @@
-import { useEffect, useState, type ReactNode } from "react";
-import { motion } from "framer-motion";
+import { useEffect, useRef, useState, type ReactNode } from "react";
+import { motion, Reorder } from "framer-motion";
 import { invoke } from "@tauri-apps/api/core";
-import { focusWindow, dockMenu, launchPinned, listPinned, listWindows, onPinnedChanged, onWindowsChanged, type AppWindow, type PinnedApp } from "../bridge";
+import { focusWindow, dockMenu, launchPinned, listPinned, setPinnedOrder, listWindows, onPinnedChanged, onWindowsChanged, type AppWindow, type PinnedApp } from "../bridge";
 import { mergeDock, type DockEntry } from "./dockItems";
+import { droppedOutside, sameOrder } from "./dockDrag";
 import { useSettings, useT } from "../i18n";
 import { initTheme } from "../appearance/theme";
 import { shellAction, useSystemStatus, type ShellAction } from "../system";
@@ -56,6 +57,66 @@ export default function Dock() {
     else if (e.pinned) launchPinned(e.pinned.id).catch(() => {});
   };
 
+  // Dragging the pinned apps: `order` holds the ids while one is being moved (null = the order Windows and the saved order give).
+  const dockRef = useRef<HTMLDivElement>(null);
+  const [order, setOrder] = useState<string[] | null>(null);
+  const orderRef = useRef<string[] | null>(null);
+  const dragFrom = useRef<string[] | null>(null);
+  const cancelled = useRef(false);
+  const lastDragEnd = useRef(0);
+  const updateOrder = (ids: string[] | null) => {
+    orderRef.current = ids;
+    setOrder(ids);
+  };
+  // A fresh list from Rust (after saving, or when Windows changes the pins) replaces the one being dragged.
+  useEffect(() => updateOrder(null), [pinned]);
+  // Esc during a drag puts everything back.
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && dragFrom.current) {
+        cancelled.current = true;
+        updateOrder(dragFrom.current);
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
+
+  const pinnedEntries = entries.filter((e) => e.pinned);
+  const otherEntries = entries.filter((e) => !e.pinned);
+  const baseIds = pinnedEntries.map((e) => e.pinned!.id);
+  const ids = order && sameOrder([...order].sort(), [...baseIds].sort()) ? order : baseIds;
+  const byId = new Map(pinnedEntries.map((e) => [e.pinned!.id, e]));
+
+  const onDragStart = () => {
+    dragFrom.current = ids;
+    cancelled.current = false;
+  };
+  const onDragEnd = (_: unknown, info: { point: { y: number } }) => {
+    const start = dragFrom.current;
+    dragFrom.current = null;
+    lastDragEnd.current = Date.now();
+    const rect = dockRef.current?.getBoundingClientRect();
+    const away = rect ? droppedOutside(info.point.y, rect.top, rect.bottom) : false;
+    const next = orderRef.current;
+    if (cancelled.current || away || !start || !next) {
+      updateOrder(null);
+      return;
+    }
+    if (!sameOrder(start, next)) setPinnedOrder(next).catch(() => updateOrder(null));
+  };
+  // A click right after a drag is the end of the drag, not a request to open the app.
+  const openUnlessDragged = (e: DockEntry) => {
+    if (Date.now() - lastDragEnd.current > 250) open(e);
+  };
+  const menuFor = (e: DockEntry) => (ev: React.MouseEvent) => {
+    ev.preventDefault();
+    ev.stopPropagation();
+    dockMenu({ kind: e.pinned ? "pinned" : "running", id: e.pinned?.id ?? "", exe: e.exe, aumid: e.aumid, name: e.title, hwnds: e.windows.map((w) => w.id) }).catch(() => {});
+  };
+  const iconOf = (e: DockEntry) => (e.icon ? <img src={`data:image/png;base64,${e.icon}`} alt="" draggable={false} /> : <span className="dock-fallback">{e.title.slice(0, 1).toUpperCase()}</span>);
+  const itemTransition = { type: "spring", stiffness: 400, damping: 22 } as const;
+
   return (
     <div
       className="dock-stage"
@@ -65,7 +126,7 @@ export default function Dock() {
         dockMenu({ kind: "empty", id: "", exe: "", aumid: "", name: "", hwnds: [] }).catch(() => {});
       }}
     >
-      <motion.div className="dock" layout>
+      <motion.div className="dock" layout ref={dockRef}>
         {system?.taskbar_hidden && (
           <>
             <SystemButton action="start" label={t("system.start")} icon={START} />
@@ -74,23 +135,34 @@ export default function Dock() {
           </>
         )}
         {entries.length === 0 && <div className="dock-empty">{t("dock.noApps")}</div>}
-        {entries.map((e) => (
-          <motion.button
-            key={e.key}
-            className={`dock-item${e.running ? " running" : ""}`}
-            title={e.title}
-            layout
-            whileHover={{ scale: 1.25, y: -6 }}
-            whileTap={{ scale: 1.1 }}
-            transition={{ type: "spring", stiffness: 400, damping: 22 }}
-            onClick={() => open(e)}
-            onContextMenu={(ev) => {
-              ev.preventDefault();
-              ev.stopPropagation();
-              dockMenu({ kind: e.pinned ? "pinned" : "running", id: e.pinned?.id ?? "", exe: e.exe, aumid: e.aumid, name: e.title, hwnds: e.windows.map((w) => w.id) }).catch(() => {});
-            }}
-          >
-            {e.icon ? <img src={`data:image/png;base64,${e.icon}`} alt="" draggable={false} /> : <span className="dock-fallback">{e.title.slice(0, 1).toUpperCase()}</span>}
+        <Reorder.Group axis="x" values={ids} onReorder={updateOrder} as="div" className="dock-pins">
+          {ids.map((id) => {
+            const e = byId.get(id);
+            if (!e) return null;
+            return (
+              <Reorder.Item
+                key={id}
+                value={id}
+                as="button"
+                className={`dock-item${e.running ? " running" : ""}`}
+                title={e.title}
+                whileHover={{ scale: 1.25, y: -6 }}
+                whileTap={{ scale: 1.1 }}
+                whileDrag={{ scale: 1.15, zIndex: 5 }}
+                transition={itemTransition}
+                onDragStart={onDragStart}
+                onDragEnd={onDragEnd}
+                onClick={() => openUnlessDragged(e)}
+                onContextMenu={menuFor(e)}
+              >
+                {iconOf(e)}
+              </Reorder.Item>
+            );
+          })}
+        </Reorder.Group>
+        {otherEntries.map((e) => (
+          <motion.button key={e.key} className="dock-item" title={e.title} layout whileHover={{ scale: 1.25, y: -6 }} whileTap={{ scale: 1.1 }} transition={itemTransition} onClick={() => open(e)} onContextMenu={menuFor(e)}>
+            {iconOf(e)}
           </motion.button>
         ))}
         {system?.taskbar_hidden && (

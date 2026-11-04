@@ -75,6 +75,8 @@ export interface DockMenuTarget {
 }
 /** Shows the dock's right-click menu at the pointer. */
 export const dockMenu = (target: DockMenuTarget) => invoke<void>("dock_menu", { target });
+/** Saves the order the pinned apps were dragged into (their ids, left to right). */
+export const setPinnedOrder = (ids: string[]) => invoke<void>("set_pinned_order", { ids });
 export const onPinnedChanged = (cb: () => void): Promise<UnlistenFn> => listen("pinned-changed", cb);
 export const onWindowsChanged = (cb: () => void): Promise<UnlistenFn> => listen("windows-changed", cb);
 
