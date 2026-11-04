@@ -92,6 +92,8 @@ export interface Nav {
   click: ClickMode;
   middle: boolean;
   remember: boolean;
+  /** While media exists, hovering the island opens the player by itself. */
+  hover_player: boolean;
 }
 /** The Dynamic Island: its screens, what each offers, how it is navigated. */
 export interface Island {

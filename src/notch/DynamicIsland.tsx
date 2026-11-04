@@ -442,6 +442,8 @@ export default function Notch() {
     setHovered(true);
     const back = lastStop.current;
     if (island.nav.remember && back && stops().includes(back)) goTo(back);
+    // With media around, hovering opens the player by itself (the click is for the other screens).
+    else if (island.nav.hover_player && musicOn && hasMedia) goTo("player");
     else setMode(restingMode());
   };
   const onHoverEnd = () => {

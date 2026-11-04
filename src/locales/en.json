@@ -108,6 +108,8 @@
   "island.click.smart": "The player while music plays, otherwise quick settings",
   "island.click.quick": "Quick settings",
   "island.click.player": "The player",
+  "island.nav.hoverPlayer": "Hover opens the player",
+  "island.nav.hoverPlayerHelp": "While something is playing or paused, resting the pointer on the island opens the player with its controls.",
   "island.nav.middle": "The middle button opens calendar and timer",
   "island.nav.remember": "Return to the last screen",
   "island.nav.rememberHelp": "When the pointer comes back, the island shows the screen it was on.",

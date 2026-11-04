@@ -9,7 +9,7 @@ export function defaultIsland(): Island {
   return {
     visibility: "fixed",
     fullscreen: "edge",
-    nav: { wheel: true, order: [...DEFAULT_ORDER], click: "smart", middle: true, remember: false },
+    nav: { wheel: true, order: [...DEFAULT_ORDER], click: "smart", middle: true, remember: false, hover_player: true },
     screens: {
       status: { enabled: true, clock_12h: false, battery_percent: true },
       music: { enabled: true, visualizer: true, album_glow: true, progress: true, auto_open: true, artwork: true },

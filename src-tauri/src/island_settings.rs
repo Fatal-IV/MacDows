@@ -132,6 +132,8 @@ pub struct Nav {
     pub middle: bool,
     /// Coming back after the pointer left returns to the last screen.
     pub remember: bool,
+    /// While media exists, hovering the island opens the player by itself.
+    pub hover_player: bool,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -175,7 +177,7 @@ impl Default for ShelfCfg {
 }
 impl Default for Nav {
     fn default() -> Self {
-        Nav { wheel: true, order: SCREEN_IDS.iter().map(|s| s.to_string()).collect(), click: ClickMode::Smart, middle: true, remember: false }
+        Nav { wheel: true, order: SCREEN_IDS.iter().map(|s| s.to_string()).collect(), click: ClickMode::Smart, middle: true, remember: false, hover_player: true }
     }
 }
 impl Default for Island {
@@ -243,7 +245,7 @@ mod tests {
         assert_eq!((i.screens.notifications.banner_seconds, i.screens.notifications.history_max), (5, 100));
         assert!(!i.screens.shelf.persist);
         assert_eq!(i.screens.shelf.max_items, 40);
-        assert!(i.nav.wheel && i.nav.middle && !i.nav.remember);
+        assert!(i.nav.wheel && i.nav.middle && !i.nav.remember && i.nav.hover_player);
         assert_eq!(i.nav.click, ClickMode::Smart);
         assert_eq!(i.nav.order, SCREEN_IDS.map(String::from).to_vec());
     }

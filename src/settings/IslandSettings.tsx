@@ -96,7 +96,7 @@ export default function IslandSettings({ s, t }: { s: AppSettings; t: T }) {
   };
   const resetNav = () =>
     updateIsland(s, (i) => {
-      i.nav = { wheel: true, order: [...DEFAULT_ORDER], click: "smart", middle: true, remember: false };
+      i.nav = { wheel: true, order: [...DEFAULT_ORDER], click: "smart", middle: true, remember: false, hover_player: true };
     });
 
   return (
@@ -130,6 +130,9 @@ export default function IslandSettings({ s, t }: { s: AppSettings; t: T }) {
         </Row>
         <Row title={t("island.nav.click")}>
           <Select label={t("island.nav.click")} value={s.island.nav.click} onChange={(v) => updateIsland(s, (i) => (i.nav.click = v as ClickMode))} options={CLICK_MODES.map((m) => ({ value: m, label: t(`island.click.${m}`) }))} />
+        </Row>
+        <Row title={t("island.nav.hoverPlayer")} description={t("island.nav.hoverPlayerHelp")}>
+          <Toggle label={t("island.nav.hoverPlayer")} checked={s.island.nav.hover_player} onChange={(v) => updateIsland(s, (i) => (i.nav.hover_player = v))} />
         </Row>
         <Row title={t("island.nav.middle")}>
           <Toggle label={t("island.nav.middle")} checked={s.island.nav.middle} onChange={(v) => updateIsland(s, (i) => (i.nav.middle = v))} />

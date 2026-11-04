@@ -108,6 +108,8 @@
   "island.click.smart": "Müzik çalarken oynatıcı, yoksa Hızlı Ayarlar",
   "island.click.quick": "Hızlı Ayarlar",
   "island.click.player": "Oynatıcı",
+  "island.nav.hoverPlayer": "Üzerine gelince oynatıcı açılsın",
+  "island.nav.hoverPlayerHelp": "Bir şey çalarken ya da duraklatılmışken imleç Ada'ya gelince oynatıcı ve kontrolleri kendiliğinden açılır.",
   "island.nav.middle": "Orta tuş Takvim ve Zamanlayıcı'yı açar",
   "island.nav.remember": "Son ekrana geri dön",
   "island.nav.rememberHelp": "İmleç geri gelince Ada, son bulunduğu ekranı gösterir.",
