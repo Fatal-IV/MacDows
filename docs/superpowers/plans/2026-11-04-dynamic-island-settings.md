@@ -10,6 +10,10 @@
 
 **Spec:** `docs/superpowers/specs/2026-11-03-dynamic-island-settings-design.md` (approved 2026-11-04). The user also decided: visibility, scale and fullscreen move to the new page and are removed from General/Bars/Appearance; all four phases are built in order.
 
+## Status (2026-11-04, evening)
+
+Done and committed: Task 1 (Rust model, migration, normalization; `island_settings.rs`), Task 2 (navigation logic `islandLogic.ts`), Task 3 (the island page with visibility, fullscreen behavior and scale), Task 4 (screen switches and navigation options), Task 5 (the island follows the settings), plus two additions the user asked for: hovering the island opens the player (`nav.hover_player`) and media source buttons (`music.sources`). Remaining: Tasks 6 to 10 (sub-feature switches, Quick settings items, notification and shelf settings, reset buttons, texts). The settings were also split into separate Dynamic Island and Dock pages, which replaced the first half of Task 3.
+
 ## Global Constraints
 
 - Defaults: all screens and sub-features on, except `nav.remember` off, `shelf.persist` false. `status.clock_12h` false, `tools.week_starts_monday` true, `banner_seconds` 5 (range 3–10), `history_max` 100 (allowed 25/50/100), `shelf.max_items` 40, `nav.click` = `smart`.
