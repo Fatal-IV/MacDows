@@ -20,6 +20,8 @@ use windows::Win32::Foundation::{CloseHandle, HANDLE};
 
 /// `System.Devices.BatteryLifePercent`-style key Windows fills for Bluetooth devices that report a battery.
 const BATTERY_KEY: &str = "{104EA319-6EE2-4701-BD47-8DDBF425BBE5} 2";
+/// When Windows last updated the battery value on that device node.
+const BATTERY_TIME_KEY: &str = "{104EA319-6EE2-4701-BD47-8DDBF425BBE5} 7";
 
 #[derive(Serialize, Clone, Debug, PartialEq)]
 pub struct BtDevice {
@@ -55,12 +57,26 @@ pub fn battery_percent(raw: u32) -> Option<u8> {
 /// The profiles switched to connect or disconnect a device: A2DP sink and hands-free.
 const SERVICES: [GUID; 2] = [GUID::from_u128(0x0000110B_0000_1000_8000_00805F9B34FB), GUID::from_u128(0x0000111E_0000_1000_8000_00805F9B34FB)];
 
+/// One headset has several device nodes (classic Hands-Free and Bluetooth LE), and their battery values differ:
+/// the live one is updated whenever it connects, the other can be weeks old. Readings are `(percent, last update)`;
+/// the newest wins, a reading without a time counts as the oldest, and on a tie the first one stays.
+pub fn freshest(readings: &[(u8, i64)]) -> Option<u8> {
+    let mut best: Option<(u8, i64)> = None;
+    for &(percent, time) in readings {
+        if best.is_none_or(|(_, t)| time > t) {
+            best = Some((percent, time));
+        }
+    }
+    best.map(|(p, _)| p)
+}
+
 /// Battery levels by device address, read from the Windows device nodes whose id contains the address.
 fn batteries(addresses: &[String]) -> HashMap<String, u8> {
-    let mut out = HashMap::new();
     let key = HSTRING::from(BATTERY_KEY);
-    let props: IIterable<HSTRING> = vec![key.clone()].into();
-    let Ok(nodes) = PnpObject::FindAllAsync(PnpObjectType::Device, &props).and_then(|op| op.get()) else { return out };
+    let time_key = HSTRING::from(BATTERY_TIME_KEY);
+    let props: IIterable<HSTRING> = vec![key.clone(), time_key.clone()].into();
+    let mut readings: HashMap<String, Vec<(u8, i64)>> = HashMap::new();
+    let Ok(nodes) = PnpObject::FindAllAsync(PnpObjectType::Device, &props).and_then(|op| op.get()) else { return HashMap::new() };
     for node in nodes {
         let Ok(id) = node.Id() else { continue };
         let id = id.to_string().to_ascii_uppercase();
@@ -73,11 +89,11 @@ fn batteries(addresses: &[String]) -> HashMap<String, u8> {
             .map(u32::from)
             .or_else(|_| value.cast::<IReference<u32>>().and_then(|r| r.Value()))
             .or_else(|_| value.cast::<IReference<i32>>().and_then(|r| r.Value()).map(|v| v.max(0) as u32));
-        if let Some(p) = raw.ok().and_then(battery_percent) {
-            out.insert(address.clone(), p);
-        }
+        let Some(percent) = raw.ok().and_then(battery_percent) else { continue };
+        let time = map.Lookup(&time_key).and_then(|t| t.cast::<IReference<windows::Foundation::DateTime>>()).and_then(|r| r.Value()).map(|d| d.UniversalTime).unwrap_or(0);
+        readings.entry(address.clone()).or_default().push((percent, time));
     }
-    out
+    readings.into_iter().filter_map(|(address, list)| freshest(&list).map(|p| (address, p))).collect()
 }
 
 fn read_devices() -> Vec<BtDevice> {
@@ -177,5 +193,26 @@ mod tests {
         assert_eq!(battery_percent(88), Some(88));
         assert_eq!(battery_percent(100), Some(100));
         assert_eq!(battery_percent(255), None);
+    }
+
+    #[test]
+    fn the_freshest_battery_reading_wins_whatever_the_order() {
+        // The same headset has a live node (updated today) and a stale one (weeks old).
+        let live_first = [(100u8, 2_000i64), (88, 1_000)];
+        let stale_first = [(88u8, 1_000i64), (100, 2_000)];
+        assert_eq!(freshest(&live_first), Some(100));
+        assert_eq!(freshest(&stale_first), Some(100));
+    }
+
+    #[test]
+    fn a_reading_without_a_time_loses_to_one_with_a_time() {
+        assert_eq!(freshest(&[(50, 0), (70, 5)]), Some(70));
+        assert_eq!(freshest(&[(70, 5), (50, 0)]), Some(70));
+    }
+
+    #[test]
+    fn no_readings_give_no_battery_and_a_tie_keeps_the_first() {
+        assert_eq!(freshest(&[]), None);
+        assert_eq!(freshest(&[(40, 7), (60, 7)]), Some(40));
     }
 }
