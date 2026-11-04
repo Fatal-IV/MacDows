@@ -504,7 +504,7 @@
         "is_partial": true,
         "namespace": "MacDows.Setup",
         "scope_chain": [
-          "s119"
+          "s125"
         ]
       },
       "norm_label": "setupwindow",
@@ -2228,7 +2228,7 @@
       "metadata": {
         "namespace": "MacDows.Setup",
         "scope_chain": [
-          "s119"
+          "s125"
         ]
       },
       "norm_label": ".oncloseclick()",
@@ -2246,7 +2246,7 @@
       "metadata": {
         "namespace": "MacDows.Setup",
         "scope_chain": [
-          "s119"
+          "s125"
         ]
       },
       "norm_label": ".ondrag()",
@@ -2264,7 +2264,7 @@
       "metadata": {
         "namespace": "MacDows.Setup",
         "scope_chain": [
-          "s119"
+          "s125"
         ],
         "unresolved_calls": [
           {
@@ -2356,7 +2356,7 @@
       "metadata": {
         "namespace": "MacDows.Setup",
         "scope_chain": [
-          "s119"
+          "s125"
         ],
         "unresolved_calls": [
           {
@@ -2388,7 +2388,7 @@
       "metadata": {
         "namespace": "MacDows.Setup",
         "scope_chain": [
-          "s119"
+          "s125"
         ]
       },
       "norm_label": ".show()",
@@ -11164,7 +11164,7 @@
       "metadata": {
         "namespace": "MacDows.Setup",
         "scope_chain": [
-          "s119"
+          "s125"
         ]
       },
       "norm_label": "installedexe",
@@ -22086,6 +22086,18 @@
       "type": "external"
     },
     {
+      "id": "regkey",
+      "label": "regkey",
+      "_origin": "semantic",
+      "community": 24,
+      "community_name": "install.rs",
+      "external": true,
+      "file_type": "concept",
+      "norm_label": "regkey",
+      "source_file": "",
+      "type": "external"
+    },
+    {
       "id": "write",
       "label": "write",
       "_origin": "semantic",
@@ -22094,6 +22106,42 @@
       "external": true,
       "file_type": "concept",
       "norm_label": "write",
+      "source_file": "",
+      "type": "external"
+    },
+    {
+      "id": "ref_react",
+      "label": "ref_react",
+      "_origin": "semantic",
+      "community": 25,
+      "community_name": "ref_react",
+      "external": true,
+      "file_type": "concept",
+      "norm_label": "ref_react",
+      "source_file": "",
+      "type": "external"
+    },
+    {
+      "id": "ref_react_dom",
+      "label": "ref_react_dom",
+      "_origin": "semantic",
+      "community": 25,
+      "community_name": "ref_react",
+      "external": true,
+      "file_type": "concept",
+      "norm_label": "ref_react_dom",
+      "source_file": "",
+      "type": "external"
+    },
+    {
+      "id": "ref_tauri_apps_api",
+      "label": "ref_tauri_apps_api",
+      "_origin": "semantic",
+      "community": 25,
+      "community_name": "ref_react",
+      "external": true,
+      "file_type": "concept",
+      "norm_label": "ref_tauri_apps_api",
       "source_file": "",
       "type": "external"
     },
@@ -22855,6 +22903,18 @@
       "type": "external"
     },
     {
+      "id": "pcwstr",
+      "label": "pcwstr",
+      "_origin": "semantic",
+      "community": 75,
+      "community_name": "drives.rs",
+      "external": true,
+      "file_type": "concept",
+      "norm_label": "pcwstr",
+      "source_file": "",
+      "type": "external"
+    },
+    {
       "id": "shellexecutew",
       "label": "shellexecutew",
       "_origin": "semantic",
@@ -22985,75 +23045,9 @@
       "type": "external"
     },
     {
-      "id": "time",
-      "label": "time",
-      "_origin": "semantic",
-      "community": 93,
-      "community_name": "app_catalog.rs",
-      "external": true,
-      "file_type": "concept",
-      "norm_label": "time",
-      "source_file": "",
-      "type": "external"
-    },
-    {
-      "id": "regkey",
-      "label": "regkey",
-      "community": 24,
-      "community_name": "install.rs",
-      "external": true,
-      "file_type": "concept",
-      "norm_label": "regkey",
-      "source_file": "",
-      "type": "external"
-    },
-    {
-      "id": "ref_react",
-      "label": "ref_react",
-      "community": 25,
-      "community_name": "ref_react",
-      "external": true,
-      "file_type": "concept",
-      "norm_label": "ref_react",
-      "source_file": "",
-      "type": "external"
-    },
-    {
-      "id": "ref_react_dom",
-      "label": "ref_react_dom",
-      "community": 25,
-      "community_name": "ref_react",
-      "external": true,
-      "file_type": "concept",
-      "norm_label": "ref_react_dom",
-      "source_file": "",
-      "type": "external"
-    },
-    {
-      "id": "ref_tauri_apps_api",
-      "label": "ref_tauri_apps_api",
-      "community": 25,
-      "community_name": "ref_react",
-      "external": true,
-      "file_type": "concept",
-      "norm_label": "ref_tauri_apps_api",
-      "source_file": "",
-      "type": "external"
-    },
-    {
-      "id": "pcwstr",
-      "label": "pcwstr",
-      "community": 75,
-      "community_name": "drives.rs",
-      "external": true,
-      "file_type": "concept",
-      "norm_label": "pcwstr",
-      "source_file": "",
-      "type": "external"
-    },
-    {
       "id": "ref_vite",
       "label": "ref_vite",
+      "_origin": "semantic",
       "community": 85,
       "community_name": "vite.config.ts",
       "external": true,
@@ -23065,11 +23059,24 @@
     {
       "id": "ref_vitejs_plugin_react",
       "label": "ref_vitejs_plugin_react",
+      "_origin": "semantic",
       "community": 85,
       "community_name": "vite.config.ts",
       "external": true,
       "file_type": "concept",
       "norm_label": "ref_vitejs_plugin_react",
+      "source_file": "",
+      "type": "external"
+    },
+    {
+      "id": "time",
+      "label": "time",
+      "_origin": "semantic",
+      "community": 93,
+      "community_name": "app_catalog.rs",
+      "external": true,
+      "file_type": "concept",
+      "norm_label": "time",
       "source_file": "",
       "type": "external"
     }
@@ -64927,5 +64934,5 @@
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "73e25f2012167e541511a363b27dbc666238123c"
+  "built_at_commit": "567c16f423e42efdef7a749183d75a6cc63b0fb4"
 }

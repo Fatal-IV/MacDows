@@ -11,7 +11,7 @@
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `73e25f20`
+- Built from commit: `567c16f4`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -463,16 +463,16 @@ Nodes (7): dependencies, @crabnebula/tauri-plugin-drag, framer-motion, react, re
 _Questions this graph is uniquely positioned to answer:_
 
 - **Why does `Dock (running apps, stable order)` connect `media.rs` to `windows_list.rs`, `Dock.tsx`?**
-  _High betweenness centrality (0.091) - this node is a cross-community bridge._
+  _High betweenness centrality (0.092) - this node is a cross-community bridge._
 - **What connects `net8.0-windows`, `Microsoft.NET.Sdk`, `ProgressBar` to the rest of the system?**
   _495 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `windows_list.rs` be split into smaller, more focused modules?**
   _Cohesion score 0.05706214689265537 - nodes in this community are weakly interconnected._
 - **Why does `Visibility modes Fixed/Smart/Peek` connect `visibility.rs` to `Settings.tsx`?**
-  _High betweenness centrality (0.049) - this node is a cross-community bridge._
+  _High betweenness centrality (0.050) - this node is a cross-community bridge._
 - **Should `shelf.rs` be split into smaller, more focused modules?**
   _Cohesion score 0.05902980713033314 - nodes in this community are weakly interconnected._
-- **Why does `Languages: English and Turkish` connect `i18n.rs` to `useT`?**
+- **Why does `framer-motion` connect `Settings.tsx` to `Dock.tsx`, `DynamicIsland.tsx`, `package.json`, `Appearance.tsx`?**
   _High betweenness centrality (0.028) - this node is a cross-community bridge._
 - **Should `DynamicIsland.tsx` be split into smaller, more focused modules?**
   _Cohesion score 0.08985200845665962 - nodes in this community are weakly interconnected._
