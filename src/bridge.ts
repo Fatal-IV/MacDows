@@ -91,6 +91,22 @@ export const launchNewApp = (id: string, exe: string, aumid: string) => invoke<v
 /** Win+number (slot 0 to 8); `new_instance` when Shift was held too. */
 export const onDockShortcut = (cb: (s: { index: number; new_instance: boolean }) => void): Promise<UnlistenFn> =>
   listen<{ index: number; new_instance: boolean }>("dock-shortcut", (e) => cb(e.payload));
+export interface PreviewItem {
+  hwnd: number;
+  title: string;
+  /** A PNG of the window, null when it cannot be captured. */
+  thumbnail: string | null;
+  /** The icon of the app, the fallback picture. */
+  icon: string | null;
+}
+/** Opens the window previews above an icon. `centerX` and `dockTop` are CSS pixels in the dock window. */
+export const showPreview = (centerX: number, dockTop: number, icon: string | null, hwnds: number[]) => invoke<void>("show_preview", { centerX, dockTop, icon, hwnds });
+export const previewHover = (source: "dock" | "panel", inside: boolean) => invoke<void>("preview_hover", { source, inside });
+export const previewItems = () => invoke<PreviewItem[]>("preview_items");
+export const closePreview = () => invoke<void>("close_preview");
+export const previewActivate = (hwnd: number) => invoke<void>("preview_activate", { hwnd });
+export const previewCloseWindow = (hwnd: number) => invoke<void>("preview_close_window", { hwnd });
+export const onPreviewUpdated = (cb: () => void): Promise<UnlistenFn> => listen("preview-updated", cb);
 /** Custom icons (PNG, base64) by lowercase key: a pin's id, or for other apps their program path. */
 export const getCustomIcons = () => invoke<Record<string, string>>("get_custom_icons");
 /** Saves the order the pinned apps were dragged into (their ids, left to right). */

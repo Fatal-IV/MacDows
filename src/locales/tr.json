@@ -81,6 +81,8 @@
   "dock.drive.removable": "Çıkarılabilir sürücü",
   "settings.winNumber": "Win + sayı kısayolları",
   "settings.winNumberHelp": "Win+1 ile Win+9, Dock'taki sabit uygulamaları sırayla başlatır veya öne getirir; Win+Shift+sayı yeni pencere açar. Bir klavye kancası gerekir; antivirüsünüz şikayet ederse kapatın.",
+  "settings.previews": "Pencere önizlemesi",
+  "settings.previewsHelp": "Dock'ta çalışan bir uygulamanın üzerine gelince pencerelerinin küçük resimleri görünür. Birine tıklayınca öne gelir, oradan kapatabilirsiniz.",
   "settings.showDesktop": "Masaüstü düğmesi",
   "settings.showDesktopHelp": "Dock'un sonuna, sizi hızlıca masaüstüne götüren bir düğme ekler. Tekrar basınca pencereleriniz geri gelir.",
   "window.controls": "Pencere düğmeleri",

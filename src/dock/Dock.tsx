@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { motion, Reorder } from "framer-motion";
 import { invoke } from "@tauri-apps/api/core";
-import { focusWindow, dockMenu, getCustomIcons, launchNewApp, launchPinned, listDrives, listPinned, onDockShortcut, onDrivesChanged, openDrive, setDockPinnedCount, setPinnedOrder, listWindows, onPinnedChanged, onWindowsChanged, type AppWindow, type Drive, type PinnedApp } from "../bridge";
+import { focusWindow, dockMenu, getCustomIcons, previewHover, showPreview, launchNewApp, launchPinned, listDrives, listPinned, onDockShortcut, onDrivesChanged, openDrive, setDockPinnedCount, setPinnedOrder, listWindows, onPinnedChanged, onWindowsChanged, type AppWindow, type Drive, type PinnedApp } from "../bridge";
 import { mergeDock, type DockEntry } from "./dockItems";
 import { droppedOutside, sameOrder } from "./dockDrag";
 import { useSettings, useT } from "../i18n";
@@ -139,11 +139,36 @@ export default function Dock() {
     };
   }, []);
 
+  // Window previews: hover a running app for a moment and a panel with its windows opens above the icon.
+  const previewsOn = settings?.dock?.previews ?? true;
+  const hoverTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const dragging = useRef(false);
+  const hoverStart = (e: DockEntry, button: HTMLElement) => {
+    if (!previewsOn || e.windows.length === 0) return;
+    previewHover("dock", true).catch(() => {});
+    clearTimeout(hoverTimer.current);
+    hoverTimer.current = setTimeout(() => {
+      if (dragging.current) return;
+      const r = button.getBoundingClientRect();
+      const dockTop = dockRef.current?.getBoundingClientRect().top ?? r.top;
+      const icon = customIcons[(e.pinned?.id ?? e.exe).toLowerCase()] ?? e.icon;
+      showPreview(r.left + r.width / 2, dockTop, icon, e.windows.map((w) => w.id)).catch(() => {});
+    }, 300);
+  };
+  const hoverEnd = () => {
+    clearTimeout(hoverTimer.current);
+    previewHover("dock", false).catch(() => {});
+  };
+  const badge = (e: DockEntry) => (e.windows.length >= 2 ? <span className="dock-badge">{e.windows.length}</span> : null);
+
   const onDragStart = () => {
+    dragging.current = true;
+    hoverEnd();
     dragFrom.current = ids;
     cancelled.current = false;
   };
   const onDragEnd = (_: unknown, info: { point: { y: number } }) => {
+    dragging.current = false;
     const start = dragFrom.current;
     dragFrom.current = null;
     lastDragEnd.current = Date.now();
@@ -208,8 +233,11 @@ export default function Dock() {
                 onDragEnd={onDragEnd}
                 onClick={() => openUnlessDragged(e)}
                 onContextMenu={menuFor(e)}
+                onPointerEnter={(ev) => hoverStart(e, ev.currentTarget as HTMLElement)}
+                onPointerLeave={hoverEnd}
               >
                 {iconOf(e)}
+                {badge(e)}
               </Reorder.Item>
             );
           })}
@@ -240,8 +268,9 @@ export default function Dock() {
           </>
         )}
         {otherEntries.map((e) => (
-          <motion.button key={e.key} className="dock-item" title={e.title} layout whileHover={{ scale: 1.25, y: -6 }} whileTap={{ scale: 1.1 }} transition={itemTransition} onClick={() => open(e)} onContextMenu={menuFor(e)}>
+          <motion.button key={e.key} className="dock-item" title={e.title} layout whileHover={{ scale: 1.25, y: -6 }} whileTap={{ scale: 1.1 }} transition={itemTransition} onClick={() => open(e)} onContextMenu={menuFor(e)} onPointerEnter={(ev) => hoverStart(e, ev.currentTarget as HTMLElement)} onPointerLeave={hoverEnd}>
             {iconOf(e)}
+            {badge(e)}
           </motion.button>
         ))}
         {system?.taskbar_hidden && (

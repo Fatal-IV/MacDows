@@ -5,12 +5,14 @@ import Notch from "./notch/DynamicIsland";
 import Dock from "./dock/Dock";
 import Settings from "./settings/Settings";
 import TrayPanel from "./tray/TrayPanel";
+import DockPreview from "./dock/DockPreview";
 
 const views: Record<string, () => React.ReactElement> = {
   notch: () => <Notch />,
   dock: () => <Dock />,
   settings: () => <Settings />,
   tray: () => <TrayPanel />,
+  preview: () => <DockPreview />,
 };
 
 const label = getCurrentWindow().label;

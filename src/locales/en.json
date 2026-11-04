@@ -81,6 +81,8 @@
   "dock.drive.removable": "Removable drive",
   "settings.winNumber": "Win + number shortcuts",
   "settings.winNumberHelp": "Win+1 to Win+9 start or focus the pinned apps of the dock in order; Win+Shift+number opens a new window. Needs a keyboard hook; turn it off if your antivirus complains.",
+  "settings.previews": "Window previews",
+  "settings.previewsHelp": "Hover a running app in the dock to see small pictures of its windows. Click one to bring it forward, or close it from there.",
   "settings.showDesktop": "Show desktop button",
   "settings.showDesktopHelp": "Adds a button at the end of the dock that jumps to the desktop. Press it again to bring your windows back.",
   "window.controls": "Window controls",

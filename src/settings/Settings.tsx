@@ -126,6 +126,9 @@ const ITEMS: Item[] = [
         <Row title={t("settings.winNumber")} description={t("settings.winNumberHelp")}>
           <Toggle label={t("settings.winNumber")} checked={s.dock.win_number} onChange={(v) => setSetting("dock", { ...s.dock, win_number: v })} />
         </Row>
+        <Row title={t("settings.previews")} description={t("settings.previewsHelp")}>
+          <Toggle label={t("settings.previews")} checked={s.dock.previews} onChange={(v) => setSetting("dock", { ...s.dock, previews: v })} />
+        </Row>
         <Row title={t("settings.showDesktop")} description={t("settings.showDesktopHelp")}>
           <Toggle label={t("settings.showDesktop")} checked={s.show_desktop_button} onChange={(v) => setSetting("show_desktop_button", v)} />
         </Row>

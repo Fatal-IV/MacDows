@@ -34,7 +34,7 @@ pub fn is_listable(style: u32, ex_style: u32, cloaked: bool, title: &str) -> boo
     style & WS_VISIBLE_BIT != 0 && ex_style & WS_EX_TOOLWINDOW_BIT == 0 && !cloaked && !title.trim().is_empty()
 }
 
-fn title_of(hwnd: HWND) -> String {
+pub fn title_of(hwnd: HWND) -> String {
     let len = unsafe { GetWindowTextLengthW(hwnd) };
     if len <= 0 {
         return String::new();
@@ -151,6 +151,21 @@ fn hicon_to_png_base64(hicon: HICON) -> Option<String> {
     }
 }
 
+/// Encodes RGBA pixels (row by row, 4 bytes each) as a base64 PNG.
+pub fn rgba_to_png_base64(w: u32, h: u32, px: &[u8]) -> Option<String> {
+    let mut out = Vec::new();
+    let mut written = false;
+    {
+        let mut enc = png::Encoder::new(&mut out, w, h);
+        enc.set_color(png::ColorType::Rgba);
+        enc.set_depth(png::BitDepth::Eight);
+        if let Ok(mut wr) = enc.write_header() {
+            written = wr.write_image_data(px).is_ok() && wr.finish().is_ok();
+        }
+    }
+    written.then(|| base64::engine::general_purpose::STANDARD.encode(&out))
+}
+
 /// Converts a bitmap to a base64 PNG (a bitmap without any alpha is made opaque). Does not delete the bitmap.
 pub fn hbitmap_to_png_base64(bitmap: windows::Win32::Graphics::Gdi::HBITMAP) -> Option<String> {
     unsafe {
@@ -174,19 +189,7 @@ pub fn hbitmap_to_png_base64(bitmap: windows::Win32::Graphics::Gdi::HBITMAP) -> 
                         p[3] = 255;
                     }
                 }
-                let mut out = Vec::new();
-                let mut written = false;
-                {
-                    let mut enc = png::Encoder::new(&mut out, w as u32, h as u32);
-                    enc.set_color(png::ColorType::Rgba);
-                    enc.set_depth(png::BitDepth::Eight);
-                    if let Ok(mut wr) = enc.write_header() {
-                        written = wr.write_image_data(&px).is_ok() && wr.finish().is_ok();
-                    }
-                }
-                if written {
-                    result = Some(base64::engine::general_purpose::STANDARD.encode(&out));
-                }
+                result = rgba_to_png_base64(w as u32, h as u32, &px);
             }
         }
         ReleaseDC(None, dc);
