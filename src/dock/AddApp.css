@@ -1,0 +1,69 @@
+html, body, #root {
+  margin: 0;
+  height: 100%;
+  background: transparent;
+  overflow: hidden;
+  user-select: none;
+  font-family: "Segoe UI Variable", "Segoe UI", system-ui, sans-serif;
+}
+
+.addapp-panel {
+  box-sizing: border-box;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px;
+  background: var(--nectar-bg-expanded, rgba(0, 0, 0, 0.92));
+  color: var(--nectar-text, #fff);
+  border: 1px solid var(--nectar-border, rgba(255, 255, 255, 0.1));
+  border-radius: 18px;
+}
+
+.addapp-search {
+  flex: none;
+  box-sizing: border-box;
+  width: 100%;
+  height: 34px;
+  padding: 0 12px;
+  border: 1px solid var(--nectar-border, rgba(255, 255, 255, 0.12));
+  border-radius: 10px;
+  background: var(--nectar-group-bg, rgba(255, 255, 255, 0.07));
+  color: inherit;
+  font: inherit;
+  font-size: 13px;
+  outline: none;
+}
+.addapp-search:focus { border-color: var(--nectar-text, #fff); }
+
+.addapp-list { flex: 1; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 2px; }
+.addapp-list::-webkit-scrollbar { width: 6px; }
+.addapp-list::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.2); border-radius: 3px; }
+
+.addapp-section { margin: 8px 6px 2px; font-size: 11px; font-weight: 600; opacity: 0.55; text-transform: uppercase; letter-spacing: 0.04em; }
+.addapp-empty { margin: 24px 0; text-align: center; font-size: 12px; opacity: 0.6; }
+
+.addapp-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  height: 36px;
+  padding: 0 8px;
+  border: 0;
+  border-radius: 9px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-size: 13px;
+  text-align: left;
+  flex: none;
+}
+.addapp-row:hover:not(:disabled) { background: var(--nectar-group-bg, rgba(255, 255, 255, 0.1)); }
+.addapp-row img { width: 24px; height: 24px; object-fit: contain; flex: none; }
+.addapp-fallback { width: 24px; text-align: center; font-weight: 600; flex: none; }
+.addapp-name { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.addapp-check { flex: none; opacity: 0.8; }
+.addapp-row.pinned { opacity: 0.45; }
+.addapp-row.busy { opacity: 0.6; }

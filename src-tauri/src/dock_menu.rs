@@ -66,9 +66,9 @@ impl MenuAction {
         ALL_ACTIONS.into_iter().find(|a| a.id() == id)
     }
 
-    /// Actions whose features exist yet; the Add app panel is built later and stays out of the menu until then.
+    /// Every action exists now; kept as a hook for features built after the menu.
     fn available(self) -> bool {
-        !matches!(self, MenuAction::AddApp)
+        true
     }
 }
 
@@ -147,7 +147,7 @@ pub fn on_menu_event(app: &AppHandle, menu_id: &str) {
             }
             MenuAction::ChangeIcon => change_icon(&app, &target),
             MenuAction::ResetIcon => reset_icon(&app, &target),
-            MenuAction::AddApp => {}
+            MenuAction::AddApp => crate::app_catalog::toggle_panel(&app),
         }
         let _ = app.emit("dock-menu-closed", ());
     });

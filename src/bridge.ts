@@ -107,6 +107,18 @@ export const closePreview = () => invoke<void>("close_preview");
 export const previewActivate = (hwnd: number) => invoke<void>("preview_activate", { hwnd });
 export const previewCloseWindow = (hwnd: number) => invoke<void>("preview_close_window", { hwnd });
 export const onPreviewUpdated = (cb: () => void): Promise<UnlistenFn> => listen("preview-updated", cb);
+export interface CatalogApp {
+  id: string;
+  name: string;
+  exe: string;
+  aumid: string;
+  icon_png_base64: string | null;
+  running: boolean;
+  pinned: boolean;
+}
+export const getCatalog = () => invoke<CatalogApp[]>("get_catalog");
+export const pinCatalogApp = (id: string) => invoke<void>("pin_catalog_app", { id });
+export const closeAddAppPanel = () => invoke<void>("close_add_app_panel");
 /** Custom icons (PNG, base64) by lowercase key: a pin's id, or for other apps their program path. */
 export const getCustomIcons = () => invoke<Record<string, string>>("get_custom_icons");
 /** Saves the order the pinned apps were dragged into (their ids, left to right). */

@@ -6,6 +6,7 @@ import Dock from "./dock/Dock";
 import Settings from "./settings/Settings";
 import TrayPanel from "./tray/TrayPanel";
 import DockPreview from "./dock/DockPreview";
+import AddApp from "./dock/AddApp";
 
 const views: Record<string, () => React.ReactElement> = {
   notch: () => <Notch />,
@@ -13,6 +14,7 @@ const views: Record<string, () => React.ReactElement> = {
   settings: () => <Settings />,
   tray: () => <TrayPanel />,
   preview: () => <DockPreview />,
+  addapp: () => <AddApp />,
 };
 
 const label = getCurrentWindow().label;

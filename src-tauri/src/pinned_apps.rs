@@ -171,8 +171,8 @@ fn pins() -> Vec<Pin> {
     sort_pins(items)
 }
 
-/// The program a `.lnk` file starts. File Explorer's shortcut has no file target (it points at a shell folder): it is `explorer.exe`.
-fn shortcut_target(path: &std::path::Path) -> Option<String> {
+/// The file a `.lnk` shortcut starts; `None` when it has no file target (it points at a shell folder or a Store app).
+pub fn lnk_target(path: &std::path::Path) -> Option<String> {
     unsafe {
         let _ = CoInitializeEx(None, COINIT_APARTMENTTHREADED);
         let link: IShellLinkW = CoCreateInstance(&ShellLink, None, CLSCTX_INPROC_SERVER).ok()?;
@@ -184,16 +184,21 @@ fn shortcut_target(path: &std::path::Path) -> Option<String> {
         let _ = link.GetPath(&mut buf, &mut data, 0);
         let len = buf.iter().position(|&c| c == 0).unwrap_or(buf.len());
         let target = String::from_utf16_lossy(&buf[..len]);
-        if !target.is_empty() {
-            return Some(target);
-        }
+        (!target.is_empty()).then_some(target)
+    }
+}
+
+/// The program a pinned `.lnk` starts. File Explorer's shortcut has no file target (it points at a shell folder): it is `explorer.exe`.
+fn shortcut_target(path: &std::path::Path) -> Option<String> {
+    if let Some(target) = lnk_target(path) {
+        return Some(target);
     }
     let root = std::env::var("SystemRoot").unwrap_or_else(|_| r"C:\Windows".into());
     Some(format!(r"{root}\explorer.exe"))
 }
 
 /// Name and icon of a Store app from the shell's Apps folder; `None` when the app is not installed any more.
-fn store_info(aumid: &str) -> Option<(String, Option<String>)> {
+pub fn store_info(aumid: &str) -> Option<(String, Option<String>)> {
     unsafe {
         let _ = CoInitializeEx(None, COINIT_APARTMENTTHREADED);
         let wide: Vec<u16> = format!("{APPS_FOLDER}{aumid}").encode_utf16().chain(std::iter::once(0)).collect();
@@ -211,7 +216,7 @@ fn store_info(aumid: &str) -> Option<(String, Option<String>)> {
     }
 }
 
-fn read_pinned() -> Vec<PinnedApp> {
+pub fn read_pinned() -> Vec<PinnedApp> {
     let dir = pinned_dir();
     pins()
         .into_iter()
