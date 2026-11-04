@@ -7,6 +7,7 @@ import { checkForUpdate, installUpdate, useAppVersion, useUpdateStatus, type Upd
 import { Button, Group, Row, Select, Toggle } from "../ui/controls";
 import WindowControls from "../ui/WindowControls";
 import Appearance from "./Appearance";
+import IslandSettings from "./IslandSettings";
 import RadialMenu from "./RadialMenu";
 import "./Settings.css";
 
@@ -91,17 +92,7 @@ const ITEMS: Item[] = [
       </Group>
     ),
   },
-  {
-    id: "island",
-    category: "island",
-    render: ({ s, t }) => (
-      <Group>
-        <Row title={t("settings.notch")} description={t("settings.visibilityHelp")}>
-          <Select label={t("settings.notch")} value={s.island.visibility} onChange={(v) => setSetting("island", { ...s.island, visibility: v })} options={VISIBILITIES.map((v) => ({ value: v, label: t(`vis.${v}`) }))} />
-        </Row>
-      </Group>
-    ),
-  },
+  { id: "island", category: "island", render: ({ s, t }) => <IslandSettings s={s} t={t} /> },
   {
     id: "dock-taskbar",
     category: "dock",

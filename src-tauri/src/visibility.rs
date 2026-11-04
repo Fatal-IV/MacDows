@@ -1,4 +1,5 @@
 use crate::fullscreen::{self, should_hide, Rect};
+use crate::island_settings::FullscreenMode;
 use crate::settings::Visibility;
 use crate::{windows_list, AppSettings};
 use std::time::Duration;
@@ -36,6 +37,12 @@ pub fn is_visible(i: Inputs) -> bool {
         Visibility::Smart => !i.overlapped || i.cursor_near,
         Visibility::Peek => i.cursor_near,
     }
+}
+
+/// The island stays out of fullscreen apps altogether when the user chose so (no edge reveal, no banner); the dock
+/// always keeps its edge reveal.
+pub fn hidden_in_fullscreen(label: &str, mode: FullscreenMode, fullscreen: Option<bool>) -> bool {
+    label == "notch" && mode == FullscreenMode::Hidden && fullscreen == Some(true)
 }
 
 /// The programs behind Windows's own Start, Search and quick settings.
@@ -144,7 +151,7 @@ pub fn start(app: AppHandle) {
                 // Show the bars for a few seconds after launch so the user sees the app started.
                 let grace = started.elapsed() < Duration::from_secs(4) && fs != Some(true);
                 let held = label == "notch" && now_ms() < NOTCH_HOLD_UNTIL_MS.load(std::sync::atomic::Ordering::Relaxed);
-                let want = grace || held || is_visible(Inputs { vis, fullscreen: fs, overlapped, cursor_near: near });
+                let want = !hidden_in_fullscreen(label, s.island.fullscreen, fs) && (grace || held || is_visible(Inputs { vis, fullscreen: fs, overlapped, cursor_near: near }));
                 if shown[i] != Some(want) {
                     unsafe {
                         let _ = ShowWindow(hwnd, if want { SW_SHOWNOACTIVATE } else { SW_HIDE });
@@ -192,6 +199,16 @@ mod tests {
     fn peek_shows_only_when_cursor_near() {
         assert!(!is_visible(inp(Peek, Some(false), false, false)));
         assert!(is_visible(inp(Peek, Some(false), false, true)));
+    }
+
+    #[test]
+    fn the_island_can_stay_out_of_fullscreen_apps_but_the_dock_cannot() {
+        use FullscreenMode::{Edge, Hidden};
+        assert!(hidden_in_fullscreen("notch", Hidden, Some(true)));
+        assert!(!hidden_in_fullscreen("dock", Hidden, Some(true)), "the dock keeps its edge reveal");
+        assert!(!hidden_in_fullscreen("notch", Edge, Some(true)), "edge is how it always worked");
+        assert!(!hidden_in_fullscreen("notch", Hidden, Some(false)), "only in fullscreen");
+        assert!(!hidden_in_fullscreen("notch", Hidden, None), "unknown counts as not fullscreen");
     }
 
     #[test]
