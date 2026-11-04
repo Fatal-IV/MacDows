@@ -1,4 +1,5 @@
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 use std::path::PathBuf;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -7,6 +8,39 @@ pub enum Visibility {
     Fixed,
     Smart,
     Peek,
+}
+
+/// A pinned app that only MacDows knows: Windows would not pin it to its own taskbar.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Default)]
+#[serde(default)]
+pub struct LocalPin {
+    pub id: String,
+    pub name: String,
+    pub exe: String,
+    /// AppUserModelID of a Store app ("" otherwise).
+    pub aumid: String,
+}
+
+/// What MacDows adds on top of the pinned apps Windows lists.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(default)]
+pub struct Dock {
+    /// Pin ids in the order the user dragged them; pins not listed go last, listed ones that are gone are ignored.
+    pub pinned_order: Vec<String>,
+    pub local_pins: Vec<LocalPin>,
+    /// Pin id (or exe path) to the file name of its custom icon in the icons folder.
+    pub custom_icons: HashMap<String, String>,
+    pub show_drives: bool,
+    /// Window previews on hover.
+    pub previews: bool,
+    /// Win+1..9 start or focus the pinned apps.
+    pub win_number: bool,
+}
+
+impl Default for Dock {
+    fn default() -> Self {
+        Dock { pinned_order: Vec::new(), local_pins: Vec::new(), custom_icons: HashMap::new(), show_drives: true, previews: true, win_number: true }
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -31,6 +65,7 @@ pub struct Settings {
     pub show_pinned_apps: bool,
     /// Pins removed in the dock that Windows would not unpin (compared ignoring case); the Windows taskbar keeps them.
     pub hidden_pinned: Vec<String>,
+    pub dock: Dock,
 }
 
 impl Default for Settings {
@@ -47,6 +82,7 @@ impl Default for Settings {
             show_desktop_button: false,
             show_pinned_apps: true,
             hidden_pinned: Vec::new(),
+            dock: Dock::default(),
         }
     }
 }
@@ -123,6 +159,7 @@ mod tests {
             show_desktop_button: true,
             show_pinned_apps: false,
             hidden_pinned: vec!["a".into()],
+            dock: Dock { win_number: false, ..Dock::default() },
         };
         let json = serde_json::to_string(&s).unwrap();
         assert_eq!(Settings::from_json(&json), s);
@@ -153,5 +190,38 @@ mod tests {
         assert_eq!(s.notch_visibility, Visibility::Peek);
         assert!(s.check_updates);
         assert_eq!(s.last_update_check, None);
+    }
+
+    #[test]
+    fn dock_defaults_match_the_spec() {
+        let d = Settings::default().dock;
+        assert!(d.pinned_order.is_empty());
+        assert!(d.local_pins.is_empty());
+        assert!(d.custom_icons.is_empty());
+        assert!(d.show_drives && d.previews && d.win_number);
+    }
+
+    #[test]
+    fn a_partial_dock_object_is_filled_with_defaults() {
+        let s = Settings::from_json(r#"{"dock":{"previews":false,"pinned_order":["a"]}}"#);
+        assert!(!s.dock.previews);
+        assert_eq!(s.dock.pinned_order, vec!["a".to_string()]);
+        assert!(s.dock.show_drives && s.dock.win_number);
+    }
+
+    #[test]
+    fn an_old_settings_file_without_dock_loads() {
+        let s = Settings::from_json(r#"{"language":"tr"}"#);
+        assert_eq!(s.language, "tr");
+        assert_eq!(s.dock, Dock::default());
+    }
+
+    #[test]
+    fn a_local_pin_round_trips() {
+        let mut s = Settings::default();
+        s.dock.local_pins.push(LocalPin { id: "local:calc".into(), name: "Calculator".into(), exe: "C:/calc.exe".into(), aumid: String::new() });
+        s.dock.custom_icons.insert("x".into(), "abc.png".into());
+        let back = Settings::from_json(&serde_json::to_string(&s).unwrap());
+        assert_eq!(back.dock, s.dock);
     }
 }

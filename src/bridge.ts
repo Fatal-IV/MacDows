@@ -2,6 +2,23 @@ import { invoke } from "@tauri-apps/api/core";
 import { listen, type UnlistenFn } from "@tauri-apps/api/event";
 
 export type Visibility = "fixed" | "smart" | "peek";
+export interface LocalPin {
+  id: string;
+  name: string;
+  exe: string;
+  aumid: string;
+}
+/** What MacDows adds on top of the pinned apps Windows lists. */
+export interface Dock {
+  pinned_order: string[];
+  local_pins: LocalPin[];
+  /** Pin id (or exe path) to the file name of its custom icon. */
+  custom_icons: Record<string, string>;
+  show_drives: boolean;
+  previews: boolean;
+  win_number: boolean;
+}
+
 export interface Settings {
   language: string;
   notch_visibility: Visibility;
@@ -15,6 +32,7 @@ export interface Settings {
   show_pinned_apps: boolean;
   /** Pins hidden in the dock because Windows would not unpin them. */
   hidden_pinned: string[];
+  dock: Dock;
 }
 
 export const getSettings = () => invoke<Settings>("get_settings");
