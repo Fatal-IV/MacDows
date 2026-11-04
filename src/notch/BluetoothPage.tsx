@@ -2,6 +2,7 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { getBluetoothDevices, quickLaunch, setBluetoothConnection, type BtDevice, type BtKind } from "../bridge";
 import { useT } from "../i18n";
+import { PairPage } from "./PairPage";
 
 const icon = (children: ReactNode) => (
   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
@@ -30,8 +31,9 @@ function Battery({ percent }: { percent: number }) {
   );
 }
 
-export function BluetoothPage({ onBack }: { onBack: () => void }) {
+export function BluetoothPage({ onBack, pairing = true, onEditing }: { onBack: () => void; pairing?: boolean; onEditing?: (on: boolean) => void }) {
   const t = useT();
+  const [adding, setAdding] = useState(false);
   const [devices, setDevices] = useState<BtDevice[] | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
   const [failed, setFailed] = useState<string | null>(null);
@@ -46,6 +48,8 @@ export function BluetoothPage({ onBack }: { onBack: () => void }) {
       clearInterval(id);
     };
   }, [busy]);
+
+  if (adding) return <PairPage onBack={() => setAdding(false)} onEditing={onEditing} />;
 
   const toggle = async (d: BtDevice) => {
     if (busy) return;
@@ -69,7 +73,7 @@ export function BluetoothPage({ onBack }: { onBack: () => void }) {
       <div className="devpage-head">
         <button className="devpage-back" onClick={onBack} aria-label={t("common.back")}>‹</button>
         <span className="shelf-title">{t("bt.title")}</span>
-        <button className="shelf-clear" onClick={() => quickLaunch("bluetooth_settings").catch(() => {})}>{t("bt.add")}</button>
+        <button className="shelf-clear" onClick={() => (pairing ? setAdding(true) : quickLaunch("bluetooth_settings").catch(() => {}))}>{t("bt.add")}</button>
       </div>
       {devices && devices.length === 0 ? (
         <div className="shelf-empty">{t("bt.empty")}</div>

@@ -227,5 +227,17 @@
   "vpn.settings": "Windows settings",
   "vpn.appOn": "A VPN app is connected",
   "vpn.credentials": "Needs a saved sign-in: set it up in Windows settings",
-  "vpn.failed": "Could not connect"
+  "vpn.failed": "Could not connect",
+  "pair.title": "Add a device",
+  "pair.searching": "Looking for devices nearby… Put the device in pairing mode.",
+  "pair.ready": "Ready to pair",
+  "pair.pairing": "Pairing…",
+  "pair.pair": "Pair",
+  "pair.pin": "PIN",
+  "pair.rejected": "Pairing was declined",
+  "pair.failed": "Could not pair",
+  "pair.ask.confirm": "Pair with this device?",
+  "pair.ask.confirm_pin": "Does the code match the device?",
+  "pair.ask.provide_pin": "Type the PIN of the device",
+  "pair.ask.none": "Pairing…"
 }

@@ -66,6 +66,8 @@ export interface QuickCfg {
   wifi_page: boolean;
   /** The VPN card and page. */
   vpn: boolean;
+  /** Pairing new Bluetooth devices inside the island. */
+  bluetooth_pairing: boolean;
 }
 export interface NotifCfg {
   enabled: boolean;
@@ -363,3 +365,18 @@ export interface VpnState {
 export const getVpnState = () => invoke<VpnState>("vpn_state");
 export const vpnConnect = (name: string) => invoke<void>("vpn_connect", { name });
 export const vpnDisconnect = (name: string) => invoke<void>("vpn_disconnect", { name });
+
+export interface BtPairingRequest {
+  id: string;
+  /** "confirm" | "confirm_pin" | "provide_pin" | "none" */
+  kind: string;
+  pin: string | null;
+}
+export const btScanStart = () => invoke<void>("bt_scan_start");
+export const btScanStop = () => invoke<void>("bt_scan_stop");
+export const btPair = (id: string) => invoke<void>("bt_pair", { id });
+export const btPairingAnswer = (accept: boolean, pin: string | null) => invoke<void>("bt_pairing_answer", { accept, pin });
+export const onBtFound = (cb: (d: { id: string; name: string; kind: string }) => void): Promise<UnlistenFn> => listen<{ id: string; name: string; kind: string }>("bt-found", (e) => cb(e.payload));
+export const onBtLost = (cb: (d: { id: string }) => void): Promise<UnlistenFn> => listen<{ id: string }>("bt-lost", (e) => cb(e.payload));
+export const onBtPaired = (cb: (d: { id: string }) => void): Promise<UnlistenFn> => listen<{ id: string }>("bt-paired", (e) => cb(e.payload));
+export const onBtPairingRequest = (cb: (r: BtPairingRequest) => void): Promise<UnlistenFn> => listen<BtPairingRequest>("bt-pairing-request", (e) => cb(e.payload));

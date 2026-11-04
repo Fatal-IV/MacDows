@@ -85,6 +85,8 @@ pub struct QuickCfg {
     pub wifi_page: bool,
     /// The VPN card and page.
     pub vpn: bool,
+    /// Pairing new Bluetooth devices inside the island (off: "Add device" opens Windows settings).
+    pub bluetooth_pairing: bool,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -168,7 +170,7 @@ impl Default for ToolsCfg {
 }
 impl Default for QuickCfg {
     fn default() -> Self {
-        QuickCfg { enabled: true, wifi: true, bluetooth: true, dnd: true, battery_saver: true, airplane: true, hotspot: true, accessibility: true, brightness: true, volume: true, lock: true, macdows_settings: true, windows_settings: true, wifi_page: true, vpn: true }
+        QuickCfg { enabled: true, wifi: true, bluetooth: true, dnd: true, battery_saver: true, airplane: true, hotspot: true, accessibility: true, brightness: true, volume: true, lock: true, macdows_settings: true, windows_settings: true, wifi_page: true, vpn: true, bluetooth_pairing: true }
     }
 }
 impl Default for NotifCfg {

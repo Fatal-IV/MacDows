@@ -50,7 +50,7 @@ const SWITCHES: { key: QuickKey; label: string }[] = [
   { key: "hotspot", label: "quick.hotspot" },
 ];
 
-export function QuickSettingsScreen({ wifiPage = true, vpn = true, onEditing }: { wifiPage?: boolean; vpn?: boolean; onEditing?: (on: boolean) => void }) {
+export function QuickSettingsScreen({ wifiPage = true, vpn = true, bluetoothPairing = true, onEditing }: { wifiPage?: boolean; vpn?: boolean; bluetoothPairing?: boolean; onEditing?: (on: boolean) => void }) {
   const t = useT();
   const [state, setState] = useState<QuickSettings | null>(null);
   const [busy, setBusy] = useState<QuickKey | null>(null);
@@ -128,7 +128,7 @@ export function QuickSettingsScreen({ wifiPage = true, vpn = true, onEditing }: 
     }
   };
 
-  if (page === "bluetooth") return <BluetoothPage onBack={() => setPage(null)} />;
+  if (page === "bluetooth") return <BluetoothPage onBack={() => setPage(null)} pairing={bluetoothPairing} onEditing={onEditing} />;
   if (page === "vpn" && vpn) return <VpnPage onBack={() => setPage(null)} />;
   if (page === "wifi" && wifiPage) return <WifiPage onBack={() => setPage(null)} onEditing={onEditing} />;
 

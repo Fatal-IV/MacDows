@@ -227,5 +227,17 @@
   "vpn.settings": "Windows ayarları",
   "vpn.appOn": "Bir VPN uygulaması bağlı",
   "vpn.credentials": "Kayıtlı oturum bilgisi gerekli: Windows ayarlarından ekle",
-  "vpn.failed": "Bağlanılamadı"
+  "vpn.failed": "Bağlanılamadı",
+  "pair.title": "Cihaz ekle",
+  "pair.searching": "Yakındaki cihazlar aranıyor… Cihazı eşleştirme moduna al.",
+  "pair.ready": "Eşleştirmeye hazır",
+  "pair.pairing": "Eşleştiriliyor…",
+  "pair.pair": "Eşleştir",
+  "pair.pin": "PIN",
+  "pair.rejected": "Eşleştirme reddedildi",
+  "pair.failed": "Eşleştirilemedi",
+  "pair.ask.confirm": "Bu cihazla eşleştirilsin mi?",
+  "pair.ask.confirm_pin": "Kod cihazdakiyle aynı mı?",
+  "pair.ask.provide_pin": "Cihazdaki PIN'i yaz",
+  "pair.ask.none": "Eşleştiriliyor…"
 }
