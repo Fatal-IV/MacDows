@@ -14,6 +14,14 @@ pub fn tray_restore_label(lang: &str) -> &'static str {
     }
 }
 
+/// Right-click item of a pinned dock icon.
+pub fn unpin_label(lang: &str) -> &'static str {
+    match lang {
+        "tr" => "Görev çubuğundan kaldır",
+        _ => "Unpin from taskbar",
+    }
+}
+
 /// The one-time explanation shown before MacDows hides the taskbar for the first time: `(title, text)`.
 pub fn taskbar_notice(lang: &str) -> (&'static str, &'static str) {
     match lang {

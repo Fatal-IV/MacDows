@@ -112,6 +112,14 @@ const ITEMS: Item[] = [
         <Row title={t("settings.dock")}>
           <Select label={t("settings.dock")} value={s.dock_visibility} onChange={(v) => setSetting("dock_visibility", v)} options={VISIBILITIES.map((v) => ({ value: v, label: t(`vis.${v}`) }))} />
         </Row>
+        <Row title={t("settings.showPinned")} description={t("settings.showPinnedHelp")}>
+          <Toggle label={t("settings.showPinned")} checked={s.show_pinned_apps} onChange={(v) => setSetting("show_pinned_apps", v)} />
+        </Row>
+        {s.hidden_pinned.length > 0 && (
+          <Row title={t("settings.hiddenPinned")} description={t("settings.hiddenPinnedHelp").replace("{n}", String(s.hidden_pinned.length))}>
+            <Button onClick={() => setSetting("hidden_pinned", [])}>{t("settings.hiddenPinnedReset")}</Button>
+          </Row>
+        )}
         <Row title={t("settings.showDesktop")} description={t("settings.showDesktopHelp")}>
           <Toggle label={t("settings.showDesktop")} checked={s.show_desktop_button} onChange={(v) => setSetting("show_desktop_button", v)} />
         </Row>

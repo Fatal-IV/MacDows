@@ -1,7 +1,8 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { motion } from "framer-motion";
 import { invoke } from "@tauri-apps/api/core";
-import { focusWindow, listWindows, onWindowsChanged, type AppWindow } from "../bridge";
+import { focusWindow, launchPinned, listPinned, pinnedMenu, listWindows, onPinnedChanged, onWindowsChanged, type AppWindow, type PinnedApp } from "../bridge";
+import { mergeDock, type DockEntry } from "./dockItems";
 import { useSettings, useT } from "../i18n";
 import { initTheme } from "../appearance/theme";
 import { shellAction, useSystemStatus, type ShellAction } from "../system";
@@ -12,6 +13,10 @@ export default function Dock() {
   const settings = useSettings();
   const system = useSystemStatus();
   const [windows, setWindows] = useState<AppWindow[]>([]);
+  const [pinned, setPinned] = useState<PinnedApp[]>([]);
+  const showPinned = settings?.show_pinned_apps ?? true;
+  // The dock reloads the pins when the list of ones hidden in the dock changes.
+  const hiddenKey = (settings?.hidden_pinned ?? []).join("|");
 
   useEffect(() => initTheme({ backdrop: true }), []);
 
@@ -24,6 +29,26 @@ export default function Dock() {
     };
   }, []);
 
+  // The apps pinned to the Windows taskbar; reloaded when Windows changes them.
+  useEffect(() => {
+    if (!showPinned) {
+      setPinned([]);
+      return;
+    }
+    const refresh = () => listPinned().then(setPinned).catch(() => setPinned([]));
+    refresh();
+    const un = onPinnedChanged(refresh);
+    return () => {
+      un.then((f) => f());
+    };
+  }, [showPinned, hiddenKey]);
+
+  const entries = mergeDock(pinned, windows);
+  const open = (e: DockEntry) => {
+    if (e.windows.length > 0) focusWindow(e.windows[0].id);
+    else if (e.pinned) launchPinned(e.pinned.id).catch(() => {});
+  };
+
   return (
     <div className="dock-stage">
       <motion.div className="dock" layout>
@@ -34,23 +59,24 @@ export default function Dock() {
             <span className="dock-sep" />
           </>
         )}
-        {windows.length === 0 && <div className="dock-empty">{t("dock.noApps")}</div>}
-        {windows.map((w) => (
+        {entries.length === 0 && <div className="dock-empty">{t("dock.noApps")}</div>}
+        {entries.map((e) => (
           <motion.button
-            key={w.id}
-            className="dock-item"
-            title={w.title}
+            key={e.key}
+            className={`dock-item${e.running ? " running" : ""}`}
+            title={e.title}
             layout
             whileHover={{ scale: 1.25, y: -6 }}
             whileTap={{ scale: 1.1 }}
             transition={{ type: "spring", stiffness: 400, damping: 22 }}
-            onClick={() => focusWindow(w.id)}
+            onClick={() => open(e)}
+            onContextMenu={(ev) => {
+              if (!e.pinned) return;
+              ev.preventDefault();
+              pinnedMenu(e.pinned.id).catch(() => {});
+            }}
           >
-            {w.icon_png_base64 ? (
-              <img src={`data:image/png;base64,${w.icon_png_base64}`} alt="" draggable={false} />
-            ) : (
-              <span className="dock-fallback">{w.title.slice(0, 1).toUpperCase()}</span>
-            )}
+            {e.icon ? <img src={`data:image/png;base64,${e.icon}`} alt="" draggable={false} /> : <span className="dock-fallback">{e.title.slice(0, 1).toUpperCase()}</span>}
           </motion.button>
         ))}
         {system?.taskbar_hidden && (

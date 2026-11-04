@@ -27,6 +27,10 @@ pub struct Settings {
     pub start_with_windows: bool,
     /// A dock button that jumps to the desktop.
     pub show_desktop_button: bool,
+    /// Show the apps pinned to the Windows taskbar in the dock.
+    pub show_pinned_apps: bool,
+    /// Pins removed in the dock that Windows would not unpin (compared ignoring case); the Windows taskbar keeps them.
+    pub hidden_pinned: Vec<String>,
 }
 
 impl Default for Settings {
@@ -41,6 +45,8 @@ impl Default for Settings {
             taskbar_notice_shown: false,
             start_with_windows: false,
             show_desktop_button: false,
+            show_pinned_apps: true,
+            hidden_pinned: Vec::new(),
         }
     }
 }
@@ -115,6 +121,8 @@ mod tests {
             taskbar_notice_shown: true,
             start_with_windows: false,
             show_desktop_button: true,
+            show_pinned_apps: false,
+            hidden_pinned: vec!["a".into()],
         };
         let json = serde_json::to_string(&s).unwrap();
         assert_eq!(Settings::from_json(&json), s);

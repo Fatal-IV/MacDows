@@ -24,6 +24,8 @@ pub struct AppWindow {
     pub id: isize,
     pub title: String,
     pub exe: String,
+    /// AppUserModelID, "" when unknown; how a pinned Store app finds its windows.
+    pub aumid: String,
     pub icon_png_base64: Option<String>,
 }
 
@@ -138,44 +140,7 @@ fn hicon_to_png_base64(hicon: HICON) -> Option<String> {
     unsafe {
         let mut ii = ICONINFO::default();
         let got = GetIconInfo(hicon, &mut ii).is_ok();
-        let mut result = None;
-        if got && !ii.hbmColor.is_invalid() {
-            let mut bmi = BITMAPINFO::default();
-            bmi.bmiHeader.biSize = std::mem::size_of::<BITMAPINFOHEADER>() as u32;
-            let dc = GetDC(None);
-            let _ = GetDIBits(dc, ii.hbmColor, 0, 0, None, &mut bmi, DIB_RGB_COLORS);
-            let (w, h) = (bmi.bmiHeader.biWidth, bmi.bmiHeader.biHeight.abs());
-            if w > 0 && h > 0 {
-                let mut px = vec![0u8; (w * h * 4) as usize];
-                bmi.bmiHeader.biHeight = -h;
-                bmi.bmiHeader.biBitCount = 32;
-                bmi.bmiHeader.biCompression = BI_RGB.0;
-                let lines = GetDIBits(dc, ii.hbmColor, 0, h as u32, Some(px.as_mut_ptr() as *mut _), &mut bmi, DIB_RGB_COLORS);
-                if lines != 0 {
-                    let no_alpha = px.chunks(4).all(|p| p[3] == 0);
-                    for p in px.chunks_mut(4) {
-                        p.swap(0, 2);
-                        if no_alpha {
-                            p[3] = 255;
-                        }
-                    }
-                    let mut out = Vec::new();
-                    let mut written = false;
-                    {
-                        let mut enc = png::Encoder::new(&mut out, w as u32, h as u32);
-                        enc.set_color(png::ColorType::Rgba);
-                        enc.set_depth(png::BitDepth::Eight);
-                        if let Ok(mut wr) = enc.write_header() {
-                            written = wr.write_image_data(&px).is_ok() && wr.finish().is_ok();
-                        }
-                    }
-                    if written {
-                        result = Some(base64::engine::general_purpose::STANDARD.encode(&out));
-                    }
-                }
-            }
-            ReleaseDC(None, dc);
-        }
+        let result = if got && !ii.hbmColor.is_invalid() { hbitmap_to_png_base64(ii.hbmColor) } else { None };
         if !ii.hbmColor.is_invalid() {
             let _ = DeleteObject(ii.hbmColor.into());
         }
@@ -183,6 +148,83 @@ fn hicon_to_png_base64(hicon: HICON) -> Option<String> {
             let _ = DeleteObject(ii.hbmMask.into());
         }
         result
+    }
+}
+
+/// Converts a bitmap to a base64 PNG (a bitmap without any alpha is made opaque). Does not delete the bitmap.
+pub fn hbitmap_to_png_base64(bitmap: windows::Win32::Graphics::Gdi::HBITMAP) -> Option<String> {
+    unsafe {
+        let mut bmi = BITMAPINFO::default();
+        bmi.bmiHeader.biSize = std::mem::size_of::<BITMAPINFOHEADER>() as u32;
+        let dc = GetDC(None);
+        let _ = GetDIBits(dc, bitmap, 0, 0, None, &mut bmi, DIB_RGB_COLORS);
+        let (w, h) = (bmi.bmiHeader.biWidth, bmi.bmiHeader.biHeight.abs());
+        let mut result = None;
+        if w > 0 && h > 0 {
+            let mut px = vec![0u8; (w * h * 4) as usize];
+            bmi.bmiHeader.biHeight = -h;
+            bmi.bmiHeader.biBitCount = 32;
+            bmi.bmiHeader.biCompression = BI_RGB.0;
+            let lines = GetDIBits(dc, bitmap, 0, h as u32, Some(px.as_mut_ptr() as *mut _), &mut bmi, DIB_RGB_COLORS);
+            if lines != 0 {
+                let no_alpha = px.chunks(4).all(|p| p[3] == 0);
+                for p in px.chunks_mut(4) {
+                    p.swap(0, 2);
+                    if no_alpha {
+                        p[3] = 255;
+                    }
+                }
+                let mut out = Vec::new();
+                let mut written = false;
+                {
+                    let mut enc = png::Encoder::new(&mut out, w as u32, h as u32);
+                    enc.set_color(png::ColorType::Rgba);
+                    enc.set_depth(png::BitDepth::Eight);
+                    if let Ok(mut wr) = enc.write_header() {
+                        written = wr.write_image_data(&px).is_ok() && wr.finish().is_ok();
+                    }
+                }
+                if written {
+                    result = Some(base64::engine::general_purpose::STANDARD.encode(&out));
+                }
+            }
+        }
+        ReleaseDC(None, dc);
+        result
+    }
+}
+
+/// The AppUserModelID of the app a window belongs to ("" when it has none): the package identity of
+/// its process for Store apps, otherwise the property the window carries. Pinned Store apps match on it.
+fn aumid_of(hwnd: HWND) -> String {
+    use windows::Win32::Storage::Packaging::Appx::GetApplicationUserModelId;
+    use windows::Win32::Foundation::PROPERTYKEY;
+    use windows::Win32::System::Com::StructuredStorage::PropVariantToStringAlloc;
+    use windows::Win32::UI::Shell::PropertiesSystem::{IPropertyStore, SHGetPropertyStoreForWindow};
+    unsafe {
+        let mut pid = 0u32;
+        GetWindowThreadProcessId(hwnd, Some(&mut pid));
+        if let Ok(process) = OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, false, pid) {
+            let mut buf = [0u16; 256];
+            let mut len = buf.len() as u32;
+            let status = GetApplicationUserModelId(process, &mut len, Some(PWSTR(buf.as_mut_ptr())));
+            let _ = CloseHandle(process);
+            if status.0 == 0 && len > 1 {
+                return String::from_utf16_lossy(&buf[..len as usize - 1]);
+            }
+        }
+        // System.AppUserModel.ID
+        let key = PROPERTYKEY { fmtid: windows::core::GUID::from_u128(0x9F4C2855_9F79_4B39_A8D0_E1D42DE1D5F3), pid: 5 };
+        let Ok(store) = SHGetPropertyStoreForWindow::<IPropertyStore>(hwnd) else { return String::new() };
+        let Ok(value) = store.GetValue(&key) else { return String::new() };
+        match PropVariantToStringAlloc(&value) {
+            Ok(text) => {
+                let out = text.to_string().unwrap_or_default();
+                windows::Win32::System::Com::CoTaskMemFree(Some(text.0 as *const _));
+                out
+            }
+            Err(_) => String::new(),
+        }
     }
 }
 
@@ -208,7 +250,8 @@ unsafe extern "system" fn collect(hwnd: HWND, lparam: LPARAM) -> BOOL {
     } else {
         icon_png_base64(&exe).or_else(|| window_icon_png_base64(hwnd))
     };
-    out.push(AppWindow { id: hwnd.0 as isize, title, exe, icon_png_base64: icon });
+    let aumid = aumid_of(hwnd);
+    out.push(AppWindow { id: hwnd.0 as isize, title, exe, aumid, icon_png_base64: icon });
     BOOL(1)
 }
 
@@ -379,7 +422,7 @@ mod tests {
     }
 
     fn win(id: isize) -> AppWindow {
-        AppWindow { id, title: format!("w{id}"), exe: String::new(), icon_png_base64: None }
+        AppWindow { id, title: format!("w{id}"), exe: String::new(), aumid: String::new(), icon_png_base64: None }
     }
 
     fn ids(v: &[AppWindow]) -> Vec<isize> {

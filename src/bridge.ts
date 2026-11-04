@@ -12,6 +12,9 @@ export interface Settings {
   taskbar_notice_shown: boolean;
   start_with_windows: boolean;
   show_desktop_button: boolean;
+  show_pinned_apps: boolean;
+  /** Pins hidden in the dock because Windows would not unpin them. */
+  hidden_pinned: string[];
 }
 
 export const getSettings = () => invoke<Settings>("get_settings");
@@ -25,11 +28,27 @@ export interface AppWindow {
   id: number;
   title: string;
   exe: string;
+  /** AppUserModelID, "" when unknown. */
+  aumid: string;
   icon_png_base64: string | null;
 }
 
 export const listWindows = () => invoke<AppWindow[]>("list_windows");
 export const focusWindow = (id: number) => invoke<void>("focus_window", { id });
+export interface PinnedApp {
+  /** The shortcut's full path; pass it to `launchPinned`. */
+  id: string;
+  name: string;
+  exe: string;
+  /** AppUserModelID of a Store app, "" otherwise. */
+  aumid: string;
+  icon_png_base64: string | null;
+}
+export const listPinned = () => invoke<PinnedApp[]>("list_pinned");
+export const launchPinned = (id: string) => invoke<void>("launch_pinned", { id });
+/** Shows the right-click menu ("Unpin from taskbar") of a pinned dock icon. */
+export const pinnedMenu = (id: string) => invoke<void>("pinned_menu", { id });
+export const onPinnedChanged = (cb: () => void): Promise<UnlistenFn> => listen("pinned-changed", cb);
 export const onWindowsChanged = (cb: () => void): Promise<UnlistenFn> => listen("windows-changed", cb);
 
 export interface MediaInfo {
