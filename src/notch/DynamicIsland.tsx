@@ -2,11 +2,13 @@
 // hover-to-expand with one damped spring, a status pill and a music pill that swap with the
 // mouse wheel or a click on the clock, auto-switching to music when playback starts, and the
 // concave "bridge" corners that join the notch to the screen edge.
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { listen } from "@tauri-apps/api/event";
 import { getMedia, mediaNext, mediaPrev, mediaSeek, mediaToggle, onMediaChanged, onNotificationNew, addToShelf, clearShelf, getShelf, removeFromShelf, type MediaInfo, type Notice, type ShelfItem } from "../bridge";
-import { useT } from "../i18n";
+import { useSettings, useT } from "../i18n";
+import { buildStops, clickTarget, restingStop, screenOn, type Stop } from "./islandLogic";
+import { defaultIsland } from "./islandDefaults";
 import { useUpdateStatus } from "../updates";
 import { useSystemStatus } from "../system";
 import { initTheme } from "../appearance/theme";
@@ -241,6 +243,14 @@ export default function Notch() {
   const t = useT();
   const update = useUpdateStatus();
   const system = useSystemStatus();
+  // The island settings (screens, navigation); the defaults until they have loaded.
+  const settings = useSettings();
+  const island = useMemo(() => settings?.island ?? defaultIsland(), [settings]);
+  const musicOn = screenOn(island, "music");
+  const statusOn = screenOn(island, "status");
+  // The drop handler lives in an effect that is set up once; it asks this instead of the settings.
+  const shelfOnRef = useRef(true);
+  shelfOnRef.current = screenOn(island, "shelf");
 
   const [hovered, setHovered] = useState(false);
   const [mode, setMode] = useState<Mode>("status");
@@ -275,6 +285,7 @@ export default function Notch() {
   useEffect(() => {
     getShelf().then(setShelf).catch(() => {});
     const un = getCurrentWebview().onDragDropEvent((e) => {
+      if (!shelfOnRef.current) return;
       const d = e.payload;
       if (d.type === "enter" || d.type === "over") setDropping(true);
       else if (d.type === "leave") setDropping(false);
@@ -354,13 +365,13 @@ export default function Notch() {
   useEffect(() => {
     const newTrack = playing && (media?.title ?? null) !== lastTrack.current;
     const justStarted = playing && !lastPlaying.current;
-    if (hasMedia && playing && mode === "status" && !hovered && (newTrack || justStarted)) {
+    if (musicOn && hasMedia && playing && mode === "status" && !hovered && (newTrack || justStarted)) {
       manualMusic.current = false;
       setMode("music");
     }
     lastTrack.current = media?.title ?? null;
     lastPlaying.current = playing;
-  }, [hasMedia, playing, media?.title, mode, hovered]);
+  }, [musicOn, hasMedia, playing, media?.title, mode, hovered]);
 
   // Music that opened itself closes again five seconds after playback stops.
   useEffect(() => {
@@ -374,10 +385,8 @@ export default function Notch() {
     if (!hasMedia && mode === "music") setMode("status");
   }, [hasMedia, mode]);
 
-  const available = useCallback((): Mode[] => (hasMedia ? (playing ? ["music", "status"] : ["status", "music"]) : ["status"]), [hasMedia, playing]);
-
   const onWheel = (e: React.WheelEvent) => {
-    if (!hovered) return;
+    if (!hovered || !island.nav.wheel) return;
     // A list that can still scroll keeps the wheel for itself.
     const list = (e.target as HTMLElement).closest(".history-list");
     if (list && list.scrollHeight > list.clientHeight) return;
@@ -393,10 +402,9 @@ export default function Notch() {
     go(direction);
   };
 
-  // The wheel walks through the screens in a row: the pill (status, music), the player, tools, quick settings,
-  // notification history and the shelf. Down goes to the next one, up to the previous one.
-  type Stop = Mode | "player" | "tools" | "quick" | "history" | "shelf";
-  const stops = (): Stop[] => [...available(), ...(hasMedia ? (["player"] as Stop[]) : []), "tools", "quick", "history", "shelf"];
+  // The wheel walks through the screens that are on, in the order of the settings: the pill (status, music), the
+  // player, tools, quick settings, notification history and the shelf. Down goes to the next one, up to the previous.
+  const stops = (): Stop[] => buildStops(island, hasMedia);
   const currentStop = (): Stop => (shelfOpen ? "shelf" : historyOpen ? "history" : quick ? "quick" : tools ? "tools" : musicOpen ? "player" : mode);
   const goTo = (stop: Stop) => {
     setOpen(false);
@@ -425,13 +433,19 @@ export default function Notch() {
     if (next !== undefined && next !== currentStop()) goTo(next);
   };
 
-  const restingMode = (): Mode => (hasMedia && playing ? "music" : "status");
+  const restingMode = (): Mode => restingStop(island, hasMedia, playing);
+
+  // Where the island was when the pointer left, for "return to the last screen".
+  const lastStop = useRef<Stop | null>(null);
 
   const onHoverStart = () => {
     setHovered(true);
-    setMode(restingMode());
+    const back = lastStop.current;
+    if (island.nav.remember && back && stops().includes(back)) goTo(back);
+    else setMode(restingMode());
   };
   const onHoverEnd = () => {
+    lastStop.current = currentStop();
     setHovered(false);
     setOpen(false);
     setTools(false);
@@ -451,15 +465,12 @@ export default function Notch() {
   };
   const openQuick = () => {
     if (open || tools || quick || shelfOpen || historyOpen) return;
+    // The click mode decides (the player while media plays, quick settings, or always the player); a target that is off
+    // gives way to the next screen that is on, and with none there is nothing to open.
+    const target = clickTarget(island, hasMedia, playing);
+    if (!target) return;
     setBanner(null);
-    // While media is playing a click opens the player; otherwise the quick settings.
-    if (hasMedia && playing) {
-      manualMusic.current = true;
-      setMode("music");
-      setOpen(true);
-    } else {
-      setQuick(true);
-    }
+    goTo(target);
   };
   useEffect(() => {
     if (!hasMedia) setOpen(false);
@@ -501,6 +512,7 @@ export default function Notch() {
         onAuxClick={(e) => {
           if (e.button !== 1) return;
           e.preventDefault();
+          if (!island.nav.middle || !screenOn(island, "tools")) return;
           toggleTools();
         }}
       >
@@ -574,7 +586,7 @@ export default function Notch() {
                 onDismiss={() => setBanner(null)}
                 onOpen={() => {
                   setBanner(null);
-                  setHistoryOpen(true);
+                  if (screenOn(island, "notifications")) setHistoryOpen(true);
                 }}
               />
             </motion.div>
@@ -619,16 +631,18 @@ export default function Notch() {
               <div className="art-large">
                 <Art url={art} />
               </div>
-              <button
-                className="corner-arrow"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  toggleTools();
-                }}
-                aria-label={t("notch.openTools")}
-              >
-                ⌃
-              </button>
+              {screenOn(island, "tools") && (
+                <button
+                  className="corner-arrow"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    toggleTools();
+                  }}
+                  aria-label={t("notch.openTools")}
+                >
+                  ⌃
+                </button>
+              )}
               <div className="meta-col">
                 <div className="track-row">
                   <div className="track-info">
@@ -676,7 +690,7 @@ export default function Notch() {
                     exit={{ rotateX: 90, opacity: 0 }}
                     transition={{ type: "spring", stiffness: 600, damping: 30 }}
                   >
-                    <Clock />
+                    {statusOn && <Clock />}
                   </motion.span>
                 </AnimatePresence>
               </button>
@@ -700,7 +714,7 @@ export default function Notch() {
                     <span className="art-overlay">{playing ? <PauseIcon /> : <PlayIcon />}</span>
                   </button>
                 ) : (
-                  hovered && battery != null && <span className="battery">{battery}%</span>
+                  statusOn && hovered && battery != null && <span className="battery">{battery}%</span>
                 )}
               </div>
             </motion.div>
