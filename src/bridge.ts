@@ -374,6 +374,7 @@ export interface BtPairingRequest {
 }
 export const btScanStart = () => invoke<void>("bt_scan_start");
 export const btScanStop = () => invoke<void>("bt_scan_stop");
+export const btUnpair = (id: string) => invoke<void>("bt_unpair", { id });
 export const btPair = (id: string) => invoke<void>("bt_pair", { id });
 export const btPairingAnswer = (accept: boolean, pin: string | null) => invoke<void>("bt_pairing_answer", { accept, pin });
 export const onBtFound = (cb: (d: { id: string; name: string; kind: string }) => void): Promise<UnlistenFn> => listen<{ id: string; name: string; kind: string }>("bt-found", (e) => cb(e.payload));

@@ -1,6 +1,6 @@
 // Paired Bluetooth devices: who is connected, battery level, connect / disconnect.
 import { useEffect, useState, type ReactNode } from "react";
-import { getBluetoothDevices, quickLaunch, setBluetoothConnection, type BtDevice, type BtKind } from "../bridge";
+import { btUnpair, getBluetoothDevices, quickLaunch, setBluetoothConnection, type BtDevice, type BtKind } from "../bridge";
 import { useT } from "../i18n";
 import { PairPage } from "./PairPage";
 
@@ -34,6 +34,8 @@ function Battery({ percent }: { percent: number }) {
 export function BluetoothPage({ onBack, pairing = true, onEditing }: { onBack: () => void; pairing?: boolean; onEditing?: (on: boolean) => void }) {
   const t = useT();
   const [adding, setAdding] = useState(false);
+  // The device whose "Remove this device?" question is open.
+  const [removing, setRemoving] = useState<string | null>(null);
   const [devices, setDevices] = useState<BtDevice[] | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
   const [failed, setFailed] = useState<string | null>(null);
@@ -50,6 +52,20 @@ export function BluetoothPage({ onBack, pairing = true, onEditing }: { onBack: (
   }, [busy]);
 
   if (adding) return <PairPage onBack={() => setAdding(false)} onEditing={onEditing} />;
+
+  const remove = async (d: BtDevice) => {
+    setRemoving(null);
+    setBusy(d.address);
+    setFailed(null);
+    try {
+      await btUnpair(d.id);
+      setDevices(await getBluetoothDevices());
+    } catch {
+      setFailed(d.address);
+    } finally {
+      setBusy(null);
+    }
+  };
 
   const toggle = async (d: BtDevice) => {
     if (busy) return;
@@ -87,9 +103,22 @@ export function BluetoothPage({ onBack, pairing = true, onEditing }: { onBack: (
                 <span className="banner-body">{failed === d.address ? t("bt.failed") : d.connected ? t("bt.connected") : t("bt.notConnected")}</span>
               </div>
               {d.battery !== null && <Battery percent={d.battery} />}
-              <button className="bt-action" disabled={busy !== null} onClick={() => toggle(d)}>
-                {busy === d.address ? t("bt.working") : d.connected ? t("bt.disconnect") : t("bt.connect")}
-              </button>
+              {removing === d.address ? (
+                <>
+                  <span className="banner-body">{t("bt.removeAsk")}</span>
+                  <button className="bt-action" onClick={() => remove(d)}>{t("net.yes")}</button>
+                  <button className="bt-action" onClick={() => setRemoving(null)}>{t("net.cancel")}</button>
+                </>
+              ) : (
+                <>
+                  <button className="bt-action" disabled={busy !== null} onClick={() => toggle(d)}>
+                    {busy === d.address ? t("bt.working") : d.connected ? t("bt.disconnect") : t("bt.connect")}
+                  </button>
+                  {pairing && (
+                    <button className="bt-action" disabled={busy !== null} onClick={() => setRemoving(d.address)}>{t("bt.remove")}</button>
+                  )}
+                </>
+              )}
             </div>
           ))}
         </div>

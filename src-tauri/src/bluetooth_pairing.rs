@@ -187,6 +187,23 @@ fn pair_blocking(app: &AppHandle, id: &str) -> Result<(), String> {
     }
 }
 
+/// `DeviceUnpairingResultStatus`: Unpaired = 0, AlreadyUnpaired = 1.
+pub fn unpair_ok(status: i32) -> bool {
+    matches!(status, 0 | 1)
+}
+
+/// Removes the pairing of a device from the paired list.
+#[tauri::command]
+pub async fn bt_unpair(id: String) -> Result<(), String> {
+    tauri::async_runtime::spawn_blocking(move || {
+        let info = DeviceInformation::CreateFromIdAsync(&HSTRING::from(id.as_str())).map_err(|e| e.message())?.get().map_err(|e| e.message())?;
+        let result = info.Pairing().and_then(|p| p.UnpairAsync()).and_then(|op| op.get()).map_err(|e| e.message())?;
+        if unpair_ok(result.Status().map_err(|e| e.message())?.0) { Ok(()) } else { Err("failed".to_string()) }
+    })
+    .await
+    .map_err(|_| "failed".to_string())?
+}
+
 /// Pairs the device the user picked. Runs on its own thread; the page also gets `bt-paired` when it is done.
 #[tauri::command]
 pub async fn bt_pair(app: AppHandle, id: String) -> Result<(), String> {
@@ -213,6 +230,15 @@ mod tests {
         assert_eq!(pairing_kind(1 | 8), "confirm_pin");
         assert_eq!(pairing_kind(1 | 2 | 4 | 8), "provide_pin");
         assert_eq!(pairing_kind(1 | 4), "provide_pin");
+    }
+
+    #[test]
+    fn unpairing_counts_unpaired_and_already_unpaired_as_done() {
+        assert!(unpair_ok(0));
+        assert!(unpair_ok(1));
+        assert!(!unpair_ok(2));
+        assert!(!unpair_ok(3));
+        assert!(!unpair_ok(4));
     }
 
     #[test]

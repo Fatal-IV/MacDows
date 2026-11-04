@@ -239,5 +239,13 @@
   "pair.ask.confirm": "Bu cihazla eşleştirilsin mi?",
   "pair.ask.confirm_pin": "Kod cihazdakiyle aynı mı?",
   "pair.ask.provide_pin": "Cihazdaki PIN'i yaz",
-  "pair.ask.none": "Eşleştiriliyor…"
+  "pair.ask.none": "Eşleştiriliyor…",
+  "bt.remove": "Kaldır",
+  "bt.removeAsk": "Bu cihaz kaldırılsın mı?",
+  "island.quick.wifiPage": "Wi-Fi sayfası",
+  "island.quick.wifiPageHelp": "Wi-Fi kutusundaki ok, katılabileceğin ağların listesini açar. Kapalıyken kutu sadece Wi-Fi'ı açıp kapatır.",
+  "island.quick.vpn": "VPN kartı",
+  "island.quick.vpnHelp": "Windows VPN bağlantılarını ve bir VPN uygulamasının açık olup olmadığını gösterir.",
+  "island.quick.pairing": "Bluetooth cihazı eşleştir",
+  "island.quick.pairingHelp": "\"Cihaz ekle\" adanın içinde eşleştirir. Kapalıyken Windows ayarlarını açar."
 }

@@ -5,6 +5,16 @@ Format: [Keep a Changelog](https://keepachangelog.com/), versioning: [SemVer](ht
 
 ## [Unreleased]
 
+### Added
+- Control Center, Wi-Fi: the arrow on the Wi-Fi tile opens a list of networks by signal strength. Connect to saved and open networks, join new ones with a password typed right in the island (also hidden networks), disconnect, and forget a network. A wrong password says so and brings the previous network back. Company (802.1X) networks open Windows settings. Settings > Dynamic Island > Quick settings > "Wi-Fi page".
+- Control Center, VPN: a VPN card shows Windows VPN connections (switch one on or off with a click, or open the list for several) and tells when a VPN app (WireGuard, OpenVPN and the like) has a tunnel up. Only stored sign-ins are used.
+- Control Center, Bluetooth: "Add a device" scans for nearby devices and pairs them inside the island (a plain yes, a code to compare, or a PIN to type), and paired devices can be removed. When the setting is off, "Add a device" opens Windows settings as before.
+- While a text field in the island has the keyboard, the island stays open even if the pointer leaves it, and closes when typing ends.
+
+### Changed
+- The dock's right-click menu for a running app now shows the window's own Windows menu (Restore, Move, Size, Minimize, Maximize, Close) under the dock's items, and "Quit app" is gone in favor of Windows's Close.
+- Pinning and unpinning in the dock no longer touch the Windows taskbar: "Keep in Dock" adds a pin only MacDows keeps (or shows a hidden one again), "Remove from Dock" hides a Windows pin in the dock only. The dock still reads the taskbar's pins to start with.
+
 ## [0.1.0] - 2026-11-04
 
 First public release. A Dynamic Island at the top of the screen and a dock at the bottom that take the place of the Windows taskbar (it comes back whenever you quit MacDows or turn the switch off). Windows's own Start, Search and quick settings stay.

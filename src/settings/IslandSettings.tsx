@@ -121,6 +121,19 @@ export default function IslandSettings({ s, t }: { s: AppSettings; t: T }) {
       <h2 className="section-title">{t("island.sectionScreens")}</h2>
       {SCREEN_IDS.map((id) => (
         <ScreenSection key={id} s={s} t={t} id={id}>
+          {id === "quick" && (
+            <>
+              <Row title={t("island.quick.wifiPage")} description={t("island.quick.wifiPageHelp")}>
+                <Toggle label={t("island.quick.wifiPage")} checked={s.island.screens.quick.wifi_page} onChange={(v) => updateIsland(s, (i) => (i.screens.quick.wifi_page = v))} />
+              </Row>
+              <Row title={t("island.quick.vpn")} description={t("island.quick.vpnHelp")}>
+                <Toggle label={t("island.quick.vpn")} checked={s.island.screens.quick.vpn} onChange={(v) => updateIsland(s, (i) => (i.screens.quick.vpn = v))} />
+              </Row>
+              <Row title={t("island.quick.pairing")} description={t("island.quick.pairingHelp")}>
+                <Toggle label={t("island.quick.pairing")} checked={s.island.screens.quick.bluetooth_pairing} onChange={(v) => updateIsland(s, (i) => (i.screens.quick.bluetooth_pairing = v))} />
+              </Row>
+            </>
+          )}
           {id === "music" && (
             <Row title={t("island.music.sources")} description={t("island.music.sourcesHelp")}>
               <Toggle label={t("island.music.sources")} checked={s.island.screens.music.sources} onChange={(v) => updateIsland(s, (i) => (i.screens.music.sources = v))} />

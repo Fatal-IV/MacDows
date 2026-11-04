@@ -239,5 +239,13 @@
   "pair.ask.confirm": "Pair with this device?",
   "pair.ask.confirm_pin": "Does the code match the device?",
   "pair.ask.provide_pin": "Type the PIN of the device",
-  "pair.ask.none": "Pairing…"
+  "pair.ask.none": "Pairing…",
+  "bt.remove": "Remove",
+  "bt.removeAsk": "Remove this device?",
+  "island.quick.wifiPage": "Wi-Fi page",
+  "island.quick.wifiPageHelp": "The arrow on the Wi-Fi tile opens a list of networks to join. Off: the tile only switches Wi-Fi.",
+  "island.quick.vpn": "VPN card",
+  "island.quick.vpnHelp": "Shows the Windows VPN connections and whether a VPN app is on.",
+  "island.quick.pairing": "Pair Bluetooth devices",
+  "island.quick.pairingHelp": "\"Add a device\" pairs inside the island. Off: it opens Windows settings."
 }
