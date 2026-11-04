@@ -6,6 +6,14 @@ Format: [Keep a Changelog](https://keepachangelog.com/), versioning: [SemVer](ht
 ## [Unreleased]
 
 ### Added
+- The dock shows the apps pinned to the Windows taskbar (programs, File Explorer and Store apps) in Windows's order, and follows Windows when something is pinned or unpinned. A running pinned app keeps its place and gets a dot; a click brings it forward or starts it. Settings > Dynamic Island and dock > "Show pinned apps".
+- Right-click menu in the dock: new window, unpin from the taskbar, pin to the taskbar, change or reset the icon, quit the app, and (on the empty dock) add app, MacDows settings and Task Manager. Windows often refuses to pin for other programs; then MacDows keeps the pin itself.
+- Drag the pinned apps to reorder them (only the order in the dock changes, not the Windows taskbar), and give any dock app a custom icon from a picture or a program.
+- Window previews: hover a running app to see its windows as small live pictures; click one to bring it forward or close it. A badge shows the window count from two windows. Can be turned off in settings.
+- Drives (local disks and USB drives) in the dock; a click opens them in File Explorer. Can be turned off in settings.
+- Win+1 to Win+9 start or focus the pinned apps in dock order, Win+Shift+number opens a new window. Windows does not let programs register these keys, so MacDows uses a keyboard hook that only looks at Win and the digits; an empty slot is left to Windows. Can be turned off in settings.
+- "Add app" in the dock's right-click menu: a searchable list of installed programs and Store apps; a click pins one.
+- The Bluetooth tile of the quick settings shows the name of the connected device ("Name +1" for more).
 - A dock button that jumps to the desktop (Win+D). Off by default; Settings > Dynamic Island and dock.
 - The app follows the light or dark theme of Windows by default, and can be set to light or dark.
 - The installer asks whether MacDows should start with Windows (a fresh install only; off by default).
@@ -23,6 +31,8 @@ Format: [Keep a Changelog](https://keepachangelog.com/), versioning: [SemVer](ht
 - Turkish interface text now addresses you formally ("siz").
 
 ### Fixed
+- The battery of a Bluetooth headset could show an old value: the same headset has several device entries in Windows and the stale one could win. The freshest reading is used now.
+- The browser's own right-click menu ("Save image as", "Inspect") no longer shows on the dock and the Dynamic Island.
 - In a fullscreen app the notch and dock no longer disappear completely; they appear when the pointer reaches the screen edge.
 - Settings could open behind other windows and be unreachable while the taskbar was replaced; it now comes to the front.
 
