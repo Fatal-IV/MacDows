@@ -10,7 +10,8 @@
     "preview": "vite preview",
     "tauri": "tauri",
     "icons": "node scripts/make-icons.mjs",
-    "test:scripts": "node --test scripts"
+    "test:scripts": "node --test scripts",
+    "test:logic": "node --test src/notch/*.test.ts"
   },
   "dependencies": {
     "@crabnebula/tauri-plugin-drag": "^2.1.0",

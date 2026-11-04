@@ -474,7 +474,7 @@ img { -webkit-user-drag: none; user-select: none; }
 .glass-icon { display: flex; flex: none; }
 .glass-text { display: flex; flex-direction: column; min-width: 0; }
 .glass-name { font-size: 12px; font-weight: 600; line-height: 1.15; }
-.glass-state { font-size: 10px; opacity: 0.7; }
+.glass-state { font-size: 10px; opacity: 0.7; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
 .glass-slider { display: flex; align-items: center; gap: 12px; padding: 9px 14px; }
 .glass-slider.off { opacity: 0.45; }

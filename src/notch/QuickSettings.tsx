@@ -1,8 +1,9 @@
 // The quick settings screen of the notch: Wi-Fi, Bluetooth, Do not disturb and Battery saver as wide glass tiles (2 x 2), brightness and volume sliders beside them.
 import { useEffect, useRef, useState, type ReactNode } from "react";
-import { getBrightness, getQuickSettings, getVolume, openMacdowsSettings, quickLaunch, setBrightness, setQuickSetting, setVolume, type QuickKey, type QuickSettings, type QuickShortcut } from "../bridge";
+import { getBluetoothDevices, getBrightness, getQuickSettings, getVolume, openMacdowsSettings, quickLaunch, setBrightness, setQuickSetting, setVolume, type BtDevice, type QuickKey, type QuickSettings, type QuickShortcut } from "../bridge";
 import { useT } from "../i18n";
 import { BluetoothPage } from "./BluetoothPage";
+import { connectedLabel } from "./bluetoothLabel";
 
 const svg = (children: ReactNode, size = 22) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
@@ -53,6 +54,21 @@ export function QuickSettingsScreen() {
   const [failed, setFailed] = useState<QuickKey | null>(null);
   // Wi-Fi and Bluetooth open a page of their own; the arrow on the tile leads there.
   const [page, setPage] = useState<QuickKey | null>(null);
+  // Who is connected, for the Bluetooth tile. Listing devices also reads batteries, so it runs less often than the tiles.
+  const [btDevices, setBtDevices] = useState<BtDevice[] | null>(null);
+  const btOn = !!state?.bluetooth.on && !!state?.bluetooth.available;
+
+  useEffect(() => {
+    if (!btOn || page === "bluetooth") return;
+    let alive = true;
+    const load = () => getBluetoothDevices().then((d) => alive && setBtDevices(d)).catch(() => {});
+    load();
+    const id = setInterval(load, 8000);
+    return () => {
+      alive = false;
+      clearInterval(id);
+    };
+  }, [btOn, page]);
 
   useEffect(() => {
     let alive = true;
@@ -94,7 +110,7 @@ export function QuickSettingsScreen() {
               <span className="glass-icon">{ICONS[key]}</span>
               <span className="glass-text">
                 <span className="glass-name">{t(label)}</span>
-                <span className="glass-state">{failed === key ? t("quick.error") : unavailable ? t("quick.unavailable") : on ? t("quick.on") : t("quick.off")}</span>
+                <span className="glass-state">{failed === key ? t("quick.error") : unavailable ? t("quick.unavailable") : on ? (key === "bluetooth" ? connectedLabel(btDevices, t("quick.on")) : t("quick.on")) : t("quick.off")}</span>
               </span>
             </button>
             {DETAIL.includes(key) && (
