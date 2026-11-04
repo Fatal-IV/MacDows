@@ -6,9 +6,10 @@
 use serde::Serialize;
 use std::ffi::c_void;
 use windows::Win32::Foundation::HANDLE;
+use windows::core::PCWSTR;
 use windows::Win32::NetworkManagement::WiFi::{
-    WlanCloseHandle, WlanEnumInterfaces, WlanFreeMemory, WlanGetAvailableNetworkList, WlanOpenHandle, WlanScan, WLAN_AVAILABLE_NETWORK_LIST,
-    WLAN_INTERFACE_INFO_LIST,
+    dot11_BSS_type_any, wlan_connection_mode_profile, WlanCloseHandle, WlanConnect, WlanDeleteProfile, WlanDisconnect, WlanEnumInterfaces, WlanFreeMemory,
+    WlanGetAvailableNetworkList, WlanOpenHandle, WlanScan, WlanSetProfile, WLAN_AVAILABLE_NETWORK_LIST, WLAN_CONNECTION_PARAMETERS, WLAN_INTERFACE_INFO_LIST,
 };
 
 #[derive(Serialize, Clone, Debug, PartialEq)]
@@ -200,6 +201,150 @@ fn request_scan() {
     }
 }
 
+/// Fixed error keys the page maps to texts: "not_found", "failed", "timeout" (plus "needs_password" and "enterprise" for networks that cannot be joined this way).
+pub fn error_key(code: u32) -> &'static str {
+    match code {
+        // ERROR_NOT_FOUND, ERROR_INVALID_PARAMETER (no such profile)
+        1168 | 87 => "not_found",
+        // ERROR_TIMEOUT, WAIT_TIMEOUT
+        1460 | 258 => "timeout",
+        _ => "failed",
+    }
+}
+
+fn wide(s: &str) -> Vec<u16> {
+    s.encode_utf16().chain(std::iter::once(0)).collect()
+}
+
+/// Where a visible network lives: its adapter, whether a profile exists (and its name) and how it is secured.
+struct Found {
+    guid: windows::core::GUID,
+    profile: Option<String>,
+    secured: bool,
+    enterprise: bool,
+}
+
+fn find_network(client: &Client, ssid: &str) -> Option<Found> {
+    for guid in interfaces(client) {
+        let mut list: *mut WLAN_AVAILABLE_NETWORK_LIST = std::ptr::null_mut();
+        if unsafe { WlanGetAvailableNetworkList(client.0, &guid, 0, None, &mut list) } != 0 || list.is_null() {
+            continue;
+        }
+        let mut found = None;
+        unsafe {
+            let count = (*list).dwNumberOfItems as usize;
+            let first = (*list).Network.as_ptr();
+            for i in 0..count {
+                let n = &*first.add(i);
+                let len = (n.dot11Ssid.uSSIDLength as usize).min(32);
+                if String::from_utf8_lossy(&n.dot11Ssid.ucSSID[..len]) != ssid {
+                    continue;
+                }
+                let name_len = n.strProfileName.iter().position(|&c| c == 0).unwrap_or(n.strProfileName.len());
+                let profile = (n.dwFlags & 0x2 != 0).then(|| String::from_utf16_lossy(&n.strProfileName[..name_len]));
+                let secured = n.bSecurityEnabled.as_bool();
+                found = Some(Found { guid, profile, secured, enterprise: secured && is_enterprise(n.dot11DefaultAuthAlgorithm.0) });
+                break;
+            }
+            WlanFreeMemory(list as *const c_void);
+        }
+        if found.is_some() {
+            return found;
+        }
+    }
+    None
+}
+
+fn is_connected_to(ssid: &str) -> bool {
+    current_state().networks.iter().any(|n| n.connected && n.ssid == ssid)
+}
+
+/// Asks Windows to connect with the named profile and waits up to 10 s for the connected state.
+fn connect_profile(client: &Client, guid: &windows::core::GUID, profile: &str, ssid: &str) -> Result<(), String> {
+    let name = wide(profile);
+    let params = WLAN_CONNECTION_PARAMETERS {
+        wlanConnectionMode: wlan_connection_mode_profile,
+        strProfile: PCWSTR(name.as_ptr()),
+        pDot11Ssid: std::ptr::null_mut(),
+        pDesiredBssidList: std::ptr::null_mut(),
+        dot11BssType: dot11_BSS_type_any,
+        dwFlags: 0,
+    };
+    let err = unsafe { WlanConnect(client.0, guid, &params, None) };
+    if err != 0 {
+        return Err(error_key(err).to_string());
+    }
+    for _ in 0..20 {
+        std::thread::sleep(std::time::Duration::from_millis(500));
+        if is_connected_to(ssid) {
+            return Ok(());
+        }
+    }
+    Err("timeout".to_string())
+}
+
+fn connect_blocking(ssid: &str) -> Result<(), String> {
+    let client = open().ok_or("failed")?;
+    let found = find_network(&client, ssid).ok_or("not_found")?;
+    if found.enterprise {
+        return Err("enterprise".into());
+    }
+    let profile = match found.profile {
+        Some(p) => p,
+        None if !found.secured => {
+            // An open network without a profile: save one, then connect with it.
+            let xml = wide(&profile_xml(ssid, Auth::Open, None, false));
+            let mut reason = 0u32;
+            let err = unsafe { WlanSetProfile(client.0, &found.guid, 0, PCWSTR(xml.as_ptr()), PCWSTR::null(), true, None, &mut reason) };
+            if err != 0 {
+                return Err(error_key(err).to_string());
+            }
+            ssid.to_string()
+        }
+        None => return Err("needs_password".into()),
+    };
+    connect_profile(&client, &found.guid, &profile, ssid)
+}
+
+fn disconnect_blocking() {
+    let Some(client) = open() else { return };
+    for g in interfaces(&client) {
+        unsafe { WlanDisconnect(client.0, &g, None) };
+    }
+}
+
+fn forget_blocking(ssid: &str) -> Result<(), String> {
+    let client = open().ok_or("failed")?;
+    let found = find_network(&client, ssid).ok_or("not_found")?;
+    let profile = found.profile.ok_or("not_found")?;
+    if is_connected_to(ssid) {
+        unsafe { WlanDisconnect(client.0, &found.guid, None) };
+    }
+    let name = wide(&profile);
+    let err = unsafe { WlanDeleteProfile(client.0, &found.guid, PCWSTR(name.as_ptr()), None) };
+    if err != 0 {
+        return Err(error_key(err).to_string());
+    }
+    Ok(())
+}
+
+/// Connects to a saved or open network the user clicked.
+#[tauri::command]
+pub async fn wifi_connect(ssid: String) -> Result<(), String> {
+    tauri::async_runtime::spawn_blocking(move || connect_blocking(&ssid)).await.map_err(|_| "failed".to_string())?
+}
+
+#[tauri::command]
+pub async fn wifi_disconnect() {
+    let _ = tauri::async_runtime::spawn_blocking(disconnect_blocking).await;
+}
+
+/// Removes the saved profile of a network (disconnecting first when it is the current one).
+#[tauri::command]
+pub async fn wifi_forget(ssid: String) -> Result<(), String> {
+    tauri::async_runtime::spawn_blocking(move || forget_blocking(&ssid)).await.map_err(|_| "failed".to_string())?
+}
+
 #[tauri::command]
 pub async fn wifi_state() -> WifiState {
     tauri::async_runtime::spawn_blocking(current_state).await.unwrap_or_default()
@@ -252,6 +397,15 @@ mod tests {
         assert!(profile_xml("TestNet", Auth::Open, None, true).contains("<nonBroadcast>true</nonBroadcast>"));
         assert!(profile_xml("TestNet", Auth::Wpa3Personal, Some("secret123"), false).contains("WPA3SAE"));
         assert!(profile_xml("A&B <1>", Auth::Open, None, false).contains("A&amp;B &lt;1&gt;"));
+    }
+
+    #[test]
+    fn reason_codes_map_to_error_keys() {
+        assert_eq!(error_key(1168), "not_found");
+        assert_eq!(error_key(87), "not_found");
+        assert_eq!(error_key(1460), "timeout");
+        assert_eq!(error_key(5), "failed");
+        assert_eq!(error_key(99999), "failed");
     }
 
     #[test]

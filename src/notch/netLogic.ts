@@ -13,3 +13,10 @@ export function securityLabel(n: WifiNetwork, t: (key: string) => string): strin
   if (!n.secured) return t("net.open");
   return n.enterprise ? t("net.enterprise") : t("net.secured");
 }
+
+const ERROR_KEYS = ["not_found", "failed", "timeout", "needs_password", "enterprise", "wrong_password"];
+
+/** The locale key for a backend error key; unknown ones read as a plain failure. */
+export function errorText(key: string, t: (key: string) => string): string {
+  return t(`net.err.${ERROR_KEYS.includes(key) ? key : "failed"}`);
+}

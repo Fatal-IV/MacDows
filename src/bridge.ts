@@ -62,6 +62,8 @@ export interface QuickCfg {
   lock: boolean;
   macdows_settings: boolean;
   windows_settings: boolean;
+  /** The Wi-Fi page behind the Wi-Fi tile's arrow. */
+  wifi_page: boolean;
 }
 export interface NotifCfg {
   enabled: boolean;
@@ -342,3 +344,6 @@ export interface WifiState {
 }
 export const getWifiState = () => invoke<WifiState>("wifi_state");
 export const wifiScan = () => invoke<void>("wifi_scan");
+export const wifiConnect = (ssid: string) => invoke<void>("wifi_connect", { ssid });
+export const wifiDisconnect = () => invoke<void>("wifi_disconnect");
+export const wifiForget = (ssid: string) => invoke<void>("wifi_forget", { ssid });

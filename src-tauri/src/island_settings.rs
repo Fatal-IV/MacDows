@@ -81,6 +81,8 @@ pub struct QuickCfg {
     pub lock: bool,
     pub macdows_settings: bool,
     pub windows_settings: bool,
+    /// The Wi-Fi page behind the Wi-Fi tile's arrow.
+    pub wifi_page: bool,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -164,7 +166,7 @@ impl Default for ToolsCfg {
 }
 impl Default for QuickCfg {
     fn default() -> Self {
-        QuickCfg { enabled: true, wifi: true, bluetooth: true, dnd: true, battery_saver: true, airplane: true, hotspot: true, accessibility: true, brightness: true, volume: true, lock: true, macdows_settings: true, windows_settings: true }
+        QuickCfg { enabled: true, wifi: true, bluetooth: true, dnd: true, battery_saver: true, airplane: true, hotspot: true, accessibility: true, brightness: true, volume: true, lock: true, macdows_settings: true, windows_settings: true, wifi_page: true }
     }
 }
 impl Default for NotifCfg {

@@ -3,6 +3,7 @@ import { useEffect, useRef, useState, type ReactNode } from "react";
 import { getBluetoothDevices, getBrightness, getQuickSettings, getVolume, openMacdowsSettings, quickLaunch, setBrightness, setQuickSetting, setVolume, type BtDevice, type QuickKey, type QuickSettings, type QuickShortcut } from "../bridge";
 import { useT } from "../i18n";
 import { BluetoothPage } from "./BluetoothPage";
+import { WifiPage } from "./WifiPage";
 import { connectedLabel } from "./bluetoothLabel";
 
 const svg = (children: ReactNode, size = 22) => (
@@ -47,7 +48,7 @@ const SWITCHES: { key: QuickKey; label: string }[] = [
   { key: "hotspot", label: "quick.hotspot" },
 ];
 
-export function QuickSettingsScreen() {
+export function QuickSettingsScreen({ wifiPage = true }: { wifiPage?: boolean }) {
   const t = useT();
   const [state, setState] = useState<QuickSettings | null>(null);
   const [busy, setBusy] = useState<QuickKey | null>(null);
@@ -96,6 +97,7 @@ export function QuickSettingsScreen() {
   };
 
   if (page === "bluetooth") return <BluetoothPage onBack={() => setPage(null)} />;
+  if (page === "wifi" && wifiPage) return <WifiPage onBack={() => setPage(null)} />;
 
   return (
     <div className="quick">
@@ -113,7 +115,7 @@ export function QuickSettingsScreen() {
                 <span className="glass-state">{failed === key ? t("quick.error") : unavailable ? t("quick.unavailable") : on ? (key === "bluetooth" ? connectedLabel(btDevices, t("quick.on")) : t("quick.on")) : t("quick.off")}</span>
               </span>
             </button>
-            {DETAIL.includes(key) && (
+            {(DETAIL.includes(key) || (key === "wifi" && wifiPage)) && (
               <button className="tile-more" aria-label={t("common.more")} title={t("common.more")} onClick={() => setPage(key)}>
                 ›
               </button>
