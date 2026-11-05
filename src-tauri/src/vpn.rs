@@ -37,7 +37,7 @@ pub fn state_of(ras_state: u32) -> &'static str {
 /// Windows's own IPv6 transition tunnels (Teredo, ISATAP, 6to4) have the same interface type and are not VPNs.
 pub fn is_tunnel_adapter(if_type: u32, description: &str) -> bool {
     let d = description.to_lowercase();
-    if ["teredo", "isatap", "6to4", "tunneling pseudo"].iter().any(|w| d.contains(w)) {
+    if ["teredo", "isatap", "6to4", "tunneling pseudo", "iphttps"].iter().any(|w| d.contains(w)) {
         return false;
     }
     if if_type == 131 {
@@ -101,11 +101,12 @@ fn connection_state(handle: HRASCONN) -> &'static str {
 
 fn app_vpn_active() -> bool {
     let mut size = 15_000u32;
-    let mut buf: Vec<u8> = vec![0; size as usize];
+    // u64 elements: the adapter structs need 8-byte alignment, which a Vec<u8> does not promise.
+    let mut buf: Vec<u64> = vec![0; (size as usize).div_ceil(8)];
     let flags = GET_ADAPTERS_ADDRESSES_FLAGS(0x0001 | 0x0002 | 0x0004 | 0x0008 | 0x0010);
     let mut err = unsafe { GetAdaptersAddresses(0, flags, None, Some(buf.as_mut_ptr() as *mut IP_ADAPTER_ADDRESSES_LH), &mut size) };
     if err == 111 {
-        buf = vec![0; size as usize];
+        buf = vec![0; (size as usize).div_ceil(8)];
         err = unsafe { GetAdaptersAddresses(0, flags, None, Some(buf.as_mut_ptr() as *mut IP_ADAPTER_ADDRESSES_LH), &mut size) };
     }
     if err != 0 {
@@ -135,6 +136,12 @@ pub fn current_state() -> VpnState {
     VpnState { entries, app_vpn_active: app_vpn_active() }
 }
 
+/// Why a dial failed. 691 is access denied (wrong stored credentials); a profile with no stored password that
+/// fails to dial needs one typed, which this panel does not offer. Anything else is a plain failure.
+pub fn dial_error_key(err: u32, has_password: bool) -> &'static str {
+    if err == 691 || !has_password { "credentials" } else { "failed" }
+}
+
 fn connect_blocking(name: &str) -> Result<(), String> {
     let mut params = RASDIALPARAMSW { dwSize: std::mem::size_of::<RASDIALPARAMSW>() as u32, ..Default::default() };
     let entry = wide(name);
@@ -145,9 +152,8 @@ fn connect_blocking(name: &str) -> Result<(), String> {
     if err != 0 {
         return Err("not_found".into());
     }
-    if !has_password.as_bool() {
-        return Err("credentials".into());
-    }
+    // No pre-check for a stored password: certificate (IKEv2) and EAP profiles have none and still dial.
+    let has_password = has_password.as_bool();
     let mut handle = HRASCONN::default();
     // No notifier: the call returns once the connection is up or has failed.
     let err = unsafe { RasDialW(None, PCWSTR::null(), &params, 0, None, &mut handle) };
@@ -155,8 +161,7 @@ fn connect_blocking(name: &str) -> Result<(), String> {
         if !handle.0.is_null() {
             unsafe { RasHangUpW(handle) };
         }
-        // 691 = access denied (wrong stored credentials), 651/-others = failed.
-        return Err(if err == 691 { "credentials" } else { "failed" }.into());
+        return Err(dial_error_key(err, has_password).into());
     }
     Ok(())
 }
@@ -215,6 +220,18 @@ mod tests {
         assert!(is_tunnel_adapter(6, "NordLynx Tunnel"));
         assert!(!is_tunnel_adapter(6, "Realtek PCIe GbE Family Controller"));
         assert!(!is_tunnel_adapter(71, "Intel(R) Wi-Fi 6 AX201 160MHz"));
+    }
+
+    #[test]
+    fn the_ip_https_adapter_is_not_a_vpn() {
+        assert!(!is_tunnel_adapter(131, "iphttpsinterface"));
+    }
+
+    #[test]
+    fn a_failed_dial_asks_for_credentials_only_when_that_can_be_the_cause() {
+        assert_eq!(dial_error_key(691, true), "credentials");
+        assert_eq!(dial_error_key(651, false), "credentials");
+        assert_eq!(dial_error_key(651, true), "failed");
     }
 
     #[test]
