@@ -5,6 +5,9 @@ Format: [Keep a Changelog](https://keepachangelog.com/), versioning: [SemVer](ht
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-11-05
+
+
 ### Added
 - Control Center, Wi-Fi: the arrow on the Wi-Fi tile opens a list of networks by signal strength. Connect to saved and open networks, join new ones with a password typed right in the island (also hidden networks), disconnect, and forget a network. A wrong password says so and brings the previous network back. Company (802.1X) networks open Windows settings. Settings > Dynamic Island > Quick settings > "Wi-Fi page".
 - Control Center, VPN: a VPN card shows Windows VPN connections (switch one on or off with a click, or open the list for several) and tells when a VPN app (WireGuard, OpenVPN and the like) has a tunnel up. Only stored sign-ins are used.
@@ -26,6 +29,12 @@ Format: [Keep a Changelog](https://keepachangelog.com/), versioning: [SemVer](ht
 - Typing in an island text field no longer dismisses a notification banner that is still showing when the field closes.
 - Shutting down Windows while MacDows runs no longer shows two error windows (taskkill failing with 0xc0000142) whose dismissal cancelled the shutdown: MacDows skips restarting Start and Search while Windows is shutting down or logging off.
 - Notifications cleared from the island's history stay cleared: they used to come back at the next refresh or restart because Windows still listed them.
+
+### Known limitations
+- The new Wi-Fi, VPN and Bluetooth pages were tried on one PC only; WPA3-only networks, certificate and EAP VPN profiles and several Bluetooth pairing kinds have unit tests but were not tried against real hardware.
+- Primary monitor only.
+- The hidden-icons button of the dock may not open its panel on some systems (it needs a Windows Explorer restart).
+- The installer is not signed with a code-signing certificate, so Windows SmartScreen may show a warning.
 
 ## [0.1.0] - 2026-11-04
 
