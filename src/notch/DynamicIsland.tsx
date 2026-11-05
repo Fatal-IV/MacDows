@@ -239,6 +239,16 @@ function Art({ url, className }: { url: string | null; className?: string }) {
 }
 
 // UI scale 0.8-1.2, kept small enough that the notch still fits its window.
+/** Two small neon green bars that blink now and then; shown while the island is set to stay on screen. */
+function Eyes() {
+  return (
+    <div className="eyes" aria-hidden>
+      <i />
+      <i />
+    </div>
+  );
+}
+
 const readScale = () => Math.min(1.2, Math.max(0.8, parseFloat(localStorage.getItem("nectar-scale") || "1") || 1));
 
 export default function Notch() {
@@ -764,7 +774,10 @@ export default function Notch() {
                     <span className="art-overlay">{playing ? <PauseIcon /> : <PlayIcon />}</span>
                   </button>
                 ) : (
-                  showWidgets && <StatusWidgets ids={placed.right} cfg={statusCfg} stats={stats} weather={weather} status={system} />
+                  <>
+                    {showWidgets && <StatusWidgets ids={placed.right} cfg={statusCfg} stats={stats} weather={weather} status={system} />}
+                    {island.visibility === "fixed" && !showWidgets && <Eyes />}
+                  </>
                 )}
               </div>
             </motion.div>

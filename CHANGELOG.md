@@ -5,6 +5,9 @@ Format: [Keep a Changelog](https://keepachangelog.com/), versioning: [SemVer](ht
 
 ## [Unreleased]
 
+### Added
+- While the island is set to stay on screen (Settings > Dynamic Island > visibility "Fixed"), two small neon green bars sit on the right of the clock and blink now and then. They give way to the status widgets while the pointer is over the island, and stay still when Windows asks for reduced motion.
+
 ## [0.2.0] - 2026-11-05
 
 
