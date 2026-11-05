@@ -311,12 +311,12 @@ fn place_dock(app: &tauri::AppHandle) {
 #[tauri::command]
 fn island_focus(app: tauri::AppHandle, on: bool) {
     if on {
-        visibility::hold_notch(10 * 60 * 1000);
+        visibility::hold_notch_for_typing(10 * 60 * 1000);
         if let Some(win) = app.get_webview_window("notch") {
             let _ = win.set_focus();
         }
     } else {
-        visibility::hold_notch(0);
+        visibility::hold_notch_for_typing(0);
     }
 }
 

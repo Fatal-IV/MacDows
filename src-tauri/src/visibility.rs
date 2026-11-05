@@ -54,9 +54,22 @@ static LAST_SHELL_MENU_MS: std::sync::atomic::AtomicU64 = std::sync::atomic::Ato
 
 static NOTCH_HOLD_UNTIL_MS: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
 
+/// Separate from the banner hold: ending a typing session must not cancel a banner that is still showing.
+static NOTCH_FOCUS_UNTIL_MS: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+
 /// Keeps the notch on screen for `ms` milliseconds even when it would be hidden (a notification banner is showing).
 pub fn hold_notch(ms: u64) {
     NOTCH_HOLD_UNTIL_MS.store(now_ms() + ms, std::sync::atomic::Ordering::Relaxed);
+}
+
+/// Keeps the notch on screen while a text field in it is being typed in (`ms` is the longest it may last; 0 releases).
+pub fn hold_notch_for_typing(ms: u64) {
+    NOTCH_FOCUS_UNTIL_MS.store(if ms == 0 { 0 } else { now_ms() + ms }, std::sync::atomic::Ordering::Relaxed);
+}
+
+/// Whether either hold is still running at `now`.
+pub fn notch_held(now: u64, banner_until: u64, typing_until: u64) -> bool {
+    now < banner_until || now < typing_until
 }
 
 fn now_ms() -> u64 {
@@ -150,7 +163,8 @@ pub fn start(app: AppHandle) {
                 let overlapped = others.iter().any(|o| rect_intersects(*o, probe));
                 // Show the bars for a few seconds after launch so the user sees the app started.
                 let grace = started.elapsed() < Duration::from_secs(4) && fs != Some(true);
-                let held = label == "notch" && now_ms() < NOTCH_HOLD_UNTIL_MS.load(std::sync::atomic::Ordering::Relaxed);
+                let held = label == "notch"
+                    && notch_held(now_ms(), NOTCH_HOLD_UNTIL_MS.load(std::sync::atomic::Ordering::Relaxed), NOTCH_FOCUS_UNTIL_MS.load(std::sync::atomic::Ordering::Relaxed));
                 let want = !hidden_in_fullscreen(label, s.island.fullscreen, fs) && (grace || held || is_visible(Inputs { vis, fullscreen: fs, overlapped, cursor_near: near }));
                 if shown[i] != Some(want) {
                     unsafe {
@@ -166,6 +180,14 @@ pub fn start(app: AppHandle) {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn ending_typing_does_not_cancel_a_banner_hold() {
+        assert!(notch_held(100, 5_000, 0), "banner hold alone");
+        assert!(notch_held(100, 0, 5_000), "typing hold alone");
+        assert!(notch_held(100, 5_000, 0) && !notch_held(10_000, 5_000, 0));
+        assert!(!notch_held(100, 0, 0));
+    }
     use crate::fullscreen::Rect;
     use crate::settings::Visibility::{Fixed, Peek, Smart};
 

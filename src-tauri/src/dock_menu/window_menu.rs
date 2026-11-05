@@ -98,7 +98,16 @@ pub fn popup(owner: HWND, target: HWND, labels: &[String]) -> u32 {
     }
 }
 
+/// Closing needs no focus; Move, Size, Minimize and the rest act on the window in front (Move and Size start a
+/// keyboard-driven loop that goes nowhere for a background window).
+pub fn needs_focus(id: u32) -> bool {
+    id != 0xF060
+}
+
 pub fn send_system_command(hwnd: HWND, id: u32) {
+    if needs_focus(id) {
+        crate::windows_list::focus_window(hwnd.0 as isize);
+    }
     unsafe {
         let _ = PostMessageW(Some(hwnd), WM_SYSCOMMAND, WPARAM(id as usize), LPARAM(0));
     }
@@ -107,6 +116,14 @@ pub fn send_system_command(hwnd: HWND, id: u32) {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn every_command_but_close_brings_the_window_forward_first() {
+        assert!(!needs_focus(0xF060));
+        assert!(needs_focus(0xF010)); // Move
+        assert!(needs_focus(0xF000)); // Size
+        assert!(needs_focus(0xF020)); // Minimize
+    }
 
     #[test]
     fn ids_map_to_dock_items_system_commands_or_nothing() {
