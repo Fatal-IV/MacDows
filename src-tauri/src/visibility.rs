@@ -167,7 +167,8 @@ pub fn start(app: AppHandle) {
                 let Ok(hwnd) = win.hwnd() else { continue };
                 let hwnd = HWND(hwnd.0);
                 let Some(r) = rect_of(hwnd) else { continue };
-                let zone = if shown[i].unwrap_or(true) { r } else { reveal_band(label, r) };
+                // Shown: the bar's own visible shape when the front end has reported it, not its whole (mostly empty) window.
+                let zone = if shown[i].unwrap_or(true) { crate::hit_region::screen_rect(label).unwrap_or(r) } else { reveal_band(label, r) };
                 let near = cur.map(|(x, y)| point_in_rect(x, y, zone)).unwrap_or(false) || (label == "dock" && (shell_menu_open || crate::preview::is_open()));
                 let probe = overlap_probe(label, r);
                 let overlapped = others.iter().any(|o| rect_intersects(*o, probe));

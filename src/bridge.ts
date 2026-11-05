@@ -404,3 +404,9 @@ export const getSystemStats = () => invoke<SystemStats>("get_system_stats");
 
 /** True on the very first start after an install (no settings file existed): the island and the dock make a longer entrance. */
 export const isFirstRun = () => invoke<boolean>("is_first_run");
+
+/** Cuts a bar's window ("notch" or "dock") down to a rounded rectangle, in physical pixels relative to the window. */
+export const setHitRegion = (label: "notch" | "dock", x: number, y: number, w: number, h: number, radius: number) =>
+  invoke<void>("set_hit_region", { label, x, y, w, h, radius });
+/** Gives a bar its whole window back. */
+export const clearHitRegion = (label: "notch" | "dock") => invoke<void>("clear_hit_region", { label });

@@ -13,6 +13,8 @@ import { defaultIsland } from "./islandDefaults";
 import { useUpdateStatus } from "../updates";
 import { useSystemStatus } from "../system";
 import { StatusWidgets, useStats, useWeather } from "./StatusWidgets";
+import { islandBox } from "../hitBox";
+import { useHitRegion } from "../hitRegion";
 import { needsStats, visibleWidgets, widgetsWidth } from "./widgetLogic";
 import { initTheme } from "../appearance/theme";
 import { SurfaceShape } from "../appearance/SurfaceShape";
@@ -565,6 +567,9 @@ export default function Notch() {
 
   const width = !ready ? 34 : tools || quick || shelfOpen || historyOpen ? 520 : dropping ? 380 : bannerOpen ? 380 : musicOpen ? 340 : isMusic ? 200 : hovered ? 170 + widgetsW : greeting ? 230 : hasMedia ? 170 : 140;
   const height = !ready ? 34 : tools ? 280 : quick ? 312 : shelfOpen || historyOpen ? 312 : dropping ? 110 : bannerOpen ? 76 : musicOpen ? (media!.duration_ms > 0 ? 126 : 108) + (showSources ? 36 : 0) : 36;
+
+  // Only the island's own shape takes clicks; the rest of its (much larger) transparent window belongs to the programs below.
+  useHitRegion("notch", islandBox(window.innerWidth, width * scale, height * scale, 12), 12);
 
   return (
     <div className="screen" style={{ zoom: scale }}>

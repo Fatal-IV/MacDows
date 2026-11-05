@@ -6,6 +6,8 @@ import { mergeDock, type DockEntry } from "./dockItems";
 import { droppedOutside, sameOrder } from "./dockDrag";
 import { useSettings, useT } from "../i18n";
 import { initTheme } from "../appearance/theme";
+import { dockBox, type Box } from "../hitBox";
+import { useHitRegion } from "../hitRegion";
 import { shellAction, useSystemStatus, type ShellAction } from "../system";
 import "./Dock.css";
 
@@ -18,6 +20,8 @@ export default function Dock() {
   useEffect(() => {
     isFirstRun().then((first) => setIntro(first ? "first" : "normal")).catch(() => setIntro("normal"));
   }, []);
+  // The dock's own shape in its window (layout position, so the entrance transform does not matter): only that takes clicks.
+  const [dockShape, setDockShape] = useState<Box | null>(null);
   const [windows, setWindows] = useState<AppWindow[]>([]);
   const [pinned, setPinned] = useState<PinnedApp[]>([]);
   const showPinned = settings?.show_pinned_apps ?? true;
@@ -87,6 +91,21 @@ export default function Dock() {
 
   // Dragging the pinned apps: `order` holds the ids while one is being moved (null = the order Windows and the saved order give).
   const dockRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const el = dockRef.current;
+    if (!el) return;
+    const measure = () => setDockShape({ x: el.offsetLeft, y: el.offsetTop, w: el.offsetWidth, h: el.offsetHeight });
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(el);
+    window.addEventListener("resize", measure);
+    return () => {
+      observer.disconnect();
+      window.removeEventListener("resize", measure);
+    };
+  }, []);
+  // Side margins hold the flares that blend the dock into the screen edge; room above holds the hover pop-up of the icons.
+  useHitRegion("dock", dockShape ? dockBox(dockShape, window.innerHeight, 20, 44) : null, 0);
   const [order, setOrder] = useState<string[] | null>(null);
   const orderRef = useRef<string[] | null>(null);
   const dragFrom = useRef<string[] | null>(null);

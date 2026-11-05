@@ -11,6 +11,7 @@ Format: [Keep a Changelog](https://keepachangelog.com/), versioning: [SemVer](ht
 
 ### Changed
 - The installer says "Updating…" (and "Update", "MacDows is updated.") instead of "Installing…" when it replaces an older version.
+- The island and the dock no longer block clicks around them: their transparent windows (580x340 and 900x120) are cut down to the shape that is actually drawn, so programs underneath (browser tabs, title bars) keep working right next to a small island. In Peek and Smart mode the pointer only counts as near the island inside that shape.
 
 ### Türkçe
 ### Eklendi
@@ -19,6 +20,7 @@ Format: [Keep a Changelog](https://keepachangelog.com/), versioning: [SemVer](ht
 
 ### Değişti
 - Kurucu, eski bir sürümün yerine geçerken "Kuruluyor…" yerine "Güncelleniyor…" (ve "Güncelleyin", "MacDows güncellendi.") yazar.
+- Ada ve dock artık çevrelerindeki tıklamaları engellemez: şeffaf pencereleri (580x340 ve 900x120) gerçekten çizilen şekle kırpılır, böylece küçük adanın hemen yanındaki programlar (tarayıcı sekmeleri, başlık çubukları) çalışmaya devam eder. Peek ve Akıllı modda imleç, adaya yalnızca bu şeklin içindeyken yakın sayılır.
 
 ## [0.2.1] - 2026-11-06
 
