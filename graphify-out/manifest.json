@@ -738,9 +738,9 @@
     "semantic_hash": ""
   },
   "src/notch/DynamicIsland.tsx": {
-    "mtime": 1793918306.8432865,
-    "seen": 1793918627.6999252,
-    "ast_hash": "26ac4d3cd14b440f05aff2e50d985b61",
+    "mtime": 1793918717.6687565,
+    "seen": 1793918943.6136098,
+    "ast_hash": "079f64fab385b2c8731e609025622078",
     "semantic_hash": ""
   },
   "src/notch/Shelf.tsx": {
@@ -900,15 +900,15 @@
     "semantic_hash": ""
   },
   "src/notch/islandLogic.test.ts": {
-    "mtime": 1793917798.2340999,
-    "seen": 1793918001.9906158,
-    "ast_hash": "f51645157de930f4d83f31580729a8ff",
+    "mtime": 1793918717.6687565,
+    "seen": 1793918943.6136365,
+    "ast_hash": "39fce922228a5054b352e37a0dc43606",
     "semantic_hash": ""
   },
   "src/notch/islandLogic.ts": {
-    "mtime": 1793917798.2340999,
-    "seen": 1793918001.9906168,
-    "ast_hash": "eb11692ccde71c31916dc61019542664",
+    "mtime": 1793918717.667758,
+    "seen": 1793918943.6136384,
+    "ast_hash": "b8f53b3d199079f904d81465a66c20f8",
     "semantic_hash": ""
   },
   "src/settings/IslandSettings.tsx": {
