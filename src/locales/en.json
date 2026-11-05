@@ -9,7 +9,7 @@
   "settings.notch": "Dynamic Island visibility",
   "settings.dock": "Dock visibility",
   "settings.language": "Language",
-  "settings.visibilityHelp": "Fixed: always visible. Smart: hides when a window covers it. Peek: appears at the screen edge. In fullscreen apps every mode shows only when the pointer reaches the screen edge.",
+  "settings.visibilityHelp": "Fixed: always visible. Smart: hides when a window covers it. Peek: appears at the screen edge. In fullscreen apps Fixed stays visible and the other modes show only when the pointer reaches the screen edge.",
   "vis.fixed": "Fixed",
   "vis.smart": "Smart",
   "vis.peek": "Peek",

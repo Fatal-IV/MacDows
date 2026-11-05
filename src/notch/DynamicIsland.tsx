@@ -239,7 +239,7 @@ function Art({ url, className }: { url: string | null; className?: string }) {
 }
 
 // UI scale 0.8-1.2, kept small enough that the notch still fits its window.
-/** Two small neon green bars that blink now and then; shown while the island is set to stay on screen. */
+/** Two small neon green bars that blink now and then; shown whenever the island shows its resting pill. */
 function Eyes() {
   return (
     <div className="eyes" aria-hidden>
@@ -776,7 +776,7 @@ export default function Notch() {
                 ) : (
                   <>
                     {showWidgets && <StatusWidgets ids={placed.right} cfg={statusCfg} stats={stats} weather={weather} status={system} />}
-                    {island.visibility === "fixed" && !showWidgets && <Eyes />}
+                    {!showWidgets && <Eyes />}
                   </>
                 )}
               </div>

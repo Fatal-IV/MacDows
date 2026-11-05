@@ -9,7 +9,7 @@
   "settings.notch": "Dinamik Ada görünürlüğü",
   "settings.dock": "Dock görünürlüğü",
   "settings.language": "Dil",
-  "settings.visibilityHelp": "Sabit: her zaman görünür. Akıllı: bir pencere üstünü kaplarsa gizlenir. Peek: ekran kenarına gelince çıkar. Tam ekran uygulamalarda tüm modlar yalnızca imleci ekran kenarına götürdüğünüzde görünür.",
+  "settings.visibilityHelp": "Sabit: her zaman görünür. Akıllı: bir pencere üstünü kaplarsa gizlenir. Peek: ekran kenarına gelince çıkar. Tam ekran uygulamalarda Sabit görünür kalır, diğer modlar yalnızca imleci ekran kenarına götürdüğünüzde görünür.",
   "vis.fixed": "Sabit",
   "vis.smart": "Akıllı",
   "vis.peek": "Peek",
