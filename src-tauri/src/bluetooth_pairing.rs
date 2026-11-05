@@ -5,6 +5,7 @@
 use serde::Serialize;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::mpsc::{channel, Sender};
+use std::collections::HashSet;
 use std::sync::Mutex;
 use std::time::Duration;
 use tauri::{AppHandle, Emitter};
@@ -64,6 +65,61 @@ static LISTENING: AtomicBool = AtomicBool::new(false);
 /// Where the page's answer to the open pairing request goes: (accepted, typed PIN).
 static ANSWER: Mutex<Option<Sender<(bool, Option<String>)>>> = Mutex::new(None);
 
+/// Devices the watcher has seen as paired. Property updates often leave `IsPaired` out, so this is what tells a
+/// paired device getting its name apart from an unpaired one.
+static KNOWN_PAIRED: Mutex<Option<HashSet<String>>> = Mutex::new(None);
+
+fn note_paired(id: &str, paired: Option<bool>) {
+    let mut guard = KNOWN_PAIRED.lock().unwrap_or_else(|e| e.into_inner());
+    let set = guard.get_or_insert_with(HashSet::new);
+    match paired {
+        Some(true) => {
+            set.insert(id.to_string());
+        }
+        Some(false) => {
+            set.remove(id);
+        }
+        None => {}
+    }
+}
+
+fn known_paired(id: &str) -> bool {
+    KNOWN_PAIRED.lock().unwrap_or_else(|e| e.into_inner()).as_ref().is_some_and(|s| s.contains(id))
+}
+
+/// What an update means for the list of unpaired devices.
+#[derive(Debug, PartialEq, Eq)]
+pub enum UpdateEffect {
+    /// The device is paired now: take it off the list.
+    Lost,
+    /// A named, unpaired device: it belongs on the list.
+    Found,
+    Nothing,
+}
+
+/// `paired` is the update's `IsPaired` when it carries one; `was_paired` is what was seen before.
+pub fn update_effect(paired: Option<bool>, was_paired: bool, name: Option<&str>) -> UpdateEffect {
+    if paired == Some(true) {
+        return UpdateEffect::Lost;
+    }
+    if paired.is_none() && was_paired {
+        return UpdateEffect::Nothing;
+    }
+    match name {
+        Some(n) if visible_in_scan(n, false) => UpdateEffect::Found,
+        _ => UpdateEffect::Nothing,
+    }
+}
+
+/// The user-facing reason for a failed pairing (`DevicePairingResultStatus`): 14 PairingCanceled and
+/// 17 RejectedByHandler are the other side or the user saying no.
+pub fn pair_error(status: i32) -> &'static str {
+    match status {
+        14 | 17 => "rejected",
+        _ => "failed",
+    }
+}
+
 fn bool_prop(info: &windows_collections::IMapView<HSTRING, windows::core::IInspectable>, key: &str) -> Option<bool> {
     info.Lookup(&HSTRING::from(key)).ok()?.cast::<IReference<bool>>().ok()?.Value().ok()
 }
@@ -82,7 +138,9 @@ fn start_watcher(app: AppHandle) -> windows::core::Result<()> {
     watcher.Added(&TypedEventHandler::new(move |_, info: windows::core::Ref<DeviceInformation>| {
         if let Some(info) = info.as_ref() {
             let name = info.Name().map(|n| n.to_string()).unwrap_or_default();
-            let paired = info.Properties().ok().and_then(|p| bool_prop(&p, PAIRED_KEY)).unwrap_or(false);
+            let paired_prop = info.Properties().ok().and_then(|p| bool_prop(&p, PAIRED_KEY));
+            note_paired(&info.Id()?.to_string(), paired_prop);
+            let paired = paired_prop.unwrap_or(false);
             if visible_in_scan(&name, paired) {
                 let _ = a.emit("bt-found", Found { id: info.Id()?.to_string(), name, kind: "other" });
             }
@@ -93,14 +151,19 @@ fn start_watcher(app: AppHandle) -> windows::core::Result<()> {
     watcher.Updated(&TypedEventHandler::new(move |_, update: windows::core::Ref<windows::Devices::Enumeration::DeviceInformationUpdate>| {
         if let Some(update) = update.as_ref() {
             let props = update.Properties()?;
-            let paired = bool_prop(&props, PAIRED_KEY).unwrap_or(false);
-            if paired {
-                let _ = a.emit("bt-lost", Lost { id: update.Id()?.to_string() });
-            } else if let Some(name) = name_prop(&props) {
-                // A device often shows up nameless first and gets its name in an update.
-                if visible_in_scan(&name, false) {
-                    let _ = a.emit("bt-found", Found { id: update.Id()?.to_string(), name, kind: "other" });
+            let id = update.Id()?.to_string();
+            let paired = bool_prop(&props, PAIRED_KEY);
+            note_paired(&id, paired);
+            // A device often shows up nameless first and gets its name in an update.
+            match update_effect(paired, known_paired(&id), name_prop(&props).as_deref()) {
+                UpdateEffect::Lost => {
+                    let _ = a.emit("bt-lost", Lost { id });
                 }
+                UpdateEffect::Found => {
+                    let name = name_prop(&props).unwrap_or_default();
+                    let _ = a.emit("bt-found", Found { id, name, kind: "other" });
+                }
+                UpdateEffect::Nothing => {}
             }
         }
         Ok(())
@@ -123,6 +186,7 @@ fn start_watcher(app: AppHandle) -> windows::core::Result<()> {
 #[tauri::command]
 pub fn bt_scan_start(app: AppHandle) -> Result<(), String> {
     LISTENING.store(true, Ordering::SeqCst);
+    *KNOWN_PAIRED.lock().unwrap_or_else(|e| e.into_inner()) = None;
     start_watcher(app).map_err(|e| e.message())
 }
 
@@ -182,8 +246,8 @@ fn pair_blocking(app: &AppHandle, id: &str) -> Result<(), String> {
     // Paired = 0, AlreadyPaired = 3.
     match result.Status().map(|s| s.0) {
         Ok(0) | Ok(3) => Ok(()),
-        Ok(7) | Ok(18) | Ok(19) => Err("rejected".into()),
-        _ => Err("failed".into()),
+        Ok(other) => Err(pair_error(other).into()),
+        Err(_) => Err("failed".into()),
     }
 }
 
@@ -239,6 +303,25 @@ mod tests {
         assert!(!unpair_ok(2));
         assert!(!unpair_ok(3));
         assert!(!unpair_ok(4));
+    }
+
+    #[test]
+    fn rejections_are_canceled_and_rejected_by_handler_only() {
+        assert_eq!(pair_error(14), "rejected");
+        assert_eq!(pair_error(17), "rejected");
+        for timeout_or_other in [7, 18, 19, 9, 4] {
+            assert_eq!(pair_error(timeout_or_other), "failed", "{timeout_or_other}");
+        }
+    }
+
+    #[test]
+    fn a_name_only_update_of_a_paired_device_does_not_list_it() {
+        assert_eq!(update_effect(None, true, Some("Headphones")), UpdateEffect::Nothing);
+        assert_eq!(update_effect(None, false, Some("Headphones")), UpdateEffect::Found);
+        assert_eq!(update_effect(Some(true), false, Some("Headphones")), UpdateEffect::Lost);
+        assert_eq!(update_effect(Some(false), true, Some("Headphones")), UpdateEffect::Found);
+        assert_eq!(update_effect(None, false, Some("  ")), UpdateEffect::Nothing);
+        assert_eq!(update_effect(None, false, None), UpdateEffect::Nothing);
     }
 
     #[test]
