@@ -8,7 +8,6 @@ import { Button, Group, Row, Select, Toggle } from "../ui/controls";
 import WindowControls from "../ui/WindowControls";
 import Appearance from "./Appearance";
 import IslandSettings from "./IslandSettings";
-import RadialMenu from "./RadialMenu";
 import "./Settings.css";
 
 const VISIBILITIES: Visibility[] = ["fixed", "smart", "peek"];
@@ -195,17 +194,9 @@ export default function Settings() {
   const version = useAppVersion();
   // Settings always opens on General.
   const [category, setCategory] = useState<Category>(FIRST);
-  const [ringOpen, setRingOpen] = useState(false);
 
   // Follows the app theme: Windows's light or dark look unless the user picked one.
   useEffect(() => initTheme(), []);
-
-  // Esc closes the category ring.
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => e.key === "Escape" && setRingOpen(false);
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, []);
 
   if (!s) return null;
   const used = CATEGORIES.filter((c) => ITEMS.some((i) => i.category === c.id));
@@ -215,6 +206,16 @@ export default function Settings() {
   return (
     <div className="settings-app">
       <WindowControls />
+      <nav className="settings-sidebar" aria-label={t("settings.categories")}>
+        {used.map((c) => (
+          <button key={c.id} className={`side-item${c.id === active ? " active" : ""}`} aria-current={c.id === active ? "page" : undefined} onClick={() => setCategory(c.id)}>
+            <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden>
+              {c.icon}
+            </svg>
+            <span>{t(`settings.cat.${c.id}`)}</span>
+          </button>
+        ))}
+      </nav>
       <AnimatePresence mode="wait" initial={false}>
         <motion.main key={active} className="settings-page" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 12 }} transition={{ duration: 0.15 }}>
           <header className="page-head">
@@ -227,17 +228,6 @@ export default function Settings() {
           </div>
         </motion.main>
       </AnimatePresence>
-      <RadialMenu
-        items={used.map((c) => ({ id: c.id, label: t(`settings.cat.${c.id}`), icon: c.icon }))}
-        activeId={active}
-        open={ringOpen}
-        onToggle={() => setRingOpen((o) => !o)}
-        onPick={(id) => {
-          setCategory(id as Category);
-          setRingOpen(false);
-        }}
-        toggleLabel={t("settings.categories")}
-      />
     </div>
   );
 }
