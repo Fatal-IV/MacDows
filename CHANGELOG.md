@@ -5,6 +5,13 @@ Format: [Keep a Changelog](https://keepachangelog.com/), versioning: [SemVer](ht
 
 ## [Unreleased]
 
+### Added
+- Update notes follow the app's language: release notes can carry a Turkish part under a "### Türkçe" heading, and Settings > Updates shows the English or the Turkish part to match the language setting (notes without that heading are shown whole).
+
+### Türkçe
+### Eklendi
+- Güncelleme notları uygulamanın diline göre gösterilir: sürüm notlarında "### Türkçe" başlığı altında Türkçe bir bölüm olabilir, Ayarlar > Güncellemeler dil ayarına göre İngilizce ya da Türkçe bölümü gösterir (bu başlığı olmayan notlar olduğu gibi gösterilir).
+
 ## [0.2.1] - 2026-11-06
 
 ### Changed
@@ -12,6 +19,13 @@ Format: [Keep a Changelog](https://keepachangelog.com/), versioning: [SemVer](ht
 
 ### Added
 - Two small neon green bars sit on the right of the island's clock and blink now and then, in every visibility mode. They give way to the status widgets while the pointer is over the island, and stay still when Windows asks for reduced motion.
+
+### Türkçe
+### Değişti
+- "Sabit" görünürlük artık tam ekran uygulamaların üstünde de ekranda kalır (ada için, "Tam ekran uygulamalarda: Hiç göster" seçili değilse; dock için de). Akıllı ve Peek modları orada yine imleci ekran kenarında bekler.
+
+### Eklendi
+- Adanın saatinin sağında iki minik neon yeşil çizgi (göz) durur ve ara sıra göz kırpar, tüm görünürlük modlarında. İmleç adanın üzerine gelince durum widget'larına yer açarlar; Windows "animasyonları azalt" istiyorsa sabit kalırlar.
 
 ## [0.2.0] - 2026-11-05
 

@@ -32,6 +32,20 @@ pub fn should_check(last: Option<u64>, now: u64, interval_secs: u64) -> bool {
     }
 }
 
+/// The heading that starts the Turkish part of release notes (the English part comes first).
+const TURKISH_MARKER: &str = "### Türkçe";
+
+/// The part of two-language release notes that matches `language`: Turkish after the "### Türkçe" heading for
+/// "tr", the English text before it otherwise. Notes without the heading are returned whole.
+pub fn notes_for_language(notes: &str, language: &str) -> String {
+    let Some(at) = notes.lines().position(|l| l.trim() == TURKISH_MARKER) else {
+        return notes.to_string();
+    };
+    let lines: Vec<&str> = notes.lines().collect();
+    let part = if language == "tr" { &lines[at + 1..] } else { &lines[..at] };
+    part.join("\n").trim().to_string()
+}
+
 /// Trims the notes and cuts them to `max_chars` characters (the final ellipsis included), never inside a character.
 pub fn shorten_notes(notes: &str, max_chars: usize) -> String {
     let trimmed = notes.trim();
@@ -163,7 +177,10 @@ pub async fn run_check(app: &AppHandle, user_initiated: bool) -> UpdateStatus {
             CheckOutcome::Failed("check_failed".into())
         }
         Ok(updater) => match updater.check().await {
-            Ok(Some(update)) => CheckOutcome::Available { version: update.version.clone(), notes: update.body.clone().unwrap_or_default() },
+            Ok(Some(update)) => {
+                let language = app.state::<crate::AppSettings>().0.lock().unwrap().language.clone();
+                CheckOutcome::Available { version: update.version.clone(), notes: notes_for_language(&update.body.clone().unwrap_or_default(), &language) }
+            }
             Ok(None) => CheckOutcome::UpToDate,
             Err(e) => {
                 log(&format!("check failed: {e}"));
@@ -265,6 +282,20 @@ mod tests {
         assert!(should_check(Some(now - day), now, day));
         assert!(should_check(Some(now - day - 1), now, day));
         assert!(should_check(Some(now + 500), now, day));
+    }
+
+    #[test]
+    fn two_language_notes_show_the_part_for_the_language() {
+        let notes = "### Added\n- Eyes\n\n### Türkçe\n### Eklendi\n- Gözler\n";
+        assert_eq!(notes_for_language(notes, "tr"), "### Eklendi\n- Gözler");
+        assert_eq!(notes_for_language(notes, "en"), "### Added\n- Eyes");
+        assert_eq!(notes_for_language(notes, "de"), "### Added\n- Eyes");
+    }
+
+    #[test]
+    fn notes_without_a_turkish_part_are_shown_whole_in_every_language() {
+        assert_eq!(notes_for_language("### Added\n- Eyes", "tr"), "### Added\n- Eyes");
+        assert_eq!(notes_for_language("", "tr"), "");
     }
 
     #[test]
