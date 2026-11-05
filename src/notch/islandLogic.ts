@@ -59,7 +59,12 @@ export const GREETED_KEY = "macdows.greeted";
 /** How long the island stays open for its greeting. */
 export const GREETING_MS = 3200;
 
-/** The island greets on the first start of a version: a fresh install (nothing stored) or an update (another version stored). */
-export function shouldGreet(stored: string | null, version: string): boolean {
-  return version !== "" && stored !== version;
+/** TEMPORARY, for testing the greeting: when true the island waves on every start, not only on the first start of a
+ *  version. Set it back to false before a release. */
+export const GREET_EVERY_START = true;
+
+/** The island greets on the first start of a version: a fresh install (nothing stored) or an update (another version
+ *  stored). `always` (see GREET_EVERY_START) makes it greet on every start. */
+export function shouldGreet(stored: string | null, version: string, always = false): boolean {
+  return version !== "" && (always || stored !== version);
 }

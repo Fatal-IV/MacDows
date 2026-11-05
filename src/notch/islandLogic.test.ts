@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { buildStops, canDisable, clickTarget, mutedApp, restingStop, screenOn, shouldGreet } from "./islandLogic.ts";
+import { buildStops, canDisable, clickTarget, mutedApp, restingStop, screenOn, shouldGreet, GREET_EVERY_START } from "./islandLogic.ts";
 import { defaultIsland } from "./islandDefaults.ts";
 import type { Island, ScreenId } from "../bridge";
 
@@ -103,4 +103,13 @@ test("the island greets on a fresh install and after an update, not on a plain r
   assert.equal(shouldGreet("0.2.1", "0.2.2"), true, "updated");
   assert.equal(shouldGreet("0.2.2", "0.2.2"), false, "same version again");
   assert.equal(shouldGreet(null, ""), false, "version unknown");
+});
+
+test("the temporary testing switch makes the island greet on every start", () => {
+  assert.equal(shouldGreet("0.2.2", "0.2.2", true), true);
+  assert.equal(shouldGreet(null, "", true), false, "still not without a version");
+});
+
+test("the testing switch is off in a release", { todo: "flip GREET_EVERY_START to false before releasing" }, () => {
+  assert.equal(GREET_EVERY_START, false);
 });

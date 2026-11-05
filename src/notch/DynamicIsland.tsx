@@ -8,7 +8,7 @@ import { getVersion } from "@tauri-apps/api/app";
 import { listen } from "@tauri-apps/api/event";
 import { getMedia, getMediaSources, selectMediaSource, mediaNext, mediaPrev, mediaSeek, mediaToggle, onMediaChanged, islandFocus, onNotificationNew, isFirstRun, addToShelf, clearShelf, getShelf, removeFromShelf, type MediaInfo, type MediaSource, type Notice, type ShelfItem } from "../bridge";
 import { useSettings, useT } from "../i18n";
-import { buildStops, clickTarget, GREETED_KEY, GREETING_MS, restingStop, screenOn, shouldGreet, type Stop } from "./islandLogic";
+import { buildStops, clickTarget, GREETED_KEY, GREETING_MS, GREET_EVERY_START, restingStop, screenOn, shouldGreet, type Stop } from "./islandLogic";
 import { defaultIsland } from "./islandDefaults";
 import { useUpdateStatus } from "../updates";
 import { useSystemStatus } from "../system";
@@ -284,7 +284,7 @@ export default function Notch() {
     const on = setTimeout(() => {
       getVersion()
         .then((v) => {
-          if (!shouldGreet(localStorage.getItem(GREETED_KEY), v)) return;
+          if (!shouldGreet(localStorage.getItem(GREETED_KEY), v, GREET_EVERY_START)) return;
           localStorage.setItem(GREETED_KEY, v);
           setGreeting(true);
           off = setTimeout(() => setGreeting(false), GREETING_MS);
