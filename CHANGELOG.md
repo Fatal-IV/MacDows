@@ -5,6 +5,8 @@ Format: [Keep a Changelog](https://keepachangelog.com/), versioning: [SemVer](ht
 
 ## [Unreleased]
 
+## [0.2.1] - 2026-11-06
+
 ### Changed
 - Visibility "Fixed" now also stays on screen over fullscreen apps (for the island unless "In fullscreen apps: Never show" is chosen, and for the dock). Smart and Peek still wait for the pointer at the screen edge there.
 
