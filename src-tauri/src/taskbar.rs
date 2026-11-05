@@ -240,6 +240,8 @@ pub(crate) fn run_steps(steps: &[KeyStep]) {
 #[derive(Serialize)]
 pub struct SystemStatus {
     pub battery_percent: Option<u8>,
+    /// Plugged in (AC power).
+    pub battery_charging: bool,
     pub hidden_icons_available: bool,
     pub taskbar_hidden: bool,
 }
@@ -249,7 +251,7 @@ fn current_status() -> SystemStatus {
     let battery_percent = unsafe { GetSystemPowerStatus(&mut power) }.ok().and_then(|_| battery_percent_from(power.BatteryLifePercent));
     let taskbar_hidden = WinBackend.window_hidden();
     let available = FileStore::default().load().map_or(false, |s| hidden_icons_available(&s, taskbar_hidden));
-    SystemStatus { battery_percent, hidden_icons_available: available, taskbar_hidden }
+    SystemStatus { battery_percent, battery_charging: power.ACLineStatus == 1, hidden_icons_available: available, taskbar_hidden }
 }
 
 #[tauri::command]

@@ -6,6 +6,7 @@ export type ShellAction = "notifications" | "quick_settings" | "hidden_icons" | 
 
 export interface SystemStatus {
   battery_percent: number | null;
+  battery_charging: boolean;
   hidden_icons_available: boolean;
   taskbar_hidden: boolean;
 }

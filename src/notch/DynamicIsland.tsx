@@ -11,6 +11,8 @@ import { buildStops, clickTarget, restingStop, screenOn, type Stop } from "./isl
 import { defaultIsland } from "./islandDefaults";
 import { useUpdateStatus } from "../updates";
 import { useSystemStatus } from "../system";
+import { StatusWidgets, useStats, useWeather } from "./StatusWidgets";
+import { needsStats, visibleWidgets, widgetsWidth } from "./widgetLogic";
 import { initTheme } from "../appearance/theme";
 import { SurfaceShape } from "../appearance/SurfaceShape";
 import "../appearance/surfaces.css";
@@ -514,9 +516,14 @@ export default function Notch() {
   useEffect(() => {
     if (!hasMedia) setOpen(false);
   }, [hasMedia]);
-  const battery = system?.battery_percent ?? null;
+  const statusCfg = island.screens.status;
+  const weather = useWeather(statusCfg);
+  const placed = visibleWidgets(statusCfg.widgets, { hasBattery: system?.battery_percent != null, weatherReady: weather != null });
+  const showWidgets = statusOn && hovered && !isMusic;
+  const stats = useStats(showWidgets && needsStats(placed));
+  const widgetsW = showWidgets ? widgetsWidth(placed) : 0;
 
-  const width = !ready ? 34 : tools || quick || shelfOpen || historyOpen ? 520 : dropping ? 380 : bannerOpen ? 380 : musicOpen ? 340 : isMusic ? 200 : hovered ? (battery != null ? 200 : 170) : hasMedia ? 170 : 140;
+  const width = !ready ? 34 : tools || quick || shelfOpen || historyOpen ? 520 : dropping ? 380 : bannerOpen ? 380 : musicOpen ? 340 : isMusic ? 200 : hovered ? 170 + widgetsW : hasMedia ? 170 : 140;
   const height = !ready ? 34 : tools ? 280 : quick ? 312 : shelfOpen || historyOpen ? 312 : dropping ? 110 : bannerOpen ? 76 : musicOpen ? (media!.duration_ms > 0 ? 126 : 108) + (showSources ? 36 : 0) : 36;
 
   return (
@@ -718,7 +725,10 @@ export default function Notch() {
               exit={{ opacity: 0, y: 5, transition: { duration: 0.1 } }}
               transition={{ duration: 0.2 }}
             >
-              <div className="side left">{hasMedia && <Visualizer playing={playing} />}</div>
+              <div className="side left">
+                {hasMedia && <Visualizer playing={playing} />}
+                {showWidgets && <StatusWidgets ids={placed.left} cfg={statusCfg} stats={stats} weather={weather} status={system} />}
+              </div>
 
               <button className="time-flip" title={hasMedia ? t("notch.switchPanel") : undefined}>
                 <AnimatePresence mode="wait" initial={false}>
@@ -754,7 +764,7 @@ export default function Notch() {
                     <span className="art-overlay">{playing ? <PauseIcon /> : <PlayIcon />}</span>
                   </button>
                 ) : (
-                  statusOn && hovered && battery != null && <span className="battery">{battery}%</span>
+                  showWidgets && <StatusWidgets ids={placed.right} cfg={statusCfg} stats={stats} weather={weather} status={system} />
                 )}
               </div>
             </motion.div>

@@ -112,7 +112,8 @@ img { -webkit-user-drag: none; user-select: none; }
   transition: color 0.2s ease;
 }
 
-.battery { font-size: 12px; font-weight: 500; opacity: 0.7; }
+.widget { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; font-weight: 500; opacity: 0.7; white-space: nowrap; }
+.widget.low { color: #ff5a52; opacity: 1; }
 
 /* Visualizer */
 .visualizer {
