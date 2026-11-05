@@ -17,6 +17,11 @@ Format: [Keep a Changelog](https://keepachangelog.com/), versioning: [SemVer](ht
 - Pinning and unpinning in the dock no longer touch the Windows taskbar: "Keep in Dock" adds a pin only MacDows keeps (or shows a hidden one again), "Remove from Dock" hides a Windows pin in the dock only. The dock still reads the taskbar's pins to start with.
 
 ### Fixed
+- Wi-Fi: networks that only accept WPA3 can be joined with a typed password (the list now carries each network's security type). A slow network is reported as "No answer from the network" instead of "Wrong password": a wrong password is now recognized when Windows tries and gives up. A failed attempt puts the network's previously saved profile back instead of leaving the failed one, and the wait no longer rescans the whole network list every half second.
+- VPN: certificate (IKEv2) and EAP profiles, which have no stored password, can connect from the island. The adapter list is read from properly aligned memory, and Windows's IP-HTTPS adapter no longer makes the tile read as "VPN on".
+- Bluetooth pairing: "rejected" is shown only when the device or you declined (canceled or rejected by handler); timeouts and other failures say "failed". A paired device that gets its name during scanning no longer shows up in the list of devices to pair.
+- Dock menu on a running app: Move, Size, Minimize and the other window commands bring the window forward first, so they work on background windows.
+- Typing in an island text field no longer dismisses a notification banner that is still showing when the field closes.
 - Shutting down Windows while MacDows runs no longer shows two error windows (taskkill failing with 0xc0000142) whose dismissal cancelled the shutdown: MacDows skips restarting Start and Search while Windows is shutting down or logging off.
 - Notifications cleared from the island's history stay cleared: they used to come back at the next refresh or restart because Windows still listed them.
 

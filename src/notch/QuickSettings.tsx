@@ -5,7 +5,7 @@ import { useT } from "../i18n";
 import { BluetoothPage } from "./BluetoothPage";
 import { WifiPage } from "./WifiPage";
 import { VpnPage } from "./VpnPage";
-import { vpnLabel } from "./netLogic";
+import { vpnIsOn, vpnLabel } from "./netLogic";
 import { connectedLabel } from "./bluetoothLabel";
 
 const svg = (children: ReactNode, size = 22) => (
@@ -157,7 +157,7 @@ export function QuickSettingsScreen({ wifiPage = true, vpn = true, bluetoothPair
         );
       })}
       {vpn && (
-        <div className={`glass-tile${vpnLabel(vpnState, (k) => k) === "vpn.on" || vpnLabel(vpnState, (k) => k) === "vpn.onApp" ? " on" : ""}${vpnBusy ? " busy" : ""}`}>
+        <div className={`glass-tile${vpnIsOn(vpnState) ? " on" : ""}${vpnBusy ? " busy" : ""}`}>
           <button className="tile-main" onClick={vpnToggle}>
             <span className="glass-icon">{svg(<path d="M12 3l7.5 3v5.5c0 4.6-3.1 8.2-7.5 9.5-4.4-1.3-7.5-4.9-7.5-9.5V6L12 3Z" />)}</span>
             <span className="glass-text">

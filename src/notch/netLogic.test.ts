@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { signalBars, securityLabel, errorText, canSubmit, vpnLabel } from "./netLogic.ts";
+import { signalBars, securityLabel, errorText, canSubmit, vpnLabel, vpnIsOn } from "./netLogic.ts";
 
 test("signal maps to 0-4 bars", () => {
   const cases: Array<[number, number]> = [[0, 0], [1, 1], [25, 1], [26, 2], [50, 2], [51, 3], [75, 3], [76, 4], [100, 4]];
@@ -43,4 +43,13 @@ test("the VPN card reads connecting, on, on (app) or off", () => {
   assert.equal(vpnLabel({ entries: [e("connecting")], app_vpn_active: true }, t), "vpn.connecting");
   assert.equal(vpnLabel({ entries: [e("disconnected")], app_vpn_active: true }, t), "vpn.onApp");
   assert.equal(vpnLabel(null, t), "vpn.off");
+});
+
+test("the VPN tile is on for a connected VPN or an app tunnel, not while connecting", () => {
+  const e = (state: string) => ({ name: "Work", state });
+  assert.equal(vpnIsOn(null), false);
+  assert.equal(vpnIsOn({ entries: [], app_vpn_active: false }), false);
+  assert.equal(vpnIsOn({ entries: [e("connected")], app_vpn_active: false }), true);
+  assert.equal(vpnIsOn({ entries: [e("disconnected")], app_vpn_active: true }), true);
+  assert.equal(vpnIsOn({ entries: [e("connecting")], app_vpn_active: true }), false);
 });

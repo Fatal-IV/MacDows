@@ -33,6 +33,12 @@ export function canSubmit(ssid: string, auth: WifiAuth, password: string): boole
 }
 
 /** The VPN card's state line: connecting, on, on through an app, or off. */
+/** Whether the VPN tile shows as on: a Windows VPN is connected, or an app's tunnel is up. Connecting is not on. */
+export function vpnIsOn(state: VpnState | null): boolean {
+  if (!state || state.entries.some((e) => e.state === "connecting")) return false;
+  return state.entries.some((e) => e.state === "connected") || state.app_vpn_active;
+}
+
 export function vpnLabel(state: VpnState | null, t: (key: string) => string): string {
   if (!state) return t("vpn.off");
   if (state.entries.some((e) => e.state === "connecting")) return t("vpn.connecting");
