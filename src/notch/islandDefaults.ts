@@ -11,7 +11,7 @@ export function defaultIsland(): Island {
     fullscreen: "edge",
     nav: { wheel: true, order: [...DEFAULT_ORDER], click: "smart", middle: true, remember: false, hover_player: true },
     screens: {
-      status: { enabled: true, clock_12h: false, battery_percent: true },
+      status: { enabled: true, clock_12h: false, widgets: { left: ["weather"], right: ["battery"] }, weather_city: "", weather_lat: 0, weather_lon: 0, temp_unit: "celsius", low_battery: 20 },
       music: { enabled: true, visualizer: true, album_glow: true, progress: true, auto_open: true, artwork: true, sources: true },
       tools: { enabled: true, calendar: true, week_starts_monday: true, timer: true, timer_sound: true, timer_progress: true, stopwatch: true },
       quick: { enabled: true, wifi: true, bluetooth: true, dnd: true, battery_saver: true, airplane: true, hotspot: true, accessibility: true, brightness: true, volume: true, lock: true, macdows_settings: true, windows_settings: true, wifi_page: true, vpn: true, bluetooth_pairing: true },

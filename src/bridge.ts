@@ -24,10 +24,19 @@ export type ClickMode = "smart" | "quick" | "player";
 export type ScreenId = "status" | "music" | "tools" | "quick" | "notifications" | "shelf";
 export const SCREEN_IDS: ScreenId[] = ["status", "music", "tools", "quick", "notifications", "shelf"];
 
+export interface Widgets {
+  left: string[];
+  right: string[];
+}
 export interface StatusCfg {
   enabled: boolean;
   clock_12h: boolean;
-  battery_percent: boolean;
+  widgets: Widgets;
+  weather_city: string;
+  weather_lat: number;
+  weather_lon: number;
+  temp_unit: "celsius" | "fahrenheit";
+  low_battery: number;
 }
 export interface MusicCfg {
   enabled: boolean;

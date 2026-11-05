@@ -27,13 +27,37 @@ pub enum ClickMode {
     Player,
 }
 
+/// Status widgets that can sit beside the clock.
+pub const WIDGET_IDS: [&str; 6] = ["weather", "battery", "cpu", "ram", "disk", "net"];
+/// How many widgets fit on one side of the clock.
+pub const MAX_WIDGETS_PER_SIDE: usize = 3;
+
+/// Which widgets sit left and right of the clock, in order.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(default)]
+pub struct Widgets {
+    pub left: Vec<String>,
+    pub right: Vec<String>,
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(default)]
 pub struct StatusCfg {
     pub enabled: bool,
     /// 12-hour clock instead of 24-hour.
     pub clock_12h: bool,
-    pub battery_percent: bool,
+    pub widgets: Widgets,
+    /// Empty: no weather request is ever made.
+    pub weather_city: String,
+    pub weather_lat: f64,
+    pub weather_lon: f64,
+    /// "celsius" or "fahrenheit".
+    pub temp_unit: String,
+    /// The battery widget turns red below this percent, 5 to 50 in steps of 5.
+    pub low_battery: u8,
+    /// Only read from settings files written before widgets existed (see `normalize`); never written back.
+    #[serde(skip_serializing)]
+    pub battery_percent: Option<bool>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -117,7 +141,7 @@ pub struct ShelfCfg {
     pub auto_open: bool,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Default)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Default)]
 #[serde(default)]
 pub struct Screens {
     pub status: StatusCfg,
@@ -144,7 +168,7 @@ pub struct Nav {
     pub hover_player: bool,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(default)]
 pub struct Island {
     pub visibility: Visibility,
@@ -155,7 +179,22 @@ pub struct Island {
 
 impl Default for StatusCfg {
     fn default() -> Self {
-        StatusCfg { enabled: true, clock_12h: false, battery_percent: true }
+        StatusCfg {
+            enabled: true,
+            clock_12h: false,
+            widgets: Widgets::default(),
+            weather_city: String::new(),
+            weather_lat: 0.0,
+            weather_lon: 0.0,
+            temp_unit: "celsius".into(),
+            low_battery: 20,
+            battery_percent: None,
+        }
+    }
+}
+impl Default for Widgets {
+    fn default() -> Self {
+        Widgets { left: vec!["weather".into()], right: vec!["battery".into()] }
     }
 }
 impl Default for MusicCfg {
@@ -213,6 +252,26 @@ fn repaired_order(order: &[String]) -> Vec<String> {
     out
 }
 
+/// Unknown ids dropped, each widget kept once (first place wins, left before right), at most
+/// `MAX_WIDGETS_PER_SIDE` per side.
+fn repaired_widgets(w: &Widgets) -> Widgets {
+    let mut seen: Vec<String> = Vec::new();
+    let mut side = |ids: &[String]| -> Vec<String> {
+        let mut out = Vec::new();
+        for id in ids {
+            let id = id.to_ascii_lowercase();
+            if WIDGET_IDS.contains(&id.as_str()) && !seen.contains(&id) && out.len() < MAX_WIDGETS_PER_SIDE {
+                seen.push(id.clone());
+                out.push(id);
+            }
+        }
+        out
+    };
+    let left = side(&w.left);
+    let right = side(&w.right);
+    Widgets { left, right }
+}
+
 fn nearest(choices: &[usize], value: usize) -> usize {
     *choices.iter().min_by_key(|c| c.abs_diff(value)).unwrap_or(&value)
 }
@@ -231,6 +290,17 @@ impl Island {
             self.screens.status.enabled = true;
         }
         self.nav.order = repaired_order(&self.nav.order);
+        let st = &mut self.screens.status;
+        // Files from before widgets: `battery_percent: false` meant no battery next to the clock.
+        if st.battery_percent.take() == Some(false) {
+            st.widgets.left.retain(|w| w != "battery");
+            st.widgets.right.retain(|w| w != "battery");
+        }
+        st.widgets = repaired_widgets(&st.widgets);
+        st.low_battery = (((st.low_battery as f32 / 5.0).round() as u8) * 5).clamp(5, 50);
+        if st.temp_unit != "fahrenheit" {
+            st.temp_unit = "celsius".into();
+        }
         let n = &mut self.screens.notifications;
         n.banner_seconds = n.banner_seconds.clamp(3, 10);
         n.history_max = nearest(&HISTORY_CHOICES, n.history_max);
@@ -248,7 +318,7 @@ mod tests {
         assert_eq!(i.visibility, Visibility::Fixed);
         assert_eq!(i.fullscreen, FullscreenMode::Edge);
         assert!(i.enabled_flags().iter().all(|on| *on));
-        assert!(!i.screens.status.clock_12h && i.screens.status.battery_percent);
+        assert!(!i.screens.status.clock_12h);
         assert!(i.screens.music.sources);
         assert!(i.screens.tools.week_starts_monday && i.screens.tools.timer_sound && i.screens.tools.timer_progress);
         assert_eq!((i.screens.notifications.banner_seconds, i.screens.notifications.history_max), (5, 100));
@@ -257,6 +327,50 @@ mod tests {
         assert!(i.nav.wheel && i.nav.middle && !i.nav.remember && i.nav.hover_player);
         assert_eq!(i.nav.click, ClickMode::Smart);
         assert_eq!(i.nav.order, SCREEN_IDS.map(String::from).to_vec());
+    }
+
+    fn status_from(json: &str) -> StatusCfg {
+        let mut i: Island = serde_json::from_str(&format!(r#"{{"screens":{{"status":{json}}}}}"#)).unwrap();
+        i.normalize();
+        i.screens.status
+    }
+
+    #[test]
+    fn status_defaults_have_weather_left_and_battery_right() {
+        let s = StatusCfg::default();
+        assert_eq!((s.widgets.left, s.widgets.right), (vec!["weather".to_string()], vec!["battery".to_string()]));
+        assert_eq!((s.weather_city.as_str(), s.temp_unit.as_str(), s.low_battery), ("", "celsius", 20));
+    }
+
+    #[test]
+    fn old_battery_percent_false_removes_the_battery_widget() {
+        let s = status_from(r#"{"battery_percent":false}"#);
+        assert_eq!(s.widgets.left, ["weather"]);
+        assert!(s.widgets.right.is_empty());
+    }
+
+    #[test]
+    fn old_battery_percent_true_keeps_the_default_layout() {
+        assert_eq!(status_from(r#"{"battery_percent":true}"#).widgets, Widgets::default());
+    }
+
+    #[test]
+    fn unknown_duplicate_and_excess_widgets_are_repaired() {
+        let s = status_from(r#"{"widgets":{"left":["cpu","bogus","cpu","ram","disk","net"],"right":["cpu","battery"]}}"#);
+        assert_eq!(s.widgets.left, ["cpu", "ram", "disk"]);
+        assert_eq!(s.widgets.right, ["battery"]);
+    }
+
+    #[test]
+    fn low_battery_snaps_to_5_50_in_steps_of_5() {
+        let at = |v: u8| status_from(&format!(r#"{{"low_battery":{v}}}"#)).low_battery;
+        assert_eq!((at(3), at(22), at(99)), (5, 20, 50));
+    }
+
+    #[test]
+    fn bad_temp_unit_falls_back_to_celsius() {
+        assert_eq!(status_from(r#"{"temp_unit":"kelvin"}"#).temp_unit, "celsius");
+        assert_eq!(status_from(r#"{"temp_unit":"fahrenheit"}"#).temp_unit, "fahrenheit");
     }
 
     #[test]
