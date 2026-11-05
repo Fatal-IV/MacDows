@@ -241,14 +241,22 @@ function Art({ url, className }: { url: string | null; className?: string }) {
   );
 }
 
-/** The island's character: two neon green arc eyes that blink now and then, and a hand that waves while it greets. */
+/** The island's character: two neon green arch eyes that blink now and then, and a tiny robot that waves while it greets. */
 function Eyes({ waving }: { waving: boolean }) {
   return (
     <div className="eyes" aria-hidden>
       <i />
       <i />
-      <svg className={`eyes-hand${waving ? " waving" : ""}`} width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M7 12V7.5a1.4 1.4 0 0 1 2.8 0V11M9.8 11V5a1.4 1.4 0 0 1 2.8 0v6M12.6 11V6a1.4 1.4 0 0 1 2.8 0v6M15.4 12V9a1.4 1.4 0 0 1 2.8 0v5c0 4-2.6 7-6.4 7-2.6 0-4.2-1.2-5.4-3L4 14.5a1.4 1.4 0 0 1 2.2-1.7L7 14" />
+      <svg className={`eyes-robot${waving ? " waving" : ""}`} width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M12 5V2.6" />
+        <circle cx="12" cy="2" r="1" fill="currentColor" stroke="none" />
+        <rect x="6" y="5" width="12" height="8.5" rx="2.6" />
+        <circle cx="9.6" cy="9.2" r="1.1" fill="currentColor" stroke="none" />
+        <circle cx="14.4" cy="9.2" r="1.1" fill="currentColor" stroke="none" />
+        <rect x="8" y="15" width="8" height="5.5" rx="2" />
+        <path d="M8 16.6 5 19" />
+        <path className="robot-arm" d="M16 16.6 19.4 12.4" />
+        <path d="M10.4 20.6v1.8M13.6 20.6v1.8" />
       </svg>
     </div>
   );
