@@ -24,7 +24,7 @@ export const mockScreen = inTauri ? null : query.get("screen");
 
 const mockInfo = (): InstallInfo => {
   const screen = query.get("screen");
-  const decision: Decision = screen === "installed" ? "reinstall" : screen === "newer" ? "newer" : "fresh";
+  const decision: Decision = screen === "installed" ? "reinstall" : screen === "newer" ? "newer" : query.get("update") === "1" ? "older" : "fresh";
   return {
     decision,
     installed_version: decision === "fresh" ? null : "0.1.0",

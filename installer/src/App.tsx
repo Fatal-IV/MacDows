@@ -56,7 +56,9 @@ export default function App() {
   };
 
   const decision = info?.decision ?? "fresh";
-  const statusKey: Key = stage === "preparing" ? "preparing" : stage === "installing" ? "installing" : "finishing";
+  // An older version is installed: this run is an update, and the words say so.
+  const updating = decision === "older";
+  const statusKey: Key = stage === "preparing" ? "preparing" : stage === "installing" ? (updating ? "updating" : "installing") : "finishing";
 
   return (
     <div className="window">
@@ -80,11 +82,13 @@ export default function App() {
                   </button>
                 )}
                 <button className="accent" style={{ marginTop: decision === "fresh" ? 18 : 26 }} onClick={install}>
-                  {t("install")}
+                  {t(updating ? "update" : "install")}
                 </button>
-                <div className="muted small" style={{ marginTop: 14 }}>
-                  {t("licenseNote")}
-                </div>
+                {!updating && (
+                  <div className="muted small" style={{ marginTop: 14 }}>
+                    {t("licenseNote")}
+                  </div>
+                )}
               </>
             ) : decision === "reinstall" ? (
               <>
@@ -129,7 +133,7 @@ export default function App() {
             <div className="badge ok">✓</div>
             <div className="wordmark sub">{t("doneTitle")}</div>
             <div className="muted" style={{ marginTop: 6 }}>
-              {t("doneText")}
+              {t(updating ? "updated" : "doneText")}
             </div>
             <button className="accent" style={{ marginTop: 24 }} onClick={open}>
               {t("open")}
