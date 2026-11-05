@@ -1,0 +1,1046 @@
+{
+  ".vscode/extensions.json": {
+    "mtime": 1793608556.778996,
+    "seen": 1793709180.821269,
+    "ast_hash": "d1846e92ceedfa6eb08a69cbb38c190a",
+    "semantic_hash": ""
+  },
+  "installer/package.json": {
+    "mtime": 1793912875.3726046,
+    "seen": 1793912880.3199475,
+    "ast_hash": "f73ed0de7c4cb2af59dd4ae7cb568b99",
+    "semantic_hash": ""
+  },
+  "installer/src-tauri/Cargo.toml": {
+    "mtime": 1793912875.3726046,
+    "seen": 1793912880.3199494,
+    "ast_hash": "baa179890c684415ed467a7e044c1e36",
+    "semantic_hash": ""
+  },
+  "installer/src-tauri/build.rs": {
+    "mtime": 1793799233.616328,
+    "seen": 1793799239.6066024,
+    "ast_hash": "241192a596b7704a1d450bd22c4947d1",
+    "semantic_hash": ""
+  },
+  "installer/src-tauri/capabilities/default.json": {
+    "mtime": 1793799233.6178348,
+    "seen": 1793799239.6066039,
+    "ast_hash": "0ba471d6b5ede75d9e1da332e4db35a9",
+    "semantic_hash": ""
+  },
+  "installer/src-tauri/src/install.rs": {
+    "mtime": 1793799233.6263566,
+    "seen": 1793799239.6066048,
+    "ast_hash": "3c9f0e0dd118e032215c94e9f50db385",
+    "semantic_hash": ""
+  },
+  "installer/src-tauri/src/launcher.rs": {
+    "mtime": 1793799233.6263566,
+    "seen": 1793799239.606606,
+    "ast_hash": "451b49b4f5f6a5a654e3bc717338e394",
+    "semantic_hash": ""
+  },
+  "installer/src-tauri/src/lib.rs": {
+    "mtime": 1793799233.627865,
+    "seen": 1793799239.6066074,
+    "ast_hash": "d1db5867a63f302db0ba53c7b3085098",
+    "semantic_hash": ""
+  },
+  "installer/src-tauri/src/logic.rs": {
+    "mtime": 1793799233.628873,
+    "seen": 1793799239.6066086,
+    "ast_hash": "3daefab28da7f3ea6c8070e8f6315223",
+    "semantic_hash": ""
+  },
+  "installer/src-tauri/src/main.rs": {
+    "mtime": 1793799233.628873,
+    "seen": 1793799239.6066096,
+    "ast_hash": "6dc706f758fefea62c9e519b0c181db1",
+    "semantic_hash": ""
+  },
+  "installer/src-tauri/tauri.conf.json": {
+    "mtime": 1793912875.3726046,
+    "seen": 1793912880.3199584,
+    "ast_hash": "eb3376cd5cf134dd566c78c9836cdb6c",
+    "semantic_hash": ""
+  },
+  "installer/src/App.tsx": {
+    "mtime": 1793917817.3044863,
+    "seen": 1793918001.9905148,
+    "ast_hash": "c22f1e249b5b68024061e952dbd890ff",
+    "semantic_hash": ""
+  },
+  "installer/src/api.ts": {
+    "mtime": 1793917817.3044863,
+    "seen": 1793918001.9905164,
+    "ast_hash": "46f89a4332a1f0409d4b164de2de1e56",
+    "semantic_hash": ""
+  },
+  "installer/src/i18n.ts": {
+    "mtime": 1793917817.2902899,
+    "seen": 1793918001.9905176,
+    "ast_hash": "97da3e9e7ce755e727cde021d5702bc0",
+    "semantic_hash": ""
+  },
+  "installer/src/main.tsx": {
+    "mtime": 1793799233.6338904,
+    "seen": 1793799239.6066148,
+    "ast_hash": "f9df578fc7e4de96bbbf32c3af56e507",
+    "semantic_hash": ""
+  },
+  "installer/src/vite-env.d.ts": {
+    "mtime": 1793799233.6348786,
+    "seen": 1793799239.6066158,
+    "ast_hash": "8f68c27c3fc38817b2726b20e2d4f1ee",
+    "semantic_hash": ""
+  },
+  "installer/tsconfig.json": {
+    "mtime": 1793799233.6348786,
+    "seen": 1793799239.6066167,
+    "ast_hash": "11de3fb1c87aa663796327c8bef7ffd5",
+    "semantic_hash": ""
+  },
+  "installer/vite.config.ts": {
+    "mtime": 1793799233.6358795,
+    "seen": 1793799239.606618,
+    "ast_hash": "40c592c71bba3552d9c5fd1256d411cd",
+    "semantic_hash": ""
+  },
+  "package.json": {
+    "mtime": 1793912875.3682177,
+    "seen": 1793912880.3199656,
+    "ast_hash": "31c4107d1143af1bec3837d81cbe0598",
+    "semantic_hash": ""
+  },
+  "scripts/build-installer.mjs": {
+    "mtime": 1793799233.6379893,
+    "seen": 1793799239.6066203,
+    "ast_hash": "cfb013ba3e13a94bc9ac0b5b1a0a293c",
+    "semantic_hash": ""
+  },
+  "scripts/build-installer.test.mjs": {
+    "mtime": 1793799233.638554,
+    "seen": 1793799239.6066215,
+    "ast_hash": "889c9b9aaa10117be59658d3df0a67d3",
+    "semantic_hash": ""
+  },
+  "scripts/extract-notes.mjs": {
+    "mtime": 1793610746.6666875,
+    "seen": 1793709180.821293,
+    "ast_hash": "46486214db17b752ae0860a43ea2f9d6",
+    "semantic_hash": ""
+  },
+  "scripts/fake-update-server.mjs": {
+    "mtime": 1793799233.6395526,
+    "seen": 1793799239.6066246,
+    "ast_hash": "8f5b864a2cb2624283bbb4cc7064816b",
+    "semantic_hash": ""
+  },
+  "scripts/make-icons.mjs": {
+    "mtime": 1793799233.6407223,
+    "seen": 1793799239.6066253,
+    "ast_hash": "6929c3b907711b51dfbd8fad5ff17de2",
+    "semantic_hash": ""
+  },
+  "scripts/make-icons.test.mjs": {
+    "mtime": 1793799233.6417325,
+    "seen": 1793799239.6066263,
+    "ast_hash": "1d5e49304595496be9789b8c4294d6d5",
+    "semantic_hash": ""
+  },
+  "src-tauri/Cargo.toml": {
+    "mtime": 1793912875.3692307,
+    "seen": 1793912880.3199718,
+    "ast_hash": "c2a63a0ad7d15e0e0349159ccfbd3613",
+    "semantic_hash": ""
+  },
+  "src-tauri/build.rs": {
+    "mtime": 1793608556.7690432,
+    "seen": 1793709180.8212984,
+    "ast_hash": "667702979da61fdc96948886b7cd7a33",
+    "semantic_hash": ""
+  },
+  "src-tauri/capabilities/default.json": {
+    "mtime": 1793799233.6448524,
+    "seen": 1793799239.6066298,
+    "ast_hash": "2fc9923b542f9d984ebddb2ed20cf538",
+    "semantic_hash": ""
+  },
+  "src-tauri/src/appearance.rs": {
+    "mtime": 1793799233.6632187,
+    "seen": 1793799239.6066325,
+    "ast_hash": "1e33f8adb4a466f26519328b2928d074",
+    "semantic_hash": ""
+  },
+  "src-tauri/src/cli.rs": {
+    "mtime": 1793799233.664221,
+    "seen": 1793799239.606635,
+    "ast_hash": "cc61ccaa9d95e779bf1b2045fb583d95",
+    "semantic_hash": ""
+  },
+  "src-tauri/src/fullscreen.rs": {
+    "mtime": 1793799233.6677222,
+    "seen": 1793799239.6066403,
+    "ast_hash": "8a3060ff76a976695f6224eab5760d3f",
+    "semantic_hash": ""
+  },
+  "src-tauri/src/i18n.rs": {
+    "mtime": 1793818633.6093593,
+    "seen": 1793818764.04725,
+    "ast_hash": "2d3266874601c23afd36ec5cd8737040",
+    "semantic_hash": ""
+  },
+  "src-tauri/src/lib.rs": {
+    "mtime": 1793917903.680659,
+    "seen": 1793918001.9905524,
+    "ast_hash": "ad4b02395fd28d62f4c9dc6cf7a54fdf",
+    "semantic_hash": ""
+  },
+  "src-tauri/src/main.rs": {
+    "mtime": 1793610746.479327,
+    "seen": 1793709180.8213074,
+    "ast_hash": "3b9bc321d92be55641d623fa07ccb08b",
+    "semantic_hash": ""
+  },
+  "src-tauri/src/media.rs": {
+    "mtime": 1793799233.670729,
+    "seen": 1793799239.6066487,
+    "ast_hash": "37bc75c7368c6adda67f14653716db15",
+    "semantic_hash": ""
+  },
+  "src-tauri/src/settings.rs": {
+    "mtime": 1793917903.680659,
+    "seen": 1793918001.9905622,
+    "ast_hash": "16ff0664f1f3cc6ace2e72c3377fa416",
+    "semantic_hash": ""
+  },
+  "src-tauri/src/system_theme.rs": {
+    "mtime": 1793835245.059046,
+    "seen": 1793901749.4341364,
+    "ast_hash": "f1afe69c1d1e3e1c2b43a5661c65b17f",
+    "semantic_hash": ""
+  },
+  "src-tauri/src/taskbar.rs": {
+    "mtime": 1793902206.713418,
+    "seen": 1793902717.3662055,
+    "ast_hash": "d17f15a5e217a01d1954f40d20ccb272",
+    "semantic_hash": ""
+  },
+  "src-tauri/src/taskbar_plan.rs": {
+    "mtime": 1793799233.6777284,
+    "seen": 1793799239.6066597,
+    "ast_hash": "cff761b0529ebf5598ec4cb564109e93",
+    "semantic_hash": ""
+  },
+  "src-tauri/src/tray_panel.rs": {
+    "mtime": 1793799233.6789892,
+    "seen": 1793799239.6066604,
+    "ast_hash": "27d42261a874baecf9f0096dd6b382dd",
+    "semantic_hash": ""
+  },
+  "src-tauri/src/updates.rs": {
+    "mtime": 1793914887.4007058,
+    "seen": 1793914950.1660526,
+    "ast_hash": "a21dbb1c8546ee74b64d4b995b4b382f",
+    "semantic_hash": ""
+  },
+  "src-tauri/src/visibility.rs": {
+    "mtime": 1793917903.6816652,
+    "seen": 1793918001.9905715,
+    "ast_hash": "026d7d582d566d4d1b6b0fa643a2b557",
+    "semantic_hash": ""
+  },
+  "src-tauri/src/visualizer.rs": {
+    "mtime": 1793799233.680988,
+    "seen": 1793799239.6066635,
+    "ast_hash": "dca84baf0a0abcf4c057d71d4bc7f27c",
+    "semantic_hash": ""
+  },
+  "src-tauri/src/volume.rs": {
+    "mtime": 1793799233.681987,
+    "seen": 1793799239.6066644,
+    "ast_hash": "c72eddd1072410a233de3220afa6e13f",
+    "semantic_hash": ""
+  },
+  "src-tauri/src/wallpaper.rs": {
+    "mtime": 1793799233.681987,
+    "seen": 1793799239.6066654,
+    "ast_hash": "3fcae0a271c17013e6567983c15405ee",
+    "semantic_hash": ""
+  },
+  "src-tauri/src/windows_list.rs": {
+    "mtime": 1793799233.6829865,
+    "seen": 1793799239.6066666,
+    "ast_hash": "06caf193c32f02579b5e9962b43b6a21",
+    "semantic_hash": ""
+  },
+  "src-tauri/tauri.conf.json": {
+    "mtime": 1793912875.3692307,
+    "seen": 1793912880.3200119,
+    "ast_hash": "fe0ae746cbdc827f32436064873ba022",
+    "semantic_hash": ""
+  },
+  "src/appearance/SurfaceShape.tsx": {
+    "mtime": 1793799233.6849878,
+    "seen": 1793799239.6066682,
+    "ast_hash": "c957ef7f638711a25c3ad27942931215",
+    "semantic_hash": ""
+  },
+  "src/appearance/backdrop.ts": {
+    "mtime": 1793799233.6849878,
+    "seen": 1793799239.6066694,
+    "ast_hash": "3ba6eac6d39d39e75be5740148949ad6",
+    "semantic_hash": ""
+  },
+  "src/appearance/theme.ts": {
+    "mtime": 1793799233.6880047,
+    "seen": 1793799239.6066701,
+    "ast_hash": "d82d5d304a4ace26ba29761033599a96",
+    "semantic_hash": ""
+  },
+  "src/bridge.ts": {
+    "mtime": 1793917964.7567537,
+    "seen": 1793918001.9905841,
+    "ast_hash": "b87e65df6bbd8145006242a31bc8ee6d",
+    "semantic_hash": ""
+  },
+  "src/dock/Dock.tsx": {
+    "mtime": 1793917964.7720404,
+    "seen": 1793918001.990586,
+    "ast_hash": "450ab6e8461cb10a977836f3bc8ee74a",
+    "semantic_hash": ""
+  },
+  "src/i18n.ts": {
+    "mtime": 1793799233.6958005,
+    "seen": 1793799239.6066804,
+    "ast_hash": "f1d5d6b80d59cb640253e17e33080706",
+    "semantic_hash": ""
+  },
+  "src/locales/en.json": {
+    "mtime": 1793912488.6368394,
+    "seen": 1793912815.317082,
+    "ast_hash": "3c4af117534883b3b5521c43ed029d51",
+    "semantic_hash": ""
+  },
+  "src/locales/tr.json": {
+    "mtime": 1793912488.6368394,
+    "seen": 1793912815.317083,
+    "ast_hash": "bd55117fee177419c8a9724d1b832ab5",
+    "semantic_hash": ""
+  },
+  "src/main.tsx": {
+    "mtime": 1793799233.6973393,
+    "seen": 1793799239.6066835,
+    "ast_hash": "eb2cb7110ee509b1b57c9e3b9d385444",
+    "semantic_hash": ""
+  },
+  "src/notch/icons.tsx": {
+    "mtime": 1793799233.7043874,
+    "seen": 1793799239.606695,
+    "ast_hash": "d7cadc472279982f19c40cdef8ef1f28",
+    "semantic_hash": ""
+  },
+  "src/settings/Appearance.tsx": {
+    "mtime": 1793799233.7077532,
+    "seen": 1793799239.606699,
+    "ast_hash": "7399065d043a94a774dbc21088cf028b",
+    "semantic_hash": ""
+  },
+  "src/settings/Settings.tsx": {
+    "mtime": 1793905185.8971388,
+    "seen": 1793905507.2148745,
+    "ast_hash": "af9ac9c7a6d1f1794a9c2bbf37249aa4",
+    "semantic_hash": ""
+  },
+  "src/system.ts": {
+    "mtime": 1793902206.7144215,
+    "seen": 1793902717.3662906,
+    "ast_hash": "cb3e491ada6923c5a3e547b7e048c101",
+    "semantic_hash": ""
+  },
+  "src/tray/TrayPanel.tsx": {
+    "mtime": 1793799233.7144241,
+    "seen": 1793799239.606705,
+    "ast_hash": "72564e851161f6ea95b5d827f2b83b6c",
+    "semantic_hash": ""
+  },
+  "src/ui/WindowControls.tsx": {
+    "mtime": 1793799233.7144241,
+    "seen": 1793799239.606706,
+    "ast_hash": "cad9efff6e83006ff845f14fb9eb659c",
+    "semantic_hash": ""
+  },
+  "src/ui/controls.tsx": {
+    "mtime": 1793799233.7154222,
+    "seen": 1793799239.6067066,
+    "ast_hash": "06f374f169ab7124ebe1bd5caec354d3",
+    "semantic_hash": ""
+  },
+  "src/updates.ts": {
+    "mtime": 1793799233.7174249,
+    "seen": 1793799239.6067078,
+    "ast_hash": "058ae2ec8f752c4e7708bae2a636287c",
+    "semantic_hash": ""
+  },
+  "src/vite-env.d.ts": {
+    "mtime": 1793608556.7848637,
+    "seen": 1793709180.8213346,
+    "ast_hash": "8f68c27c3fc38817b2726b20e2d4f1ee",
+    "semantic_hash": ""
+  },
+  "tsconfig.json": {
+    "mtime": 1793799233.7174249,
+    "seen": 1793799239.60671,
+    "ast_hash": "0effe8d39590d179e27f23387fca1ac9",
+    "semantic_hash": ""
+  },
+  "tsconfig.node.json": {
+    "mtime": 1793608556.7848637,
+    "seen": 1793709180.821336,
+    "ast_hash": "281e378713152cccc7860c818db55849",
+    "semantic_hash": ""
+  },
+  "vite.config.ts": {
+    "mtime": 1793799233.7186315,
+    "seen": 1793799239.6067123,
+    "ast_hash": "80efb443c6bc69fcf30bb30ef4abfd73",
+    "semantic_hash": ""
+  },
+  ".github/workflows/release.yml": {
+    "mtime": 1793799233.549224,
+    "seen": 1793799239.606713,
+    "ast_hash": "2388f2c431c1e2735924cb9713c308aa",
+    "semantic_hash": ""
+  },
+  "CHANGELOG.md": {
+    "mtime": 1793917989.379045,
+    "seen": 1793918001.9906397,
+    "ast_hash": "daa26dc16c2a7d3912fc46ef5c7fe83c",
+    "semantic_hash": ""
+  },
+  "README.md": {
+    "mtime": 1793799233.5532243,
+    "seen": 1793799239.6067152,
+    "ast_hash": "db6810ec68d3ea5400d71cde89699f93",
+    "semantic_hash": ""
+  },
+  "docs/HANDOFF.md": {
+    "mtime": 1793799233.5573277,
+    "seen": 1793799239.6067162,
+    "ast_hash": "c152e058acc12a8a5877cb6c3d63c5bc",
+    "semantic_hash": ""
+  },
+  "docs/superpowers/notes/2026-11-02-installer-facts.md": {
+    "mtime": 1793799233.5593343,
+    "seen": 1793799239.606717,
+    "ast_hash": "b79362f10f3e9e5bb4198aa6e4743060",
+    "semantic_hash": ""
+  },
+  "docs/superpowers/notes/2026-11-02-taskbar-facts.md": {
+    "mtime": 1793799233.5603337,
+    "seen": 1793799239.6067183,
+    "ast_hash": "a416e339bacb8c4c77fef2992165b321",
+    "semantic_hash": ""
+  },
+  "docs/superpowers/notes/2026-11-02-update-facts.md": {
+    "mtime": 1793799233.5613327,
+    "seen": 1793799239.606719,
+    "ast_hash": "71019d4b452aa2c9f2ffa945b77808f6",
+    "semantic_hash": ""
+  },
+  "docs/superpowers/plans/2026-11-02-core-v0.1.md": {
+    "mtime": 1793620152.5528903,
+    "seen": 1793709180.8213427,
+    "ast_hash": "447a01b8363170584b1bdc6aeb4db81a",
+    "semantic_hash": ""
+  },
+  "docs/superpowers/plans/2026-11-02-installer-and-logo.md": {
+    "mtime": 1793799233.5625484,
+    "seen": 1793799239.606721,
+    "ast_hash": "ca4b2dd1625db732f3c7032d26642a84",
+    "semantic_hash": ""
+  },
+  "docs/superpowers/plans/2026-11-02-taskbar-takeover.md": {
+    "mtime": 1793799233.5625484,
+    "seen": 1793799239.6067224,
+    "ast_hash": "8f182f6efff63db743cbb6c07e01a076",
+    "semantic_hash": ""
+  },
+  "docs/superpowers/plans/2026-11-02-update-check.md": {
+    "mtime": 1793799233.5635548,
+    "seen": 1793799239.606723,
+    "ast_hash": "c5022125f18bff33589cd6b25d4f789e",
+    "semantic_hash": ""
+  },
+  "docs/superpowers/specs/2026-11-02-core-design.md": {
+    "mtime": 1793799233.5659163,
+    "seen": 1793799239.6067276,
+    "ast_hash": "69b3aa36b1a8d73418cd6b5939351a96",
+    "semantic_hash": ""
+  },
+  "docs/superpowers/specs/2026-11-02-installer-design.md": {
+    "mtime": 1793799233.5674238,
+    "seen": 1793799239.6067288,
+    "ast_hash": "dccebd20a37272b6edd4fb5dfb669726",
+    "semantic_hash": ""
+  },
+  "docs/superpowers/specs/2026-11-02-taskbar-takeover-design.md": {
+    "mtime": 1793799233.5687468,
+    "seen": 1793799239.6067295,
+    "ast_hash": "a21bf6b55d48ec91db1c26ca776b6e9b",
+    "semantic_hash": ""
+  },
+  "docs/superpowers/specs/2026-11-02-update-check-design.md": {
+    "mtime": 1793799233.569754,
+    "seen": 1793799239.6067305,
+    "ast_hash": "50ba8a5107fcb19a4a272bd9056949ce",
+    "semantic_hash": ""
+  },
+  "index.html": {
+    "mtime": 1793799233.6035933,
+    "seen": 1793799239.6067345,
+    "ast_hash": "ffddd5489e43a15076b6a5937d8304da",
+    "semantic_hash": ""
+  },
+  "installer/index.html": {
+    "mtime": 1793799233.6132846,
+    "seen": 1793799239.6067357,
+    "ast_hash": "7a543eb026bf3bf44960fbe6f2289d37",
+    "semantic_hash": ""
+  },
+  "branding/macdows-mark-16.svg": {
+    "mtime": 1793799233.5542276,
+    "seen": 1793799239.6067376,
+    "ast_hash": "e3378c4d69d94d73a69eadefa36473ee",
+    "semantic_hash": ""
+  },
+  "branding/macdows-mark-24.svg": {
+    "mtime": 1793799233.5542276,
+    "seen": 1793799239.6067388,
+    "ast_hash": "b9e89e2ff8821dcc43b829ab9f5f7130",
+    "semantic_hash": ""
+  },
+  "branding/macdows-mark.svg": {
+    "mtime": 1793799233.5557356,
+    "seen": 1793799239.6067395,
+    "ast_hash": "ad77bd8078cbbaff8d7a24e370579368",
+    "semantic_hash": ""
+  },
+  "installer/src-tauri/icons/128x128.png": {
+    "mtime": 1793908193.1840503,
+    "seen": 1793910347.6983342,
+    "ast_hash": "256c3cfdf6dc33193a1fe0d99833ce9b",
+    "semantic_hash": ""
+  },
+  "installer/src-tauri/icons/128x128@2x.png": {
+    "mtime": 1793908193.217999,
+    "seen": 1793910347.6983366,
+    "ast_hash": "33f3fa89cf3ab17a560cb7581f1ea759",
+    "semantic_hash": ""
+  },
+  "installer/src-tauri/icons/32x32.png": {
+    "mtime": 1793908193.137823,
+    "seen": 1793910347.6983373,
+    "ast_hash": "658b53dcb6bf319aa4c271cda79985ad",
+    "semantic_hash": ""
+  },
+  "installer/src-tauri/icons/icon.png": {
+    "mtime": 1793908193.2772264,
+    "seen": 1793910347.6983383,
+    "ast_hash": "affb71d8d171fbb88665bb5834a3c738",
+    "semantic_hash": ""
+  },
+  "installer/src/assets/mark.svg": {
+    "mtime": 1793799233.5557356,
+    "seen": 1793910347.6983392,
+    "ast_hash": "ad77bd8078cbbaff8d7a24e370579368",
+    "semantic_hash": ""
+  },
+  "public/macdows-mark.svg": {
+    "mtime": 1793799233.6358795,
+    "seen": 1793799239.6067467,
+    "ast_hash": "b9e89e2ff8821dcc43b829ab9f5f7130",
+    "semantic_hash": ""
+  },
+  "public/tauri.svg": {
+    "mtime": 1793608556.7872913,
+    "seen": 1793709180.8213718,
+    "ast_hash": "f0966ff85db99f2d00771f92d18c9e7f",
+    "semantic_hash": ""
+  },
+  "public/vite.svg": {
+    "mtime": 1793608556.788702,
+    "seen": 1793709180.8213737,
+    "ast_hash": "8e3a10e157f75ada21ab742c022d5430",
+    "semantic_hash": ""
+  },
+  "src-tauri/icons/128x128.png": {
+    "mtime": 1793908193.1840503,
+    "seen": 1793910347.6983433,
+    "ast_hash": "256c3cfdf6dc33193a1fe0d99833ce9b",
+    "semantic_hash": ""
+  },
+  "src-tauri/icons/128x128@2x.png": {
+    "mtime": 1793908193.217999,
+    "seen": 1793910347.698344,
+    "ast_hash": "33f3fa89cf3ab17a560cb7581f1ea759",
+    "semantic_hash": ""
+  },
+  "src-tauri/icons/32x32.png": {
+    "mtime": 1793908193.137823,
+    "seen": 1793910347.6983447,
+    "ast_hash": "658b53dcb6bf319aa4c271cda79985ad",
+    "semantic_hash": ""
+  },
+  "src-tauri/icons/64x64.png": {
+    "mtime": 1793908193.1594894,
+    "seen": 1793910347.6983454,
+    "ast_hash": "c0b849a1deb9db7a30f67e9ba1c52cb4",
+    "semantic_hash": ""
+  },
+  "src-tauri/icons/Square107x107Logo.png": {
+    "mtime": 1793908192.4468684,
+    "seen": 1793910347.6983466,
+    "ast_hash": "caf5a0bebf478bbfdb7d9fb72ab47bb4",
+    "semantic_hash": ""
+  },
+  "src-tauri/icons/Square142x142Logo.png": {
+    "mtime": 1793908192.4729276,
+    "seen": 1793910347.6983473,
+    "ast_hash": "44947ca897951b38ed59be6acb395847",
+    "semantic_hash": ""
+  },
+  "src-tauri/icons/Square150x150Logo.png": {
+    "mtime": 1793908192.4994187,
+    "seen": 1793910347.6983478,
+    "ast_hash": "15698ae10ab1eddc94ba54e25ae4b6a0",
+    "semantic_hash": ""
+  },
+  "src-tauri/icons/Square284x284Logo.png": {
+    "mtime": 1793908192.5371816,
+    "seen": 1793910347.6983488,
+    "ast_hash": "ab4815b36fda6fd30d62c42204230904",
+    "semantic_hash": ""
+  },
+  "src-tauri/icons/Square30x30Logo.png": {
+    "mtime": 1793908192.3621285,
+    "seen": 1793910347.6983495,
+    "ast_hash": "4ddd5c4d545dfb79c097ed8b55caa4a3",
+    "semantic_hash": ""
+  },
+  "src-tauri/icons/Square310x310Logo.png": {
+    "mtime": 1793908192.579897,
+    "seen": 1793910347.6983504,
+    "ast_hash": "ab525607a88310047482ba9a12d89161",
+    "semantic_hash": ""
+  },
+  "src-tauri/icons/Square44x44Logo.png": {
+    "mtime": 1793908192.3818116,
+    "seen": 1793910347.6983511,
+    "ast_hash": "e37aa8a1787a3d321eb317b6d28a8617",
+    "semantic_hash": ""
+  },
+  "src-tauri/icons/Square71x71Logo.png": {
+    "mtime": 1793908192.4010956,
+    "seen": 1793910347.6983519,
+    "ast_hash": "9f75531226e3830bd3233682ec6302f4",
+    "semantic_hash": ""
+  },
+  "src-tauri/icons/Square89x89Logo.png": {
+    "mtime": 1793908192.4229069,
+    "seen": 1793910347.6983523,
+    "ast_hash": "ba4743f97fb712cc1ccc6523aa873d87",
+    "semantic_hash": ""
+  },
+  "src-tauri/icons/StoreLogo.png": {
+    "mtime": 1793908192.3439684,
+    "seen": 1793910347.6983533,
+    "ast_hash": "5487e4132a93ee73752a63853e8d3df5",
+    "semantic_hash": ""
+  },
+  "src-tauri/icons/icon.png": {
+    "mtime": 1793908193.2772264,
+    "seen": 1793910347.6983542,
+    "ast_hash": "affb71d8d171fbb88665bb5834a3c738",
+    "semantic_hash": ""
+  },
+  "src/notch/Tools.tsx": {
+    "mtime": 1793799233.7033725,
+    "seen": 1793799239.6066916,
+    "ast_hash": "778082e1c068ba2385109608ae521119",
+    "semantic_hash": ""
+  },
+  "Takvim.png": {
+    "mtime": 1793711756.2957249,
+    "seen": 1793711839.4005136,
+    "ast_hash": "a965f250d8cdb7f490ab334971b998ba",
+    "semantic_hash": ""
+  },
+  "installer/MacDows.Setup/App.xaml": {
+    "mtime": 1793799233.6050963,
+    "seen": 1793799239.606589,
+    "ast_hash": "c27c339a9af30ea82613ea77644a5269",
+    "semantic_hash": ""
+  },
+  "installer/MacDows.Setup/App.xaml.cs": {
+    "mtime": 1793799233.6050963,
+    "seen": 1793799239.6065922,
+    "ast_hash": "8f605463a3afa9901fd0a06f17140852",
+    "semantic_hash": ""
+  },
+  "installer/MacDows.Setup/MacDows.Setup.csproj": {
+    "mtime": 1793799233.6066012,
+    "seen": 1793799239.6065943,
+    "ast_hash": "28b9cb9a8d95a1333aa5e5fe2d7cbe56",
+    "semantic_hash": ""
+  },
+  "installer/MacDows.Setup/SetupWindow.xaml": {
+    "mtime": 1793799233.607607,
+    "seen": 1793799239.606596,
+    "ast_hash": "d950ea6619416ab0d6bec6d2067a458a",
+    "semantic_hash": ""
+  },
+  "installer/MacDows.Setup/SetupWindow.xaml.cs": {
+    "mtime": 1793799233.608113,
+    "seen": 1793799239.606598,
+    "ast_hash": "bd2c1a118d75621ef24ff1e746ed2e2e",
+    "semantic_hash": ""
+  },
+  "installer/MacDows.Setup/logo.png": {
+    "mtime": 1793799233.6112854,
+    "seen": 1793799239.6067405,
+    "ast_hash": "33f3fa89cf3ab17a560cb7581f1ea759",
+    "semantic_hash": ""
+  },
+  "src-tauri/src/quick_settings.rs": {
+    "mtime": 1793823438.8531017,
+    "seen": 1793823484.1947203,
+    "ast_hash": "366fd2cad3d7341e5c0a7486a3b8ec3a",
+    "semantic_hash": ""
+  },
+  "src/notch/QuickSettings.tsx": {
+    "mtime": 1793903931.6485353,
+    "seen": 1793903947.8988428,
+    "ast_hash": "f582118a747ca1bb29e99a1209ed9073",
+    "semantic_hash": ""
+  },
+  "src-tauri/src/notifications.rs": {
+    "mtime": 1793835245.0580406,
+    "seen": 1793901749.4341211,
+    "ast_hash": "5868f563ade0603fb54a10515090a073",
+    "semantic_hash": ""
+  },
+  "src/notch/NotificationBanner.tsx": {
+    "mtime": 1793799233.7003574,
+    "seen": 1793799239.6066868,
+    "ast_hash": "8bcc05a152c2956f241d0d4f915c9ea7",
+    "semantic_hash": ""
+  },
+  "src-tauri/src/shelf.rs": {
+    "mtime": 1793799233.6757278,
+    "seen": 1793799239.6066563,
+    "ast_hash": "d0e01babefb423932e70c74b8242baea",
+    "semantic_hash": ""
+  },
+  "src/notch/DynamicIsland.tsx": {
+    "mtime": 1793917964.7567537,
+    "seen": 1793918001.9905992,
+    "ast_hash": "54a10fc7d40ced3927058c9be336caf6",
+    "semantic_hash": ""
+  },
+  "src/notch/Shelf.tsx": {
+    "mtime": 1793799233.7023575,
+    "seen": 1793799239.6066904,
+    "ast_hash": "95d2121d002246becf6184da3e1a242b",
+    "semantic_hash": ""
+  },
+  "src/notch/NotificationHistory.tsx": {
+    "mtime": 1793799233.7013578,
+    "seen": 1793799239.606688,
+    "ast_hash": "e250d91c182ad4d05a9353114dabd5d0",
+    "semantic_hash": ""
+  },
+  "src-tauri/src/bluetooth.rs": {
+    "mtime": 1793799233.664221,
+    "seen": 1793799239.6066337,
+    "ast_hash": "1f9db55ede1a56cc05636548ead08f10",
+    "semantic_hash": ""
+  },
+  "src/notch/BluetoothPage.tsx": {
+    "mtime": 1793823921.5594463,
+    "seen": 1793823971.5750475,
+    "ast_hash": "6b5391a975c77f1de90342b738e5971d",
+    "semantic_hash": ""
+  },
+  "src-tauri/src/secure_store.rs": {
+    "mtime": 1793799233.6747286,
+    "seen": 1793799239.6066542,
+    "ast_hash": "27cfcff33ddcfee6dff9aa2d7d8d1638",
+    "semantic_hash": ""
+  },
+  "docs/superpowers/specs/2026-11-03-dynamic-island-settings-design.md": {
+    "mtime": 1793799233.5707574,
+    "seen": 1793799239.6067314,
+    "ast_hash": "a857f94d3b6d656a20884226535e5348",
+    "semantic_hash": ""
+  },
+  "src/notch/bluetoothLabel.test.ts": {
+    "mtime": 1793799233.7033725,
+    "seen": 1793799239.6066928,
+    "ast_hash": "67ed294e1b0d2a071783bfdf5aa5e080",
+    "semantic_hash": ""
+  },
+  "src/notch/bluetoothLabel.ts": {
+    "mtime": 1793799233.7043874,
+    "seen": 1793799239.606694,
+    "ast_hash": "b058ef0c37ab449a32090547c4e0d6e7",
+    "semantic_hash": ""
+  },
+  "docs/superpowers/plans/2026-11-04-dynamic-island-settings.md": {
+    "mtime": 1793799233.5659163,
+    "seen": 1793799239.6067266,
+    "ast_hash": "272a8170e85cd2baa4058257b255a9cd",
+    "semantic_hash": ""
+  },
+  "src-tauri/src/pinned_apps.rs": {
+    "mtime": 1793823853.539609,
+    "seen": 1793823891.327142,
+    "ast_hash": "9a1c76324c24ce3861b762bf844bf294",
+    "semantic_hash": ""
+  },
+  "src/dock/dockItems.test.ts": {
+    "mtime": 1793799233.6946404,
+    "seen": 1793799239.6066782,
+    "ast_hash": "155044a998a731b0781016bae6cce9b0",
+    "semantic_hash": ""
+  },
+  "src/dock/dockItems.ts": {
+    "mtime": 1793799233.6946404,
+    "seen": 1793799239.6066792,
+    "ast_hash": "e6da6158262fb5434cc4a125a1cd999e",
+    "semantic_hash": ""
+  },
+  "docs/superpowers/specs/2026-11-04-dock-features-design.md": {
+    "mtime": 1793799233.5725503,
+    "seen": 1793799239.6067338,
+    "ast_hash": "c659524ac520f2a68b850bbf6171693e",
+    "semantic_hash": ""
+  },
+  "docs/superpowers/plans/2026-11-04-dock-features.md": {
+    "mtime": 1793799233.5645683,
+    "seen": 1793799239.6067257,
+    "ast_hash": "b28ae1444ce0f2ebbbc76853f7a39e0e",
+    "semantic_hash": ""
+  },
+  "src-tauri/src/dock_menu.rs": {
+    "mtime": 1793818724.5390568,
+    "seen": 1793818764.0472372,
+    "ast_hash": "b0d483c6939cf2d7e7233a85cf291845",
+    "semantic_hash": ""
+  },
+  "src/dock/dockDrag.test.ts": {
+    "mtime": 1793799233.6936412,
+    "seen": 1793799239.6066763,
+    "ast_hash": "c07a02f846ccf57f3a89f2092b0dd811",
+    "semantic_hash": ""
+  },
+  "src/dock/dockDrag.ts": {
+    "mtime": 1793799233.6936412,
+    "seen": 1793799239.6066773,
+    "ast_hash": "c03830c3d6bc2398424e4a1e59be98c5",
+    "semantic_hash": ""
+  },
+  "src-tauri/src/custom_icons.rs": {
+    "mtime": 1793799233.6652188,
+    "seen": 1793799239.6066363,
+    "ast_hash": "c678cd4f928f2c34ab8f00ec003fbe1f",
+    "semantic_hash": ""
+  },
+  "src-tauri/src/drives.rs": {
+    "mtime": 1793799233.6662166,
+    "seen": 1793799239.6066391,
+    "ast_hash": "b85ab92c3631f1f95ace44bd6092f92b",
+    "semantic_hash": ""
+  },
+  "src-tauri/src/hotkeys.rs": {
+    "mtime": 1793799233.6677222,
+    "seen": 1793799239.6066418,
+    "ast_hash": "1d9dc0a77da57931977e573163eb7ce1",
+    "semantic_hash": ""
+  },
+  "src-tauri/src/preview.rs": {
+    "mtime": 1793799233.672728,
+    "seen": 1793799239.606652,
+    "ast_hash": "92271183b525816508bc80bed229a0e1",
+    "semantic_hash": ""
+  },
+  "src/dock/DockPreview.tsx": {
+    "mtime": 1793799233.6926332,
+    "seen": 1793799239.6066747,
+    "ast_hash": "a7b4bf9058786c7dd5d7dbc02d922ae1",
+    "semantic_hash": ""
+  },
+  "src-tauri/src/app_catalog.rs": {
+    "mtime": 1793799233.6622176,
+    "seen": 1793799239.6066313,
+    "ast_hash": "8dd74a743febf19c83358e7a1673868a",
+    "semantic_hash": ""
+  },
+  "src/dock/AddApp.tsx": {
+    "mtime": 1793799233.6905043,
+    "seen": 1793799239.606672,
+    "ast_hash": "de43a5fceb0596425dda9d4d80e350f7",
+    "semantic_hash": ""
+  },
+  "src-tauri/src/island_settings.rs": {
+    "mtime": 1793902020.8369634,
+    "seen": 1793902072.654489,
+    "ast_hash": "a22546a3b6bcc72984d181295ecac2a3",
+    "semantic_hash": ""
+  },
+  "src/notch/islandDefaults.ts": {
+    "mtime": 1793902064.4729893,
+    "seen": 1793902072.6545477,
+    "ast_hash": "472459b26b29c675fdb0f92a558cba65",
+    "semantic_hash": ""
+  },
+  "src/notch/islandLogic.test.ts": {
+    "mtime": 1793917798.2340999,
+    "seen": 1793918001.9906158,
+    "ast_hash": "f51645157de930f4d83f31580729a8ff",
+    "semantic_hash": ""
+  },
+  "src/notch/islandLogic.ts": {
+    "mtime": 1793917798.2340999,
+    "seen": 1793918001.9906168,
+    "ast_hash": "eb11692ccde71c31916dc61019542664",
+    "semantic_hash": ""
+  },
+  "src/settings/IslandSettings.tsx": {
+    "mtime": 1793904478.847754,
+    "seen": 1793904830.494838,
+    "ast_hash": "4d944cba062ccd64051b662a1c7b7d61",
+    "semantic_hash": ""
+  },
+  "src/settings/useStored.ts": {
+    "mtime": 1793799233.7119517,
+    "seen": 1793799239.606703,
+    "ast_hash": "ffba147d275afa5bf21206b2a24d67fb",
+    "semantic_hash": ""
+  },
+  "docs/superpowers/specs/2026-11-04-control-center-network-design.md": {
+    "mtime": 1793799233.5717554,
+    "seen": 1793799239.6067326,
+    "ast_hash": "694825ee890925c4442d69c235ebbe3e",
+    "semantic_hash": ""
+  },
+  "docs/superpowers/plans/2026-11-04-control-center-network.md": {
+    "mtime": 1793799233.5645683,
+    "seen": 1793799239.6067243,
+    "ast_hash": "866f0566bdf4963a52c7897e3e91d3ca",
+    "semantic_hash": ""
+  },
+  "src-tauri/src/wifi.rs": {
+    "mtime": 1793903792.8569844,
+    "seen": 1793903838.4010694,
+    "ast_hash": "fb35474284af59cbb899afbb2388b8f2",
+    "semantic_hash": ""
+  },
+  "src/notch/netLogic.test.ts": {
+    "mtime": 1793903931.6475377,
+    "seen": 1793903947.8988562,
+    "ast_hash": "bdcb73eaa891f3391ffb0ee4ac3ca9ca",
+    "semantic_hash": ""
+  },
+  "src/notch/netLogic.ts": {
+    "mtime": 1793903931.6475377,
+    "seen": 1793903947.8988569,
+    "ast_hash": "c84f501d8debdedacd0f0415a6abc761",
+    "semantic_hash": ""
+  },
+  "src-tauri/src/dock_menu/window_menu.rs": {
+    "mtime": 1793903899.1682436,
+    "seen": 1793903925.8536434,
+    "ast_hash": "632b02f094120ab540bf54f136c313bb",
+    "semantic_hash": ""
+  },
+  "src/notch/WifiPage.tsx": {
+    "mtime": 1793903828.004629,
+    "seen": 1793903838.4011276,
+    "ast_hash": "106cdf27cbdc663d94f97778117a0e43",
+    "semantic_hash": ""
+  },
+  "src-tauri/src/vpn.rs": {
+    "mtime": 1793903854.630332,
+    "seen": 1793903878.3677828,
+    "ast_hash": "278f8ad59d9d02cb2bf5927601061745",
+    "semantic_hash": ""
+  },
+  "src/notch/VpnPage.tsx": {
+    "mtime": 1793823438.075363,
+    "seen": 1793823484.1947868,
+    "ast_hash": "bfcbf5697b77aba8fb754ec3511fc27e",
+    "semantic_hash": ""
+  },
+  "src-tauri/src/bluetooth_pairing.rs": {
+    "mtime": 1793903681.7280345,
+    "seen": 1793903714.6677477,
+    "ast_hash": "689f3428763e4fec7b8da4c5244085de",
+    "semantic_hash": ""
+  },
+  "src/notch/PairPage.tsx": {
+    "mtime": 1793823629.1568785,
+    "seen": 1793823671.1089494,
+    "ast_hash": "f1e665ec462a7551191d09d723d7c57c",
+    "semantic_hash": ""
+  },
+  "docs/superpowers/specs/2026-11-04-status-widgets-design.md": {
+    "mtime": 1793903125.2365828,
+    "seen": 1793903149.4156864,
+    "ast_hash": "7fadc6425f0e7245087ef667faedec60",
+    "semantic_hash": ""
+  },
+  "docs/superpowers/plans/2026-11-05-status-widgets.md": {
+    "mtime": 1793901978.4948616,
+    "seen": 1793902072.6545832,
+    "ast_hash": "0f28b6ef8d99da04c65875e5304d1464",
+    "semantic_hash": ""
+  },
+  "src-tauri/src/system_stats.rs": {
+    "mtime": 1793902088.994323,
+    "seen": 1793902173.4047267,
+    "ast_hash": "b83242995e9d11fc05064148a571375f",
+    "semantic_hash": ""
+  },
+  "src/notch/widgetLogic.test.ts": {
+    "mtime": 1793902189.431021,
+    "seen": 1793902198.0867643,
+    "ast_hash": "870a4f5f4ce098e9f0051fefadc2cb6a",
+    "semantic_hash": ""
+  },
+  "src/notch/widgetLogic.ts": {
+    "mtime": 1793902189.452491,
+    "seen": 1793902198.0867677,
+    "ast_hash": "6227a8750d749c2c218cb5fbb3193e5e",
+    "semantic_hash": ""
+  },
+  "src/notch/StatusWidgets.tsx": {
+    "mtime": 1793902264.9720106,
+    "seen": 1793902717.3662572,
+    "ast_hash": "e79661f82c1861774952588d83aa4aff",
+    "semantic_hash": ""
+  },
+  "src/notch/widgetIcons.tsx": {
+    "mtime": 1793902264.9024293,
+    "seen": 1793902717.366277,
+    "ast_hash": "687d71294191446ad11824dc2fdb1b74",
+    "semantic_hash": ""
+  },
+  "src/settings/StatusWidgetsEditor.tsx": {
+    "mtime": 1793902754.6843774,
+    "seen": 1793903116.7703302,
+    "ast_hash": "8c7a90ea25140f5ccee87755b34bf1d4",
+    "semantic_hash": ""
+  }
+}
