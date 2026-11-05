@@ -10,10 +10,15 @@ Format: [Keep a Changelog](https://keepachangelog.com/), versioning: [SemVer](ht
 - Control Center, VPN: a VPN card shows Windows VPN connections (switch one on or off with a click, or open the list for several) and tells when a VPN app (WireGuard, OpenVPN and the like) has a tunnel up. Only stored sign-ins are used.
 - Control Center, Bluetooth: "Add a device" scans for nearby devices and pairs them inside the island (a plain yes, a code to compare, or a PIN to type), and paired devices can be removed. When the setting is off, "Add a device" opens Windows settings as before.
 - While a text field in the island has the keyboard, the island stays open even if the pointer leaves it, and closes when typing ends.
+- Status widgets on the island: weather, battery, CPU, memory, disk and network speed sit on either side of the clock while the pointer is over the island (not while the player is open). Settings > Dynamic Island > Status has a pill preview where widgets are dragged between the left area, the right area and the "Available" tray (up to 3 per side; Alt+Left/Right moves a focused widget between areas, Alt+Up/Down reorders). The numbers are only sampled while the island is hovered and a CPU, memory, disk or network widget is placed, every 2 seconds. Weather comes from Open-Meteo for the city chosen in settings (temperature in Celsius or Fahrenheit); only the city name and its coordinates are sent, and with no city nothing is sent at all. The battery widget turns red below a chosen percentage (default 20%) unless the charger is connected, and hides itself on computers without a battery. The old "battery percentage" setting becomes the battery widget (switched off there, it stays off).
 
 ### Changed
 - The dock's right-click menu for a running app now shows the window's own Windows menu (Restore, Move, Size, Minimize, Maximize, Close) under the dock's items, and "Quit app" is gone in favor of Windows's Close.
 - Pinning and unpinning in the dock no longer touch the Windows taskbar: "Keep in Dock" adds a pin only MacDows keeps (or shows a hidden one again), "Remove from Dock" hides a Windows pin in the dock only. The dock still reads the taskbar's pins to start with.
+
+### Fixed
+- Shutting down Windows while MacDows runs no longer shows two error windows (taskkill failing with 0xc0000142) whose dismissal cancelled the shutdown: MacDows skips restarting Start and Search while Windows is shutting down or logging off.
+- Notifications cleared from the island's history stay cleared: they used to come back at the next refresh or restart because Windows still listed them.
 
 ## [0.1.0] - 2026-11-04
 

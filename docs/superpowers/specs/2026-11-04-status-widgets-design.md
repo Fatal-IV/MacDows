@@ -1,6 +1,6 @@
 # Durum widget'ları (Nectar'daki gibi), tasarım
 
-Tarih: 2026-11-04 · Durum: kullanıcı onayı bekliyor (yazılı belge)
+Tarih: 2026-11-04 · Durum: uygulandı (2026-11-05)
 
 ## 1. Amaç
 
