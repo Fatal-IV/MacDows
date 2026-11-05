@@ -3,6 +3,8 @@ import { SCREEN_IDS, setSetting, type ClickMode, type FullscreenMode, type Scree
 import { DEFAULT_ORDER } from "../notch/islandDefaults";
 import { canDisable } from "../notch/islandLogic";
 import { Button, Group, Row, Select, Slider, Toggle } from "../ui/controls";
+import { useSystemStatus } from "../system";
+import { StatusWidgetsEditor } from "./StatusWidgetsEditor";
 import { useStored } from "./useStored";
 
 const VISIBILITIES: Visibility[] = ["fixed", "smart", "peek"];
@@ -86,6 +88,7 @@ function OrderList({ s, t }: { s: AppSettings; t: T }) {
 /** The "Dynamic Island" settings page. */
 export default function IslandSettings({ s, t }: { s: AppSettings; t: T }) {
   const [scale, setScale] = useStored("nectar-scale", "1");
+  const system = useSystemStatus();
 
   const resetLayout = () => {
     updateIsland(s, (i) => {
@@ -133,6 +136,18 @@ export default function IslandSettings({ s, t }: { s: AppSettings; t: T }) {
                 <Toggle label={t("island.quick.pairing")} checked={s.island.screens.quick.bluetooth_pairing} onChange={(v) => updateIsland(s, (i) => (i.screens.quick.bluetooth_pairing = v))} />
               </Row>
             </>
+          )}
+          {id === "status" && (
+            <StatusWidgetsEditor
+              cfg={s.island.screens.status}
+              hasBattery={system?.battery_percent != null}
+              t={t}
+              onChange={(next) =>
+                updateIsland(s, (i) => {
+                  i.screens.status = next;
+                })
+              }
+            />
           )}
           {id === "music" && (
             <Row title={t("island.music.sources")} description={t("island.music.sourcesHelp")}>

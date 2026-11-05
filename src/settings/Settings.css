@@ -44,3 +44,25 @@ html, body, #root { margin: 0; height: 100%; background: transparent; }
 .section-title { margin: 22px 0 8px; font-size: 12px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; color: var(--s-muted); }
 .section-title:first-child { margin-top: 0; }
 .order-row { justify-content: space-between; }
+
+/* Status widget editor */
+.widget-editor { padding: 12px 0 0; }
+.widget-editor > .ui-row-text { padding: 0 18px 10px; }
+.wpreview { display: flex; align-items: center; gap: 10px; margin: 0 18px; padding: 8px 12px; border-radius: 18px; background: #000; color: #fff; }
+.wclock { font-size: 13px; font-weight: 500; flex-shrink: 0; }
+.wzone { display: flex; flex: 1; align-items: center; gap: 6px; min-height: 34px; padding: 3px; border: 1px dashed var(--s-border); border-radius: 10px; transition: background 0.15s, border-color 0.15s; }
+.wpreview .wzone:first-child { justify-content: flex-start; }
+.wpreview .wzone:last-child { justify-content: flex-end; }
+.wzone.flash { border-color: #ff5a52; background: rgba(255, 90, 82, 0.18); }
+.wtray-title { margin: 12px 18px 6px; font-size: 12px; color: var(--s-muted); }
+.wzone.tray { margin: 0 18px 12px; flex-wrap: wrap; flex: none; }
+.wchip { display: inline-flex; align-items: center; gap: 5px; padding: 5px 9px; border-radius: 8px; background: var(--s-bg); color: var(--s-text); border: 1px solid var(--s-border); font-size: 12px; cursor: grab; user-select: none; touch-action: none; }
+.wchip:focus-visible { outline: 2px solid var(--s-accent, #4c8dff); }
+.wchip.dragging { opacity: 0.35; }
+.wchip.dim { opacity: 0.45; }
+.wghost { position: fixed; z-index: 50; pointer-events: none; display: inline-flex; align-items: center; gap: 5px; padding: 5px 9px; border-radius: 8px; background: var(--s-bg); color: var(--s-text); border: 1px solid var(--s-border); font-size: 12px; box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35); }
+.wcity { position: relative; }
+.wcity input { width: 190px; padding: 6px 9px; border-radius: 8px; border: 1px solid var(--s-border); background: var(--s-bg); color: var(--s-text); font: inherit; font-size: 13px; }
+.wcity-list { position: absolute; right: 0; top: 100%; z-index: 20; margin: 4px 0 0; padding: 4px; min-width: 240px; list-style: none; border-radius: 10px; background: var(--s-bg); border: 1px solid var(--s-border); box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35); }
+.wcity-list button { display: block; width: 100%; text-align: left; padding: 6px 8px; border: 0; border-radius: 6px; background: none; color: var(--s-text); font: inherit; font-size: 13px; cursor: pointer; }
+.wcity-list button:hover { background: var(--s-border); }
