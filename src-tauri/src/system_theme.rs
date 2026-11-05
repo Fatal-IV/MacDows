@@ -277,6 +277,12 @@ pub fn apply(light: bool, surface_hex: &str, tint: bool) {
 /// Start is opened.
 fn reload_start() {
     use std::os::windows::process::CommandExt;
+    use windows::Win32::UI::WindowsAndMessaging::{GetSystemMetrics, SM_SHUTTINGDOWN};
+    // While Windows is signing out or shutting down no new process can start (taskkill fails with 0xc0000142 and
+    // Windows shows an error box that can cancel the shutdown), and Start is going away anyway.
+    if unsafe { GetSystemMetrics(SM_SHUTTINGDOWN) } != 0 {
+        return;
+    }
     let system32 = PathBuf::from(std::env::var_os("SystemRoot").unwrap_or_else(|| "C:\\Windows".into())).join("System32");
     // Search (SearchHost) reads the colors the same way, so it is restarted with Start.
     let _ = std::process::Command::new(system32.join("taskkill.exe"))

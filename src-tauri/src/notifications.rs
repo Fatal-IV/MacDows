@@ -71,6 +71,30 @@ pub fn merge_history(history: &mut Vec<Notice>, incoming: &[Notice], max: usize)
     added
 }
 
+/// Only what arrived after `cutoff` (the moment the history was last cleared) may join the history: Windows keeps
+/// the old notifications in its own list, and without this they would flow straight back in after a clear.
+pub fn after_cutoff(list: &[Notice], cutoff: i64) -> Vec<Notice> {
+    list.iter().filter(|n| n.time_ms > cutoff).cloned().collect()
+}
+
+fn cutoff_path() -> std::path::PathBuf {
+    history_path().with_file_name("notification-history-cleared-at")
+}
+
+/// When the history was last cleared (Unix ms); 0 when it never was. Kept on disk so a restart remembers it.
+fn cleared_at() -> i64 {
+    *CLEARED_AT.lock().unwrap().get_or_insert_with(|| std::fs::read_to_string(cutoff_path()).ok().and_then(|s| s.trim().parse().ok()).unwrap_or(0))
+}
+
+static CLEARED_AT: Mutex<Option<i64>> = Mutex::new(None);
+
+fn mark_cleared() {
+    let now = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map(|d| d.as_millis() as i64).unwrap_or(0);
+    let _ = std::fs::create_dir_all(cutoff_path().parent().unwrap_or(std::path::Path::new(".")));
+    let _ = std::fs::write(cutoff_path(), now.to_string());
+    *CLEARED_AT.lock().unwrap() = Some(now);
+}
+
 fn history_path() -> std::path::PathBuf {
     std::env::var_os("APPDATA").map(std::path::PathBuf::from).unwrap_or_else(std::env::temp_dir).join("MacDows").join("notification-history.json")
 }
@@ -163,7 +187,7 @@ pub fn start(app: AppHandle) {
                 let changed = known.as_ref() != Some(&ids);
                 let new = fresh(&known, &current);
                 with_history(|h| {
-                    if merge_history(h, &current, HISTORY_MAX) {
+                    if merge_history(h, &after_cutoff(&current, cleared_at()), HISTORY_MAX) {
                         save_history(h);
                     }
                 });
@@ -199,6 +223,7 @@ pub fn get_notification_history() -> Vec<Notice> {
 
 #[tauri::command]
 pub fn clear_notification_history() {
+    mark_cleared();
     with_history(|h| {
         h.clear();
         save_history(h);
@@ -249,6 +274,14 @@ mod tests {
         assert!(merge_history(&mut h, &[n(1, 100), n(2, 300)], 10));
         assert_eq!(h.iter().map(|x| x.time_ms).collect::<Vec<_>>(), vec![300, 100]);
         assert!(!merge_history(&mut h, &[n(2, 300)], 10));
+    }
+
+    #[test]
+    fn a_cleared_history_does_not_take_the_old_ones_back() {
+        let live = [n(1, 100), n(2, 300)];
+        assert_eq!(after_cutoff(&live, 300).len(), 0);
+        assert_eq!(after_cutoff(&live, 200).iter().map(|x| x.id).collect::<Vec<_>>(), vec![2]);
+        assert_eq!(after_cutoff(&live, 0).len(), 2);
     }
 
     #[test]
