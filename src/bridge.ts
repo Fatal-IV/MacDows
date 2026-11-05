@@ -390,3 +390,12 @@ export const onBtFound = (cb: (d: { id: string; name: string; kind: string }) =>
 export const onBtLost = (cb: (d: { id: string }) => void): Promise<UnlistenFn> => listen<{ id: string }>("bt-lost", (e) => cb(e.payload));
 export const onBtPaired = (cb: (d: { id: string }) => void): Promise<UnlistenFn> => listen<{ id: string }>("bt-paired", (e) => cb(e.payload));
 export const onBtPairingRequest = (cb: (r: BtPairingRequest) => void): Promise<UnlistenFn> => listen<BtPairingRequest>("bt-pairing-request", (e) => cb(e.payload));
+
+export interface SystemStats {
+  cpu: number;
+  ram: number;
+  disk: number;
+  net_down: number;
+  net_up: number;
+}
+export const getSystemStats = () => invoke<SystemStats>("get_system_stats");
