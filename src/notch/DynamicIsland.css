@@ -593,23 +593,38 @@ img { -webkit-user-drag: none; user-select: none; }
 /* With the VPN card the four tiles form a plain 2 x 2 grid. */
 .quick-tiles.has-vpn .glass-tile:nth-child(3) { grid-column: auto; }
 
-/* Blinking neon green eyes (island set to "fixed") */
-.eyes { display: flex; align-items: center; gap: 4px; margin-right: 10px; height: 12px; }
+/* The island's character: arc eyes that blink, and a hand that waves while it greets */
+.eyes { display: flex; align-items: center; gap: 5px; margin-right: 10px; height: 14px; color: #39ff14; }
 .eyes i {
   display: block;
-  width: 2.5px;
-  height: 9px;
-  border-radius: 2px;
-  background: #39ff14;
-  box-shadow: 0 0 4px #39ff14, 0 0 9px rgba(57, 255, 20, 0.55);
-  transform-origin: center;
+  width: 8px;
+  height: 5px;
+  box-sizing: border-box;
+  border-top: 2.5px solid #39ff14;
+  border-radius: 8px 8px 0 0 / 6px 6px 0 0;
+  filter: drop-shadow(0 0 3px #39ff14) drop-shadow(0 0 7px rgba(57, 255, 20, 0.5));
+  transform-origin: center bottom;
   animation: eye-blink 5s infinite;
 }
 @keyframes eye-blink {
   0%, 90%, 100% { transform: scaleY(1); }
-  93% { transform: scaleY(0.12); }
+  93% { transform: scaleY(0.2); }
   96% { transform: scaleY(1); }
 }
+.eyes-hand {
+  width: 0;
+  margin-left: 0;
+  opacity: 0;
+  overflow: visible;
+  filter: drop-shadow(0 0 3px #39ff14);
+  transform-origin: 30% 90%;
+  transition: width 0.25s ease, margin-left 0.25s ease, opacity 0.25s ease;
+}
+.eyes-hand.waving { width: 15px; margin-left: 4px; opacity: 1; animation: hand-wave 0.55s ease-in-out infinite alternate; }
+@keyframes hand-wave {
+  from { transform: rotate(-16deg); }
+  to { transform: rotate(22deg); }
+}
 @media (prefers-reduced-motion: reduce) {
-  .eyes i { animation: none; }
+  .eyes i, .eyes-hand.waving { animation: none; }
 }

@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { buildStops, canDisable, clickTarget, mutedApp, restingStop, screenOn } from "./islandLogic.ts";
+import { buildStops, canDisable, clickTarget, mutedApp, restingStop, screenOn, shouldGreet } from "./islandLogic.ts";
 import { defaultIsland } from "./islandDefaults.ts";
 import type { Island, ScreenId } from "../bridge";
 
@@ -96,4 +96,11 @@ test("muted apps match ignoring case", () => {
 test("screenOn reads the enabled flag of a screen", () => {
   assert.equal(screenOn(only("tools"), "tools"), true);
   assert.equal(screenOn(only("tools"), "shelf"), false);
+});
+
+test("the island greets on a fresh install and after an update, not on a plain restart", () => {
+  assert.equal(shouldGreet(null, "0.2.2"), true, "fresh install");
+  assert.equal(shouldGreet("0.2.1", "0.2.2"), true, "updated");
+  assert.equal(shouldGreet("0.2.2", "0.2.2"), false, "same version again");
+  assert.equal(shouldGreet(null, ""), false, "version unknown");
 });

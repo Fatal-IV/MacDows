@@ -53,3 +53,13 @@ export function mutedApp(island: Island, app: string): boolean {
   const name = app.toLowerCase();
   return island.screens.notifications.muted_apps.some((m) => m.toLowerCase() === name);
 }
+
+/** Where the island remembers the app version it has already greeted. */
+export const GREETED_KEY = "macdows.greeted";
+/** How long the island stays open for its greeting. */
+export const GREETING_MS = 3200;
+
+/** The island greets on the first start of a version: a fresh install (nothing stored) or an update (another version stored). */
+export function shouldGreet(stored: string | null, version: string): boolean {
+  return version !== "" && stored !== version;
+}

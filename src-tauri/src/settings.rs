@@ -123,9 +123,34 @@ fn path() -> PathBuf {
     base.join("MacDows").join("settings.json")
 }
 
+/// Set when this run found no settings file at all: the very first start after an install.
+static FIRST_RUN: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
+
+/// True when MacDows is starting for the first time (no settings file existed). Stays the same for the whole run.
+pub fn first_run() -> bool {
+    FIRST_RUN.load(std::sync::atomic::Ordering::Relaxed)
+}
+
+/// A file that is not there at all (not a read error such as a locked or unreadable file) means a first start.
+fn is_missing(e: &std::io::Error) -> bool {
+    e.kind() == std::io::ErrorKind::NotFound
+}
+
 pub fn load() -> Settings {
     let p = path();
-    let Ok(text) = std::fs::read_to_string(&p) else { return Settings::default() };
+    let text = match std::fs::read_to_string(&p) {
+        Ok(text) => text,
+        Err(e) => {
+            if is_missing(&e) {
+                FIRST_RUN.store(true, std::sync::atomic::Ordering::Relaxed);
+                // Written right away, so the next start is not a first start.
+                let s = Settings::default();
+                let _ = save(&s);
+                return s;
+            }
+            return Settings::default();
+        }
+    };
     if text.trim().is_empty() {
         return Settings::default();
     }
@@ -149,6 +174,13 @@ pub fn save(s: &Settings) -> std::io::Result<()> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn only_a_missing_file_counts_as_a_first_start() {
+        assert!(is_missing(&std::io::Error::from(std::io::ErrorKind::NotFound)));
+        assert!(!is_missing(&std::io::Error::from(std::io::ErrorKind::PermissionDenied)));
+        assert!(!is_missing(&std::io::Error::from(std::io::ErrorKind::InvalidData)));
+    }
 
     #[test]
     fn empty_string_gives_defaults() {

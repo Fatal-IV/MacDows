@@ -7,10 +7,18 @@ Format: [Keep a Changelog](https://keepachangelog.com/), versioning: [SemVer](ht
 
 ### Added
 - Update notes follow the app's language: release notes can carry a Turkish part under a "### Türkçe" heading, and Settings > Updates shows the English or the Turkish part to match the language setting (notes without that heading are shown whole).
+- The island's character: the two eyes are now small horizontal arcs, and the character waves hello. On the very first start after an install the island drops in with a bounce, the dock rises from the bottom, and the island opens a little to wave; after an update the island opens and waves once on the first start of the new version. Then it shrinks back and keeps blinking. Both bars stay on screen for a few extra seconds on the first start, whatever the visibility mode.
+
+### Changed
+- The installer says "Updating…" (and "Update", "MacDows is updated.") instead of "Installing…" when it replaces an older version.
 
 ### Türkçe
 ### Eklendi
 - Güncelleme notları uygulamanın diline göre gösterilir: sürüm notlarında "### Türkçe" başlığı altında Türkçe bir bölüm olabilir, Ayarlar > Güncellemeler dil ayarına göre İngilizce ya da Türkçe bölümü gösterir (bu başlığı olmayan notlar olduğu gibi gösterilir).
+- Adanın karakteri: iki göz artık yatay minik yaylar ve karakter merhaba diye el sallıyor. Kurulumdan sonraki ilk açılışta ada zıplayarak iner, dock alttan yükselir ve ada biraz açılıp el sallar; güncellemeden sonra yeni sürümün ilk açılışında ada bir kez açılıp el sallar. Sonra küçülür ve göz kırpmaya devam eder. İlk açılışta iki çubuk, görünürlük modu ne olursa olsun birkaç saniye fazla ekranda kalır.
+
+### Değişti
+- Kurucu, eski bir sürümün yerine geçerken "Kuruluyor…" yerine "Güncelleniyor…" (ve "Güncelleyin", "MacDows güncellendi.") yazar.
 
 ## [0.2.1] - 2026-11-06
 

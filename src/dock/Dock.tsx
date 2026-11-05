@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { motion, Reorder } from "framer-motion";
 import { invoke } from "@tauri-apps/api/core";
-import { focusWindow, dockMenu, getCustomIcons, previewHover, showPreview, launchNewApp, launchPinned, listDrives, listPinned, onDockShortcut, onDrivesChanged, openDrive, setDockPinnedCount, setPinnedOrder, listWindows, onPinnedChanged, onWindowsChanged, type AppWindow, type Drive, type PinnedApp } from "../bridge";
+import { isFirstRun, focusWindow, dockMenu, getCustomIcons, previewHover, showPreview, launchNewApp, launchPinned, listDrives, listPinned, onDockShortcut, onDrivesChanged, openDrive, setDockPinnedCount, setPinnedOrder, listWindows, onPinnedChanged, onWindowsChanged, type AppWindow, type Drive, type PinnedApp } from "../bridge";
 import { mergeDock, type DockEntry } from "./dockItems";
 import { droppedOutside, sameOrder } from "./dockDrag";
 import { useSettings, useT } from "../i18n";
@@ -13,6 +13,11 @@ export default function Dock() {
   const t = useT();
   const settings = useSettings();
   const system = useSystemStatus();
+  // The dock's entrance: held back until the backend says whether this is the very first start, then it rises with a bounce.
+  const [intro, setIntro] = useState<"pending" | "first" | "normal">("pending");
+  useEffect(() => {
+    isFirstRun().then((first) => setIntro(first ? "first" : "normal")).catch(() => setIntro("normal"));
+  }, []);
   const [windows, setWindows] = useState<AppWindow[]>([]);
   const [pinned, setPinned] = useState<PinnedApp[]>([]);
   const showPinned = settings?.show_pinned_apps ?? true;
@@ -197,8 +202,11 @@ export default function Dock() {
   const itemTransition = { type: "spring", stiffness: 400, damping: 22 } as const;
 
   return (
-    <div
+    <motion.div
       className="dock-stage"
+      initial={{ y: 90, opacity: 0 }}
+      animate={intro === "pending" ? { y: 90, opacity: 0 } : { y: 0, opacity: 1 }}
+      transition={intro === "first" ? { type: "spring", stiffness: 120, damping: 11, delay: 0.9 } : { duration: 0 }}
       onContextMenu={(ev) => {
         // Right-click on the dock's empty space (not on an icon).
         ev.preventDefault();
@@ -288,7 +296,7 @@ export default function Dock() {
           </>
         )}
       </motion.div>
-    </div>
+    </motion.div>
   );
 }
 

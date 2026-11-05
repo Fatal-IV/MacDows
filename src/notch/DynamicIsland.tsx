@@ -4,10 +4,11 @@
 // concave "bridge" corners that join the notch to the screen edge.
 import { useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
+import { getVersion } from "@tauri-apps/api/app";
 import { listen } from "@tauri-apps/api/event";
-import { getMedia, getMediaSources, selectMediaSource, mediaNext, mediaPrev, mediaSeek, mediaToggle, onMediaChanged, islandFocus, onNotificationNew, addToShelf, clearShelf, getShelf, removeFromShelf, type MediaInfo, type MediaSource, type Notice, type ShelfItem } from "../bridge";
+import { getMedia, getMediaSources, selectMediaSource, mediaNext, mediaPrev, mediaSeek, mediaToggle, onMediaChanged, islandFocus, onNotificationNew, isFirstRun, addToShelf, clearShelf, getShelf, removeFromShelf, type MediaInfo, type MediaSource, type Notice, type ShelfItem } from "../bridge";
 import { useSettings, useT } from "../i18n";
-import { buildStops, clickTarget, restingStop, screenOn, type Stop } from "./islandLogic";
+import { buildStops, clickTarget, GREETED_KEY, GREETING_MS, restingStop, screenOn, shouldGreet, type Stop } from "./islandLogic";
 import { defaultIsland } from "./islandDefaults";
 import { useUpdateStatus } from "../updates";
 import { useSystemStatus } from "../system";
@@ -238,17 +239,20 @@ function Art({ url, className }: { url: string | null; className?: string }) {
   );
 }
 
-// UI scale 0.8-1.2, kept small enough that the notch still fits its window.
-/** Two small neon green bars that blink now and then; shown whenever the island shows its resting pill. */
-function Eyes() {
+/** The island's character: two neon green arc eyes that blink now and then, and a hand that waves while it greets. */
+function Eyes({ waving }: { waving: boolean }) {
   return (
     <div className="eyes" aria-hidden>
       <i />
       <i />
+      <svg className={`eyes-hand${waving ? " waving" : ""}`} width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M7 12V7.5a1.4 1.4 0 0 1 2.8 0V11M9.8 11V5a1.4 1.4 0 0 1 2.8 0v6M12.6 11V6a1.4 1.4 0 0 1 2.8 0v6M15.4 12V9a1.4 1.4 0 0 1 2.8 0v5c0 4-2.6 7-6.4 7-2.6 0-4.2-1.2-5.4-3L4 14.5a1.4 1.4 0 0 1 2.2-1.7L7 14" />
+      </svg>
     </div>
   );
 }
 
+// UI scale 0.8-1.2, kept small enough that the notch still fits its window.
 const readScale = () => Math.min(1.2, Math.max(0.8, parseFloat(localStorage.getItem("nectar-scale") || "1") || 1));
 
 export default function Notch() {
@@ -265,6 +269,31 @@ export default function Notch() {
   shelfOnRef.current = screenOn(island, "shelf");
 
   const [hovered, setHovered] = useState(false);
+  // The first start after an install or an update: the island opens a little and its character waves hello.
+  const [greeting, setGreeting] = useState(false);
+  // Null until the backend has said whether this is the very first start (then the entrance is slower and bouncier).
+  const [firstRun, setFirstRun] = useState<boolean | null>(null);
+  useEffect(() => {
+    isFirstRun().then(setFirstRun).catch(() => setFirstRun(false));
+  }, []);
+  useEffect(() => {
+    if (firstRun === null) return;
+    let off: ReturnType<typeof setTimeout> | undefined;
+    const on = setTimeout(() => {
+      getVersion()
+        .then((v) => {
+          if (!shouldGreet(localStorage.getItem(GREETED_KEY), v)) return;
+          localStorage.setItem(GREETED_KEY, v);
+          setGreeting(true);
+          off = setTimeout(() => setGreeting(false), GREETING_MS);
+        })
+        .catch(() => {});
+    }, firstRun ? 1800 : 500);
+    return () => {
+      clearTimeout(on);
+      if (off) clearTimeout(off);
+    };
+  }, [firstRun]);
   const [mode, setMode] = useState<Mode>("status");
   const [ready, setReady] = useState(false);
   const [impacted, setImpacted] = useState(false);
@@ -365,13 +394,14 @@ export default function Notch() {
 
   // Drop-in on startup: the notch slides in, then its top corners flatten into the screen edge.
   useEffect(() => {
-    const a = setTimeout(() => setReady(true), 80);
-    const b = setTimeout(() => setImpacted(true), 320);
+    if (firstRun === null) return;
+    const a = setTimeout(() => setReady(true), firstRun ? 500 : 80);
+    const b = setTimeout(() => setImpacted(true), firstRun ? 1100 : 320);
     return () => {
       clearTimeout(a);
       clearTimeout(b);
     };
-  }, []);
+  }, [firstRun]);
 
   // A new track, or playback resuming, brings the music pill up while the pointer is away.
   useEffect(() => {
@@ -533,7 +563,7 @@ export default function Notch() {
   const stats = useStats(showWidgets && needsStats(placed));
   const widgetsW = showWidgets ? widgetsWidth(placed) : 0;
 
-  const width = !ready ? 34 : tools || quick || shelfOpen || historyOpen ? 520 : dropping ? 380 : bannerOpen ? 380 : musicOpen ? 340 : isMusic ? 200 : hovered ? 170 + widgetsW : hasMedia ? 170 : 140;
+  const width = !ready ? 34 : tools || quick || shelfOpen || historyOpen ? 520 : dropping ? 380 : bannerOpen ? 380 : musicOpen ? 340 : isMusic ? 200 : hovered ? 170 + widgetsW : greeting ? 230 : hasMedia ? 170 : 140;
   const height = !ready ? 34 : tools ? 280 : quick ? 312 : shelfOpen || historyOpen ? 312 : dropping ? 110 : bannerOpen ? 76 : musicOpen ? (media!.duration_ms > 0 ? 126 : 108) + (showSources ? 36 : 0) : 36;
 
   return (
@@ -556,7 +586,7 @@ export default function Notch() {
           height: SHELL_SPRING,
           borderTopLeftRadius: SHELL_SPRING,
           borderTopRightRadius: SHELL_SPRING,
-          y: { type: "spring", stiffness: 550, damping: 45, mass: 0.8 },
+          y: firstRun ? { type: "spring", stiffness: 110, damping: 9, mass: 1 } : { type: "spring", stiffness: 550, damping: 45, mass: 0.8 },
           opacity: { duration: 0.2 },
         }}
         style={{ originY: 0 }}
@@ -776,7 +806,7 @@ export default function Notch() {
                 ) : (
                   <>
                     {showWidgets && <StatusWidgets ids={placed.right} cfg={statusCfg} stats={stats} weather={weather} status={system} />}
-                    {!showWidgets && <Eyes />}
+                    {!showWidgets && <Eyes waving={greeting} />}
                   </>
                 )}
               </div>

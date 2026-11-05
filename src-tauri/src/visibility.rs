@@ -25,6 +25,12 @@ pub fn point_in_rect(x: i32, y: i32, r: Rect) -> bool {
     x >= r.left && x < r.right && y >= r.top && y < r.bottom
 }
 
+/// How long both bars stay on screen after a start, whatever the visibility mode: a few seconds, and long enough for
+/// the welcome entrance on the very first start.
+pub fn launch_grace(first_run: bool) -> Duration {
+    Duration::from_secs(if first_run { 9 } else { 4 })
+}
+
 /// Whether a bar (notch or dock) should be shown right now.
 pub fn is_visible(i: Inputs) -> bool {
     // Fixed means fixed: it stays on screen over fullscreen apps too (the island's own "never show in fullscreen
@@ -166,7 +172,7 @@ pub fn start(app: AppHandle) {
                 let probe = overlap_probe(label, r);
                 let overlapped = others.iter().any(|o| rect_intersects(*o, probe));
                 // Show the bars for a few seconds after launch so the user sees the app started.
-                let grace = started.elapsed() < Duration::from_secs(4) && fs != Some(true);
+                let grace = started.elapsed() < launch_grace(crate::settings::first_run()) && fs != Some(true);
                 let held = label == "notch"
                     && notch_held(now_ms(), NOTCH_HOLD_UNTIL_MS.load(std::sync::atomic::Ordering::Relaxed), NOTCH_FOCUS_UNTIL_MS.load(std::sync::atomic::Ordering::Relaxed));
                 let want = !hidden_in_fullscreen(label, s.island.fullscreen, fs) && (grace || held || is_visible(Inputs { vis, fullscreen: fs, overlapped, cursor_near: near }));
@@ -184,6 +190,12 @@ pub fn start(app: AppHandle) {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn the_first_start_keeps_the_bars_up_longer() {
+        assert_eq!(launch_grace(false), Duration::from_secs(4));
+        assert_eq!(launch_grace(true), Duration::from_secs(9));
+    }
 
     #[test]
     fn ending_typing_does_not_cancel_a_banner_hold() {

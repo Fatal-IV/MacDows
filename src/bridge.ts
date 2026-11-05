@@ -401,3 +401,6 @@ export interface SystemStats {
   net_up: number;
 }
 export const getSystemStats = () => invoke<SystemStats>("get_system_stats");
+
+/** True on the very first start after an install (no settings file existed): the island and the dock make a longer entrance. */
+export const isFirstRun = () => invoke<boolean>("is_first_run");
