@@ -9,7 +9,7 @@ test("signal maps to 0-4 bars", () => {
 
 test("security label is open, secured or enterprise", () => {
   const t = (k: string) => k;
-  const base = { ssid: "TestNet", signal: 50, saved: false, connected: false };
+  const base = { ssid: "TestNet", signal: 50, saved: false, connected: false, auth: "wpa2" as const };
   assert.equal(securityLabel({ ...base, secured: false, enterprise: false }, t), "net.open");
   assert.equal(securityLabel({ ...base, secured: true, enterprise: false }, t), "net.secured");
   assert.equal(securityLabel({ ...base, secured: true, enterprise: true }, t), "net.enterprise");

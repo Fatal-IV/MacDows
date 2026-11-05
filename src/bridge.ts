@@ -346,6 +346,8 @@ export interface WifiNetwork {
   /** 0-100 */
   signal: number;
   secured: boolean;
+  /** How a typed password must be sent: WPA3-only networks need "wpa3". */
+  auth: "open" | "wpa2" | "wpa3";
   enterprise: boolean;
   saved: boolean;
   connected: boolean;

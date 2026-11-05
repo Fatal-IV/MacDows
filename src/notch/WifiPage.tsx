@@ -113,7 +113,7 @@ export function WifiPage({ onBack, onEditing = () => {} }: { onBack: () => void;
   };
 
   const submitJoin = (n: WifiNetwork) => {
-    const auth: WifiAuth = "wpa2";
+    const auth: WifiAuth = n.auth === "wpa3" ? "wpa3" : "wpa2";
     if (canSubmit(n.ssid, auth, password)) run(n.ssid, () => wifiConnectNew(n.ssid, password, auth, false));
   };
 
@@ -180,7 +180,7 @@ export function WifiPage({ onBack, onEditing = () => {} }: { onBack: () => void;
             }}
           />
           <button className="bt-action" onClick={() => setShowPassword((v) => !v)}>{showPassword ? t("net.hide") : t("net.show")}</button>
-          <button className="bt-action" disabled={busy !== null || !canSubmit(n.ssid, "wpa2", password)} onClick={() => submitJoin(n)}>
+          <button className="bt-action" disabled={busy !== null || !canSubmit(n.ssid, n.auth === "wpa3" ? "wpa3" : "wpa2", password)} onClick={() => submitJoin(n)}>
             {busy === n.ssid ? t("net.working") : t("net.join")}
           </button>
         </div>

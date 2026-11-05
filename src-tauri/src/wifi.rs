@@ -9,7 +9,8 @@ use windows::Win32::Foundation::HANDLE;
 use windows::core::PCWSTR;
 use windows::Win32::NetworkManagement::WiFi::{
     dot11_BSS_type_any, wlan_connection_mode_profile, WlanCloseHandle, WlanConnect, WlanDeleteProfile, WlanDisconnect, WlanEnumInterfaces, WlanFreeMemory,
-    WlanGetAvailableNetworkList, WlanOpenHandle, WlanScan, WlanSetProfile, WLAN_AVAILABLE_NETWORK_LIST, WLAN_CONNECTION_PARAMETERS, WLAN_INTERFACE_INFO_LIST,
+    WlanGetAvailableNetworkList, WlanGetProfile, WlanOpenHandle, WlanQueryInterface, WlanScan, WlanSetProfile, wlan_intf_opcode_current_connection,
+    wlan_intf_opcode_interface_state, WLAN_AVAILABLE_NETWORK_LIST, WLAN_CONNECTION_ATTRIBUTES, WLAN_CONNECTION_PARAMETERS, WLAN_INTERFACE_INFO_LIST,
 };
 
 #[derive(Serialize, Clone, Debug, PartialEq)]
@@ -18,6 +19,8 @@ pub struct WifiNetwork {
     /// 0-100.
     pub signal: u8,
     pub secured: bool,
+    /// How a typed password has to be sent: "open", "wpa2" or "wpa3" (WPA3-only networks).
+    pub auth: String,
     pub enterprise: bool,
     pub saved: bool,
     pub connected: bool,
@@ -125,8 +128,19 @@ fn interfaces(client: &Client) -> Vec<windows::core::GUID> {
 }
 
 fn is_enterprise(algo: i32) -> bool {
-    // 802.1X family: WPA (3), RSNA (6), WPA3 enterprise (8).
-    matches!(algo, 3 | 6 | 8)
+    // 802.1X family: WPA (3), RSNA (6), WPA3 enterprise 192-bit (8), WPA3 enterprise (11).
+    matches!(algo, 3 | 6 | 8 | 11)
+}
+
+/// The profile type a typed password needs, from the network's default authentication algorithm:
+/// WPA3-SAE (9) networks accept nothing else, every other personal network takes WPA2 (WPA2/WPA3 transition
+/// networks report RSNA-PSK and accept it too).
+pub fn auth_name(secured: bool, algo: i32) -> &'static str {
+    match (secured, algo) {
+        (false, _) => "open",
+        (true, 9) => "wpa3",
+        _ => "wpa2",
+    }
 }
 
 fn merge(into: &mut Vec<WifiNetwork>, net: WifiNetwork) {
@@ -165,6 +179,7 @@ fn read_networks(client: &Client, guid: &windows::core::GUID) -> Option<Vec<Wifi
                     ssid,
                     signal: n.wlanSignalQuality.min(100) as u8,
                     secured,
+                    auth: auth_name(secured, n.dot11DefaultAuthAlgorithm.0).to_string(),
                     enterprise: secured && is_enterprise(n.dot11DefaultAuthAlgorithm.0),
                     saved: n.dwFlags & 0x2 != 0,
                     connected: n.dwFlags & 0x1 != 0,
@@ -256,11 +271,59 @@ fn find_network(client: &Client, ssid: &str) -> Option<Found> {
     None
 }
 
-fn is_connected_to(ssid: &str) -> bool {
-    current_state().networks.iter().any(|n| n.connected && n.ssid == ssid)
+/// `WLAN_INTERFACE_STATE`: not ready 0, connected 1, disconnected 4, associating 5, discovering 6, authenticating 7.
+fn interface_state(client: &Client, guid: &windows::core::GUID) -> Option<i32> {
+    let mut size = 0u32;
+    let mut data: *mut c_void = std::ptr::null_mut();
+    let err = unsafe { WlanQueryInterface(client.0, guid, wlan_intf_opcode_interface_state, None, &mut size, &mut data, None) };
+    if err != 0 || data.is_null() {
+        return None;
+    }
+    let state = unsafe { *(data as *const i32) };
+    unsafe { WlanFreeMemory(data as *const c_void) };
+    Some(state)
 }
 
-/// Asks Windows to connect with the named profile and waits up to 10 s for the connected state.
+/// The SSID the adapter is connected to right now.
+fn connected_ssid(client: &Client, guid: &windows::core::GUID) -> Option<String> {
+    let mut size = 0u32;
+    let mut data: *mut c_void = std::ptr::null_mut();
+    let err = unsafe { WlanQueryInterface(client.0, guid, wlan_intf_opcode_current_connection, None, &mut size, &mut data, None) };
+    if err != 0 || data.is_null() {
+        return None;
+    }
+    let ssid = unsafe {
+        let attrs = &*(data as *const WLAN_CONNECTION_ATTRIBUTES);
+        let id = &attrs.wlanAssociationAttributes.dot11Ssid;
+        String::from_utf8_lossy(&id.ucSSID[..(id.uSSIDLength as usize).min(32)]).to_string()
+    };
+    unsafe { WlanFreeMemory(data as *const c_void) };
+    Some(ssid)
+}
+
+#[derive(Debug, PartialEq, Eq)]
+pub enum Wait {
+    Connected,
+    Failed,
+    Keep,
+}
+
+/// What the adapter's state means while a connect is under way. `saw_progress`: it has been associating,
+/// discovering or authenticating since the request. Falling back to disconnected after that is Windows
+/// giving up (a wrong key ends exactly like this); before that, the request may simply not have started.
+pub fn judge(state: i32, on_target: bool, saw_progress: bool) -> Wait {
+    match state {
+        1 if on_target => Wait::Connected,
+        0 | 4 if saw_progress => Wait::Failed,
+        _ => Wait::Keep,
+    }
+}
+
+/// How long a connect may take before it is reported as a timeout.
+const CONNECT_WAIT_MS: u64 = 30_000;
+
+/// Asks Windows to connect with the named profile and waits for the result: connected, Windows giving up
+/// ("auth_failed") or, after 30 s, a timeout.
 fn connect_profile(client: &Client, guid: &windows::core::GUID, profile: &str, ssid: &str) -> Result<(), String> {
     let name = wide(profile);
     let params = WLAN_CONNECTION_PARAMETERS {
@@ -275,10 +338,16 @@ fn connect_profile(client: &Client, guid: &windows::core::GUID, profile: &str, s
     if err != 0 {
         return Err(error_key(err).to_string());
     }
-    for _ in 0..20 {
-        std::thread::sleep(std::time::Duration::from_millis(500));
-        if is_connected_to(ssid) {
-            return Ok(());
+    let mut saw_progress = false;
+    for _ in 0..(CONNECT_WAIT_MS / 250) {
+        std::thread::sleep(std::time::Duration::from_millis(250));
+        let Some(state) = interface_state(client, guid) else { continue };
+        saw_progress |= matches!(state, 5..=7);
+        let on_target = state == 1 && connected_ssid(client, guid).as_deref() == Some(ssid);
+        match judge(state, on_target, saw_progress) {
+            Wait::Connected => return Ok(()),
+            Wait::Failed => return Err("auth_failed".to_string()),
+            Wait::Keep => {}
         }
     }
     Err("timeout".to_string())
@@ -318,7 +387,7 @@ fn forget_blocking(ssid: &str) -> Result<(), String> {
     let client = open().ok_or("failed")?;
     let found = find_network(&client, ssid).ok_or("not_found")?;
     let profile = found.profile.ok_or("not_found")?;
-    if is_connected_to(ssid) {
+    if connected_ssid(&client, &found.guid).as_deref() == Some(ssid) {
         unsafe { WlanDisconnect(client.0, &found.guid, None) };
     }
     let name = wide(&profile);
@@ -329,10 +398,27 @@ fn forget_blocking(ssid: &str) -> Result<(), String> {
     Ok(())
 }
 
-/// A secured network that never reaches the connected state after a connect request almost always has a wrong key:
-/// Windows reports the key mismatch only through an asynchronous notification, which we do not listen to.
+/// A secured network that Windows gave up on after trying to connect has a wrong key; a plain timeout stays a timeout
+/// (a slow network is not a wrong password).
 pub fn failure_key(secured: bool, key: &str) -> String {
-    if secured && key == "timeout" { "wrong_password".to_string() } else { key.to_string() }
+    match key {
+        "auth_failed" if secured => "wrong_password".to_string(),
+        "auth_failed" => "failed".to_string(),
+        other => other.to_string(),
+    }
+}
+
+/// The saved profile's XML (NUL-terminated UTF-16), kept so a failed attempt can put it back.
+fn saved_profile_xml(client: &Client, guid: &windows::core::GUID, name: &str) -> Option<Vec<u16>> {
+    let name = wide(name);
+    let mut xml = windows::core::PWSTR::null();
+    let err = unsafe { WlanGetProfile(client.0, guid, PCWSTR(name.as_ptr()), None, &mut xml, None, None) };
+    if err != 0 || xml.is_null() {
+        return None;
+    }
+    let text = unsafe { xml.as_wide().to_vec() };
+    unsafe { WlanFreeMemory(xml.0 as *const c_void) };
+    Some(text.into_iter().chain(std::iter::once(0)).collect())
 }
 
 pub fn parse_auth(name: &str) -> Option<Auth> {
@@ -365,6 +451,8 @@ fn connect_new_blocking(ssid: &str, password: Option<&str>, auth: &str, hidden: 
         None => *interfaces(&client).first().ok_or("failed")?,
     };
     let had_profile = existing.as_ref().is_some_and(|f| f.profile.is_some());
+    // An existing profile of the same name is overwritten below; keep it to put it back if the attempt fails.
+    let old_xml = existing.as_ref().and_then(|f| f.profile.as_deref()).and_then(|name| saved_profile_xml(&client, &guid, name));
     let previous = current_connection(&client).filter(|(_, _, prev_ssid)| prev_ssid != ssid);
     let xml = wide(&profile_xml(ssid, auth, password, hidden));
     let mut reason = 0u32;
@@ -375,7 +463,10 @@ fn connect_new_blocking(ssid: &str, password: Option<&str>, auth: &str, hidden: 
     match connect_profile(&client, &guid, ssid, ssid) {
         Ok(()) => Ok(()),
         Err(key) => {
-            if !had_profile {
+            if let Some(old) = &old_xml {
+                let mut reason = 0u32;
+                unsafe { WlanSetProfile(client.0, &guid, 0, PCWSTR(old.as_ptr()), PCWSTR::null(), true, None, &mut reason) };
+            } else if !had_profile {
                 let name = wide(ssid);
                 unsafe { WlanDeleteProfile(client.0, &guid, PCWSTR(name.as_ptr()), None) };
             }
@@ -435,7 +526,7 @@ mod tests {
     use super::*;
 
     fn net(ssid: &str, signal: u8, connected: bool) -> WifiNetwork {
-        WifiNetwork { ssid: ssid.into(), signal, secured: true, enterprise: false, saved: false, connected }
+        WifiNetwork { ssid: ssid.into(), signal, secured: true, auth: "wpa2".into(), enterprise: false, saved: false, connected }
     }
 
     #[test]
@@ -483,11 +574,30 @@ mod tests {
     }
 
     #[test]
-    fn a_secured_network_that_never_connects_reads_as_a_wrong_password() {
-        assert_eq!(failure_key(true, "timeout"), "wrong_password");
+    fn a_secured_network_windows_gave_up_on_reads_as_a_wrong_password() {
+        assert_eq!(failure_key(true, "auth_failed"), "wrong_password");
+        assert_eq!(failure_key(false, "auth_failed"), "failed");
+        assert_eq!(failure_key(true, "timeout"), "timeout");
         assert_eq!(failure_key(false, "timeout"), "timeout");
         assert_eq!(failure_key(true, "not_found"), "not_found");
         assert_eq!(failure_key(true, "failed"), "failed");
+    }
+
+    #[test]
+    fn the_list_says_how_a_password_must_be_sent() {
+        assert_eq!(auth_name(false, 1), "open");
+        assert_eq!(auth_name(true, 7), "wpa2");
+        assert_eq!(auth_name(true, 9), "wpa3");
+        assert!(is_enterprise(11) && !is_enterprise(9) && !is_enterprise(7));
+    }
+
+    #[test]
+    fn a_connect_ends_when_connected_or_when_windows_gives_up_after_trying() {
+        assert_eq!(judge(1, true, true), Wait::Connected);
+        assert_eq!(judge(1, false, false), Wait::Keep, "still on the previous network");
+        assert_eq!(judge(7, false, true), Wait::Keep, "authenticating");
+        assert_eq!(judge(4, false, true), Wait::Failed, "tried, then fell back to disconnected");
+        assert_eq!(judge(4, false, false), Wait::Keep, "the request has not started yet");
     }
 
     #[test]
