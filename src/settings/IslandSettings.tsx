@@ -1,4 +1,5 @@
-import type { ReactNode } from "react";
+import { Children, useState, type ReactNode } from "react";
+import { AnimatePresence, motion } from "framer-motion";
 import { SCREEN_IDS, setSetting, type ClickMode, type FullscreenMode, type ScreenId, type Settings as AppSettings, type Visibility } from "../bridge";
 import { DEFAULT_ORDER } from "../notch/islandDefaults";
 import { canDisable } from "../notch/islandLogic";
@@ -22,15 +23,34 @@ export function updateIsland(s: AppSettings, change: (draft: Island) => void) {
 
 type T = (key: string) => string;
 
-/** One screen of the island: a header with its on/off switch, and (while it is on) its own settings. The last
- *  screen that is on cannot be switched off, and says why. */
+/** One screen of the island: a header with its on/off switch, and (while it is on) its own settings, folded away until
+ *  the header is clicked. The last screen that is on cannot be switched off, and says why. */
 function ScreenSection({ s, t, id, children }: { s: AppSettings; t: T; id: ScreenId; children?: ReactNode }) {
   const on = s.island.screens[id].enabled;
   const locked = on && !canDisable(s.island, id);
+  const [open, setOpen] = useState(false);
+  const expandable = on && Children.toArray(children).length > 0;
   return (
     <Group>
-      <Row title={t(`island.screen.${id}`)} description={locked ? t("island.lastScreen") : undefined}>
-        <Toggle
+      <div
+        className={`ui-row${expandable ? " ui-row-fold" : ""}`}
+        role={expandable ? "button" : undefined}
+        tabIndex={expandable ? 0 : undefined}
+        aria-expanded={expandable ? open : undefined}
+        onClick={expandable ? () => setOpen((v) => !v) : undefined}
+        onKeyDown={expandable ? (e) => (e.key === "Enter" || e.key === " ") && e.target === e.currentTarget && (e.preventDefault(), setOpen((v) => !v)) : undefined}
+      >
+        <div className="ui-row-text">
+          <div className="ui-row-title">{t(`island.screen.${id}`)}</div>
+          {locked && <div className="ui-row-desc">{t("island.lastScreen")}</div>}
+        </div>
+        <div className="ui-row-control" onClick={(e) => e.stopPropagation()}>
+          {expandable && (
+            <svg className={`ui-chevron${open ? " open" : ""}`} width="14" height="14" viewBox="0 0 24 24" aria-hidden onClick={() => setOpen((v) => !v)}>
+              <path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          )}
+          <Toggle
           label={t(`island.screen.${id}`)}
           checked={on}
           disabled={locked}
@@ -39,9 +59,16 @@ function ScreenSection({ s, t, id, children }: { s: AppSettings; t: T; id: Scree
               i.screens[id].enabled = v;
             })
           }
-        />
-      </Row>
-      {on && children}
+          />
+        </div>
+      </div>
+      <AnimatePresence initial={false}>
+        {expandable && open && (
+          <motion.div key="body" className="ui-fold" initial={{ height: 0, opacity: 0, overflow: "hidden" }} animate={{ height: "auto", opacity: 1, transitionEnd: { overflow: "visible" } }} exit={{ height: 0, opacity: 0, overflow: "hidden" }} transition={{ duration: 0.18 }}>
+            {children}
+          </motion.div>
+        )}
+      </AnimatePresence>
     </Group>
   );
 }

@@ -170,3 +170,11 @@
 .ui-value { min-width: 40px; text-align: right; font-size: 12.5px; font-variant-numeric: tabular-nums; color: var(--s-muted); }
 
 .ui-toggle:disabled { opacity: 0.45; cursor: not-allowed; }
+
+/* Cards whose settings fold away until the header is clicked */
+.ui-row-fold { cursor: pointer; user-select: none; }
+.ui-row-fold:hover { background: color-mix(in srgb, var(--s-text) 4%, transparent); }
+.ui-row-fold:focus-visible { outline: 2px solid var(--s-accent, #4c8dff); outline-offset: -2px; }
+.ui-chevron { color: var(--s-muted); transition: transform 0.18s ease; cursor: pointer; }
+.ui-chevron.open { transform: rotate(180deg); }
+.ui-fold { border-top: 1px solid var(--s-border); }
