@@ -108,9 +108,9 @@
     "semantic_hash": ""
   },
   "package.json": {
-    "mtime": 1793967276.2909334,
-    "seen": 1793967286.3316011,
-    "ast_hash": "c93ab451f423d21e18b018a47040b264",
+    "mtime": 1793970796.2561386,
+    "seen": 1793970799.791281,
+    "ast_hash": "dda0119d4f727679fbbd75acb59f5c72",
     "semantic_hash": ""
   },
   "scripts/build-installer.mjs": {
@@ -150,9 +150,9 @@
     "semantic_hash": ""
   },
   "src-tauri/Cargo.toml": {
-    "mtime": 1793967276.384479,
-    "seen": 1793967286.3316178,
-    "ast_hash": "c33f14203ff3961d42d1af3c1e97d758",
+    "mtime": 1793970796.2576416,
+    "seen": 1793970799.79129,
+    "ast_hash": "12de5909eea3b9e16e964ee469fe76f6",
     "semantic_hash": ""
   },
   "src-tauri/build.rs": {
@@ -276,9 +276,9 @@
     "semantic_hash": ""
   },
   "src-tauri/tauri.conf.json": {
-    "mtime": 1793967276.3384037,
-    "seen": 1793967286.3316958,
-    "ast_hash": "5be2bbc9066d666c04bb562c2ae0f534",
+    "mtime": 1793970796.2561386,
+    "seen": 1793970799.7913334,
+    "ast_hash": "7b2e0035b1d8fd68926ef6a7a60bad81",
     "semantic_hash": ""
   },
   "src/appearance/SurfaceShape.tsx": {
@@ -408,9 +408,9 @@
     "semantic_hash": ""
   },
   "CHANGELOG.md": {
-    "mtime": 1793967276.4498367,
-    "seen": 1793967286.3317912,
-    "ast_hash": "925f70f55b28bcbfff66eae03e151920",
+    "mtime": 1793970796.2576416,
+    "seen": 1793970799.7913868,
+    "ast_hash": "a3608400a2cec88d87231e849df73ace",
     "semantic_hash": ""
   },
   "README.md": {
