@@ -1,6 +1,7 @@
 // Paired Bluetooth devices: who is connected, battery level, connect / disconnect.
 import { useEffect, useState, type ReactNode } from "react";
 import { btUnpair, getBluetoothDevices, quickLaunch, setBluetoothConnection, type BtDevice, type BtKind } from "../bridge";
+import { announceLink } from "./linkBus";
 import { useT } from "../i18n";
 import { PairPage } from "./PairPage";
 
@@ -76,9 +77,12 @@ export function BluetoothPage({ onBack, pairing = true, onEditing }: { onBack: (
       setDevices(next);
       const now = next.find((x) => x.address === d.address);
       // A device that did not change state could not be switched this way.
-      if (now && now.connected === d.connected) setFailed(d.address);
+      const changed = !now || now.connected !== d.connected;
+      if (!changed) setFailed(d.address);
+      announceLink({ kind: "bluetooth", name: d.name, state: !changed ? "failed" : d.connected ? "disconnected" : "connected" });
     } catch {
       setFailed(d.address);
+      announceLink({ kind: "bluetooth", name: d.name, state: "failed" });
     } finally {
       setBusy(null);
     }

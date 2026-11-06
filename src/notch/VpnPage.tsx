@@ -2,6 +2,7 @@
 import { useEffect, useRef, useState } from "react";
 import { getVpnState, quickLaunch, vpnConnect, vpnDisconnect, type VpnState } from "../bridge";
 import { useT } from "../i18n";
+import { announceLink } from "./linkBus";
 
 const SHIELD = (
   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
@@ -28,14 +29,16 @@ export function VpnPage({ onBack }: { onBack: () => void }) {
     };
   }, []);
 
-  const run = async (name: string, action: () => Promise<unknown>) => {
+  const run = async (name: string, action: () => Promise<unknown>, announce: "connect" | "disconnect") => {
     if (busy) return;
     setBusy(name);
     setError(null);
     try {
       await action();
+      announceLink({ kind: "vpn", name, state: announce === "connect" ? "connected" : "disconnected" });
     } catch (e) {
       setError({ name, key: String(e) });
+      if (announce === "connect") announceLink({ kind: "vpn", name, state: "failed" });
     } finally {
       setBusy(null);
       getVpnState().then(setState).catch(() => {});
@@ -70,7 +73,7 @@ export function VpnPage({ onBack }: { onBack: () => void }) {
                 <span className="banner-body">{line(e.name, e.state)}</span>
               </div>
               {error?.name === e.name && error.key === "credentials" && <button className="bt-action" onClick={openSettings}>{t("net.openSettings")}</button>}
-              <button className="bt-action" disabled={busy !== null || e.state === "connecting"} onClick={() => run(e.name, () => (e.state === "connected" ? vpnDisconnect(e.name) : vpnConnect(e.name)))}>
+              <button className="bt-action" disabled={busy !== null || e.state === "connecting"} onClick={() => run(e.name, () => (e.state === "connected" ? vpnDisconnect(e.name) : vpnConnect(e.name)), e.state === "connected" ? "disconnect" : "connect")}>
                 {busy === e.name ? t("net.working") : e.state === "connected" ? t("net.disconnect") : t("net.connect")}
               </button>
             </div>

@@ -23,7 +23,8 @@ import { MusicNoteIcon, PauseIcon, PlayIcon, SkipBackIcon, SkipForwardIcon } fro
 import { ToolsPanel, useTimer } from "./Tools";
 import { QuickSettingsScreen } from "./QuickSettings";
 import { NotificationBanner } from "./NotificationBanner";
-import { LinkToast, type Link } from "./LinkToast";
+import { LinkToast } from "./LinkToast";
+import { isRepeat, linkKey, onAnnouncedLink, type Link } from "./linkBus";
 import { DropZone, ShelfScreen } from "./Shelf";
 import { NotificationHistory } from "./NotificationHistory";
 import { getCurrentWebview } from "@tauri-apps/api/webview";
@@ -313,17 +314,28 @@ export default function Notch() {
       if (off) clearTimeout(off);
     };
   }, [firstRun]);
-  // A Bluetooth device or a Wi-Fi network just connected: its name and an animated icon, for a few seconds.
+  // A Bluetooth device, a Wi-Fi network or a VPN connected, disconnected or failed to connect: its name and an animated
+  // icon for a few seconds. What the backend sees on its own waits for a quiet island; what the user just did on a
+  // Control Center page (`forced`) shrinks the island over whatever screen is open, which comes back afterwards.
   const [link, setLink] = useState<Link | null>(null);
+  const screenBusyRef = useRef(false);
   useEffect(() => {
     let off: ReturnType<typeof setTimeout> | undefined;
-    const un = listen<Link>("link-connected", (e) => {
-      setLink(e.payload);
+    let last: { key: string; at: number } | null = null;
+    const show = (l: Link) => {
+      if (!l.forced && screenBusyRef.current) return;
+      const now = Date.now();
+      if (isRepeat(last, l, now)) return;
+      last = { key: linkKey(l), at: now };
+      setLink(l);
       if (off) clearTimeout(off);
       off = setTimeout(() => setLink(null), LINK_MS);
-    });
+    };
+    const un = listen<Omit<Link, "forced">>("link-changed", (e) => show(e.payload));
+    const stop = onAnnouncedLink(show);
     return () => {
       un.then((f) => f());
+      stop();
       if (off) clearTimeout(off);
     };
   }, []);
@@ -629,11 +641,12 @@ export default function Notch() {
   const showWidgets = statusOn && hovered && !isMusic;
   const stats = useStats(showWidgets && needsStats(placed));
   const widgetsW = showWidgets ? widgetsWidth(placed) : 0;
-  const linkOpen = link !== null && !open && !tools && !quick && !shelfOpen && !historyOpen && !dropping && !bannerOpen;
+  screenBusyRef.current = open || tools || quick || shelfOpen || historyOpen || dropping || bannerOpen;
+  const linkOpen = link !== null && (link.forced === true || !screenBusyRef.current);
   eyesShowingRef.current = ready && !hovered && !tools && !quick && !shelfOpen && !historyOpen && !dropping && !bannerOpen && !linkOpen;
 
-  const width = !ready ? 34 : tools || quick || shelfOpen || historyOpen ? 520 : dropping ? 380 : bannerOpen ? 380 : linkOpen ? 270 : musicOpen ? 340 : isMusic ? 240 : hovered ? 170 + widgetsW : hasMedia ? 170 : 140;
-  const height = !ready ? 34 : tools ? 280 : quick ? 312 : shelfOpen || historyOpen ? 312 : dropping ? 110 : bannerOpen ? 76 : linkOpen ? 46 : musicOpen ? (media!.duration_ms > 0 ? 126 : 108) + (showSources ? 36 : 0) : 36;
+  const width = !ready ? 34 : linkOpen ? 280 : tools || quick || shelfOpen || historyOpen ? 520 : dropping ? 380 : bannerOpen ? 380 : musicOpen ? 340 : isMusic ? 240 : hovered ? 170 + widgetsW : hasMedia ? 170 : 140;
+  const height = !ready ? 34 : linkOpen ? 46 : tools ? 280 : quick ? 312 : shelfOpen || historyOpen ? 312 : dropping ? 110 : bannerOpen ? 76 : musicOpen ? (media!.duration_ms > 0 ? 126 : 108) + (showSources ? 36 : 0) : 36;
 
   // Only the island's own shape takes clicks; the rest of its (much larger) transparent window belongs to the programs below.
   useHitRegion("notch", islandBox(window.innerWidth, width * scale, height * scale, 12), 12);
@@ -701,7 +714,11 @@ export default function Notch() {
         </AnimatePresence>
 
         <AnimatePresence mode="wait" initial={false}>
-          {dropping ? (
+          {linkOpen ? (
+            <motion.div key="link" className="tools-wrap" initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.98, transition: { duration: 0.1 } }} transition={{ type: "spring", stiffness: 500, damping: 30 }}>
+              <LinkToast link={link!} label={t(`link.${link!.kind}.${link!.state}`)} />
+            </motion.div>
+          ) : dropping ? (
             <motion.div key="drop" className="tools-wrap" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0, transition: { duration: 0.1 } }}>
               <DropZone />
             </motion.div>
@@ -736,10 +753,6 @@ export default function Notch() {
               >
                 ⌄
               </button>
-            </motion.div>
-          ) : linkOpen ? (
-            <motion.div key="link" className="tools-wrap" initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.98, transition: { duration: 0.1 } }} transition={{ type: "spring", stiffness: 500, damping: 30 }}>
-              <LinkToast link={link!} label={t(`link.${link!.kind}`)} />
             </motion.div>
           ) : bannerOpen ? (
             <motion.div key="banner" className="tools-wrap" initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.98, transition: { duration: 0.1 } }} transition={{ type: "spring", stiffness: 500, damping: 30 }}>

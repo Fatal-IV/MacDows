@@ -45,11 +45,23 @@ const CATEGORIES: { id: Category; icon: ReactNode }[] = [
   { id: "general", icon: stroke("M5 7h8m4 0h2M5 17h2m4 0h8M13 4v6m-4 4v6") },
   {
     id: "island",
-    icon: <rect x="3.5" y="4" width="17" height="5" rx="2.5" fill="none" stroke="currentColor" strokeWidth="1.7" />,
+    // A screen with the island at its top edge.
+    icon: (
+      <>
+        <rect x="3" y="4" width="18" height="16" rx="3" fill="none" stroke="currentColor" strokeWidth="1.7" />
+        <rect x="8.5" y="7" width="7" height="2.4" rx="1.2" fill="currentColor" />
+      </>
+    ),
   },
   {
     id: "dock",
-    icon: <rect x="5.5" y="15" width="13" height="5" rx="2" fill="none" stroke="currentColor" strokeWidth="1.7" />,
+    // The same screen with the dock at its bottom edge.
+    icon: (
+      <>
+        <rect x="3" y="4" width="18" height="16" rx="3" fill="none" stroke="currentColor" strokeWidth="1.7" />
+        <rect x="7.5" y="14.6" width="9" height="2.4" rx="1.2" fill="currentColor" />
+      </>
+    ),
   },
   { id: "appearance", icon: stroke("M12 3c3.5 4 6 6.5 6 10a6 6 0 0 1-12 0c0-3.5 2.5-6 6-10Z") },
   { id: "updates", icon: stroke("M20 7v5h-5M4 17v-5h5M6.3 9A7 7 0 0 1 18 7.5M17.7 15A7 7 0 0 1 6 16.5") },

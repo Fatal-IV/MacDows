@@ -659,6 +659,17 @@ img { -webkit-user-drag: none; user-select: none; }
 .link-icon svg { position: relative; filter: drop-shadow(0 0 4px currentColor); }
 .link-ring { position: absolute; inset: 0; border-radius: 50%; border: 1.5px solid currentColor; opacity: 0; animation: link-ring 1.4s ease-out 0.2s 2; }
 .link-ring.late { animation-delay: 0.55s; }
+.link-toast.disconnected .link-icon { color: #ffb020; }
+.link-toast.failed .link-icon { color: #ff453a; }
+.link-toast.disconnected .link-ring { animation-name: link-ring-in; }
+.link-toast.failed .link-ring { animation-iteration-count: 3; animation-duration: 1s; }
+.link-toast.failed .link-icon svg { animation: link-shake 0.5s ease-in-out 0.15s 2; }
+.link-slash { stroke-dasharray: 1; stroke-dashoffset: 1; animation: bt-draw 0.4s ease-out 0.35s forwards; }
+.vpn-shield, .vpn-check { stroke-dasharray: 1; stroke-dashoffset: 1; animation: bt-draw 0.6s ease-out 0.1s forwards; }
+.vpn-check { animation-delay: 0.5s; animation-duration: 0.4s; }
+.link-toast.failed .vpn-check, .link-toast.disconnected .vpn-check { opacity: 0.4; }
+@keyframes link-ring-in { 0% { transform: scale(1.6); opacity: 0; } 100% { transform: scale(0.5); opacity: 0.6; } }
+@keyframes link-shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-2.5px); } 75% { transform: translateX(2.5px); } }
 @keyframes link-ring { 0% { transform: scale(0.5); opacity: 0.7; } 100% { transform: scale(1.6); opacity: 0; } }
 .bt-rune { stroke-dasharray: 1; stroke-dashoffset: 1; animation: bt-draw 0.7s ease-out 0.1s forwards; }
 @keyframes bt-draw { to { stroke-dashoffset: 0; } }
@@ -672,8 +683,8 @@ img { -webkit-user-drag: none; user-select: none; }
 .link-label { font-size: 10px; letter-spacing: 0.04em; text-transform: uppercase; opacity: 0.6; }
 .link-name { font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 @media (prefers-reduced-motion: reduce) {
-  .link-ring { animation: none; }
-  .bt-rune { animation: none; stroke-dashoffset: 0; }
+  .link-ring, .link-icon svg { animation: none !important; }
+  .bt-rune, .link-slash, .vpn-shield, .vpn-check { animation: none; stroke-dashoffset: 0; }
   .wf-arc, .wf-dot { animation: none; opacity: 1; }
 }
 

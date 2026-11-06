@@ -2,6 +2,7 @@
 import { useEffect, useRef, useState } from "react";
 import { getWifiState, quickLaunch, wifiConnect, wifiConnectNew, wifiDisconnect, wifiForget, wifiScan, type WifiNetwork, type WifiState } from "../bridge";
 import { useT } from "../i18n";
+import { announceLink } from "./linkBus";
 import { canSubmit, errorText, securityLabel, signalBars, type WifiAuth } from "./netLogic";
 
 function Bars({ signal }: { signal: number }) {
@@ -102,13 +103,14 @@ export function WifiPage({ onBack, onEditing = () => {} }: { onBack: () => void;
     ];
   };
 
-  const run = async (ssid: string, action: () => Promise<unknown>) => {
+  const run = async (ssid: string, action: () => Promise<unknown>, announce?: "connect" | "disconnect") => {
     if (busy) return;
     setBusy(ssid);
     setError(null);
     setConfirmForget(null);
     try {
       await action();
+      if (announce) announceLink({ kind: "wifi", name: ssid, state: announce === "connect" ? "connected" : "disconnected" });
       setJoining(null);
       setPassword("");
       if (hiddenOpen && ssid === hSsid) {
@@ -118,6 +120,7 @@ export function WifiPage({ onBack, onEditing = () => {} }: { onBack: () => void;
       }
     } catch (e) {
       setError({ ssid, key: String(e) });
+      if (announce === "connect") announceLink({ kind: "wifi", name: ssid, state: "failed" });
     } finally {
       setBusy(null);
       getWifiState().then(setState).catch(() => {});
@@ -133,7 +136,7 @@ export function WifiPage({ onBack, onEditing = () => {} }: { onBack: () => void;
 
   const submitJoin = (n: WifiNetwork) => {
     const auth: WifiAuth = n.auth === "wpa3" ? "wpa3" : "wpa2";
-    if (canSubmit(n.ssid, auth, password)) run(n.ssid, () => wifiConnectNew(n.ssid, password, auth, false));
+    if (canSubmit(n.ssid, auth, password)) run(n.ssid, () => wifiConnectNew(n.ssid, password, auth, false), "connect");
   };
 
   const rows = (state?.networks ?? []).map((n) => (
@@ -155,7 +158,7 @@ export function WifiPage({ onBack, onEditing = () => {} }: { onBack: () => void;
             {n.enterprise ? (
               <button className="bt-action" onClick={() => quickLaunch("wifi_settings").catch(() => {})}>{t("net.openSettings")}</button>
             ) : n.connected ? (
-              <button className="bt-action" disabled={busy !== null} onClick={() => run(n.ssid, () => wifiDisconnect())}>{t("net.disconnect")}</button>
+              <button className="bt-action" disabled={busy !== null} onClick={() => run(n.ssid, () => wifiDisconnect(), "disconnect")}>{t("net.disconnect")}</button>
             ) : n.secured && !n.saved ? (
               <button
                 className="bt-action"
@@ -170,7 +173,7 @@ export function WifiPage({ onBack, onEditing = () => {} }: { onBack: () => void;
                 {t("net.connect")}
               </button>
             ) : (
-              <button className="bt-action" disabled={busy !== null} onClick={() => run(n.ssid, () => wifiConnect(n.ssid))}>
+              <button className="bt-action" disabled={busy !== null} onClick={() => run(n.ssid, () => wifiConnect(n.ssid), "connect")}>
                 {busy === n.ssid ? t("net.working") : t("net.connect")}
               </button>
             )}
@@ -208,7 +211,7 @@ export function WifiPage({ onBack, onEditing = () => {} }: { onBack: () => void;
   ));
 
   const hiddenReady = canSubmit(hSsid, hAuth, hPassword);
-  const submitHidden = () => hiddenReady && run(hSsid, () => wifiConnectNew(hSsid, hAuth === "open" ? null : hPassword, hAuth, true));
+  const submitHidden = () => hiddenReady && run(hSsid, () => wifiConnectNew(hSsid, hAuth === "open" ? null : hPassword, hAuth, true), "connect");
 
   return (
     <div className="devpage">
