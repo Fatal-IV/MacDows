@@ -8,7 +8,14 @@ use std::collections::HashMap;
 use std::sync::Mutex;
 use tauri::{AppHandle, Manager};
 use windows::Win32::Foundation::HWND;
-use windows::Win32::Graphics::Gdi::{CreateRoundRectRgn, SetWindowRgn};
+use windows::Win32::Graphics::Gdi::{CreateRoundRectRgn, GetStockObject, SetWindowRgn, NULL_BRUSH};
+use windows::Win32::UI::WindowsAndMessaging::{SetClassLongPtrW, GCLP_HBRBACKGROUND};
+
+/// Windows paints the area a new region exposes with the window class's background brush (white) until the page has
+/// painted over it: a white bar flashed under the island and the dock whenever their shape grew. No brush, no flash.
+unsafe fn no_background(hwnd: HWND) {
+    SetClassLongPtrW(hwnd, GCLP_HBRBACKGROUND, GetStockObject(NULL_BRUSH).0 as isize);
+}
 
 /// Where each bar's visible shape is on the screen, by window label.
 static SCREEN_RECTS: Mutex<Option<HashMap<String, Rect>>> = Mutex::new(None);
@@ -60,7 +67,8 @@ pub fn set_hit_region(app: AppHandle, label: String, x: i32, y: i32, w: i32, h: 
     unsafe {
         // The window owns the region once SetWindowRgn accepts it.
         let region = CreateRoundRectRgn(left, top, right + 1, bottom + 1, d, d);
-        SetWindowRgn(hwnd, Some(region), true);
+        no_background(hwnd);
+        SetWindowRgn(hwnd, Some(region), false);
     }
     remember(&label, Some(Rect { left: origin.x + left, top: origin.y + top, right: origin.x + right, bottom: origin.y + bottom }));
     Ok(())
@@ -75,7 +83,8 @@ pub fn clear_hit_region(app: AppHandle, label: String) -> Result<(), String> {
     let win = app.get_webview_window(&label).ok_or("no such window")?;
     let hwnd = HWND(win.hwnd().map_err(|e| e.to_string())?.0);
     unsafe {
-        SetWindowRgn(hwnd, None, true);
+        no_background(hwnd);
+        SetWindowRgn(hwnd, None, false);
     }
     remember(&label, None);
     Ok(())
