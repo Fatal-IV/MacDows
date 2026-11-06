@@ -1,20 +1,20 @@
 //! The island and the dock live in transparent windows that are as big as the island or dock can ever get (580x340 and
 //! 900x120). Without further care the empty part of such a window swallows clicks meant for the program underneath.
-//! The front end reports the real size of what it draws and the window is cut down to that shape (`SetWindowRgn`),
-//! so everything outside it belongs to the windows below, and the cursor only counts as "near" inside it.
+//! The front end reports the real size of what it draws; while the pointer is outside that shape the window ignores
+//! the mouse (clicks fall through to the windows below), inside it the window takes it. (Cutting the window with
+//! `SetWindowRgn` did the same but painted the cut-out margin white.) The cursor only counts as "near" inside the shape.
 
 use crate::fullscreen::Rect;
 use std::collections::HashMap;
 use std::sync::Mutex;
 use tauri::{AppHandle, Manager};
-use windows::Win32::Foundation::HWND;
-use windows::Win32::Graphics::Gdi::{CreateRoundRectRgn, GetStockObject, SetWindowRgn, NULL_BRUSH};
-use windows::Win32::UI::WindowsAndMessaging::{SetClassLongPtrW, GCLP_HBRBACKGROUND};
+use windows::Win32::Foundation::{HWND, POINT};
+use windows::Win32::Graphics::Gdi::SetWindowRgn;
+use windows::Win32::UI::WindowsAndMessaging::GetCursorPos;
 
-/// Windows paints the area a new region exposes with the window class's background brush (white) until the page has
-/// painted over it: a white bar flashed under the island and the dock whenever their shape grew. No brush, no flash.
-unsafe fn no_background(hwnd: HWND) {
-    SetClassLongPtrW(hwnd, GCLP_HBRBACKGROUND, GetStockObject(NULL_BRUSH).0 as isize);
+/// True when the point is inside the rectangle grown by `pad` pixels on every side.
+pub fn point_in(r: Rect, x: i32, y: i32, pad: i32) -> bool {
+    x >= r.left - pad && x < r.right + pad && y >= r.top - pad && y < r.bottom + pad
 }
 
 /// Where each bar's visible shape is on the screen, by window label.
@@ -62,13 +62,12 @@ pub fn set_hit_region(app: AppHandle, label: String, x: i32, y: i32, w: i32, h: 
     let Some((left, top, right, bottom)) = clamp_to_window(x, y, w, h, size.width as i32, size.height as i32) else {
         return clear_hit_region(app, label);
     };
-    let hwnd = HWND(win.hwnd().map_err(|e| e.to_string())?.0);
-    let d = radius.max(0).saturating_mul(2);
-    unsafe {
-        // The window owns the region once SetWindowRgn accepts it.
-        let region = CreateRoundRectRgn(left, top, right + 1, bottom + 1, d, d);
-        no_background(hwnd);
-        SetWindowRgn(hwnd, Some(region), false);
+    let _ = radius;
+    // No window region any more: it painted its margin white. An old region (there is none now) would be removed here.
+    if let Ok(h) = win.hwnd() {
+        unsafe {
+            SetWindowRgn(HWND(h.0), None, false);
+        }
     }
     remember(&label, Some(Rect { left: origin.x + left, top: origin.y + top, right: origin.x + right, bottom: origin.y + bottom }));
     Ok(())
@@ -83,11 +82,37 @@ pub fn clear_hit_region(app: AppHandle, label: String) -> Result<(), String> {
     let win = app.get_webview_window(&label).ok_or("no such window")?;
     let hwnd = HWND(win.hwnd().map_err(|e| e.to_string())?.0);
     unsafe {
-        no_background(hwnd);
         SetWindowRgn(hwnd, None, false);
     }
     remember(&label, None);
     Ok(())
+}
+
+/// Watches the pointer and lets each bar's window ignore the mouse while the pointer is outside its drawn shape.
+pub fn start(app: AppHandle) {
+    std::thread::spawn(move || {
+        let mut ignoring: HashMap<&'static str, bool> = HashMap::new();
+        loop {
+            std::thread::sleep(std::time::Duration::from_millis(16));
+            let mut p = POINT::default();
+            if unsafe { GetCursorPos(&mut p) }.is_err() {
+                continue;
+            }
+            for label in ["notch", "dock"] {
+                let want = match screen_rect(label) {
+                    Some(r) => !point_in(r, p.x, p.y, 2),
+                    None => false,
+                };
+                if ignoring.get(label).copied() != Some(want) {
+                    if let Some(win) = app.get_webview_window(label) {
+                        if win.set_ignore_cursor_events(want).is_ok() {
+                            ignoring.insert(label, want);
+                        }
+                    }
+                }
+            }
+        }
+    });
 }
 
 #[cfg(test)]
@@ -109,6 +134,14 @@ mod tests {
         assert_eq!(clamp_to_window(600, 0, 50, 50, 580, 340), None);
         assert_eq!(clamp_to_window(10, 10, 0, 40, 580, 340), None);
         assert_eq!(clamp_to_window(10, 10, 40, -5, 580, 340), None);
+    }
+
+    #[test]
+    fn the_pointer_is_inside_a_shape_up_to_its_edge() {
+        let r = Rect { left: 10, top: 0, right: 110, bottom: 40 };
+        assert!(point_in(r, 10, 0, 0) && point_in(r, 109, 39, 0));
+        assert!(!point_in(r, 110, 20, 0) && !point_in(r, 9, 20, 0));
+        assert!(point_in(r, 110, 20, 2) && point_in(r, 8, 20, 2));
     }
 
     #[test]

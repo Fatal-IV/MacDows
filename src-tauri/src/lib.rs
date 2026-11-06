@@ -403,6 +403,7 @@ pub fn run() {
             visibility::start(app.handle().clone());
             updates::start(app.handle().clone());
             start_taskbar_takeover(app.handle());
+            hit_region::start(app.handle().clone());
             announce_update(app.handle());
             Ok(())
         })
