@@ -645,7 +645,7 @@ export default function Notch() {
   const linkOpen = link !== null && (link.forced === true || !screenBusyRef.current);
   eyesShowingRef.current = ready && !hovered && !tools && !quick && !shelfOpen && !historyOpen && !dropping && !bannerOpen && !linkOpen;
 
-  const width = !ready ? 34 : linkOpen ? 280 : tools || quick || shelfOpen || historyOpen ? 520 : dropping ? 380 : bannerOpen ? 380 : musicOpen ? 340 : isMusic ? 240 : hovered ? 170 + widgetsW : hasMedia ? 170 : 140;
+  const width = !ready ? 34 : linkOpen ? 280 : tools || quick || shelfOpen || historyOpen ? 520 : dropping ? 380 : bannerOpen ? 380 : musicOpen ? 340 : isMusic ? 198 : hovered ? 170 + widgetsW : hasMedia ? 150 : 140;
   const height = !ready ? 34 : linkOpen ? 46 : tools ? 280 : quick ? 312 : shelfOpen || historyOpen ? 312 : dropping ? 110 : bannerOpen ? 76 : musicOpen ? (media!.duration_ms > 0 ? 126 : 108) + (showSources ? 36 : 0) : 36;
 
   // Only the island's own shape takes clicks; the rest of its (much larger) transparent window belongs to the programs below.
@@ -854,7 +854,7 @@ export default function Notch() {
               exit={{ opacity: 0, y: 5, transition: { duration: 0.1 } }}
               transition={{ duration: 0.2 }}
             >
-              <div className="side left">
+              <div className={`side left${isMusic && !showWidgets ? " snug" : ""}`}>
                 {hasMedia && <Visualizer playing={playing} />}
                 {showWidgets && <StatusWidgets ids={placed.left} cfg={statusCfg} stats={stats} weather={weather} status={system} />}
               </div>

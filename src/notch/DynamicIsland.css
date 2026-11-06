@@ -82,6 +82,9 @@ img { -webkit-user-drag: none; user-select: none; }
 }
 .side.left { justify-content: flex-start; }
 .side.right { justify-content: flex-end; }
+/* Playing music: the visualizer sits next to the clock and the spare room goes to the eyes and the cover on the right. */
+.side.left.snug { flex: none; }
+.side.left.snug .visualizer { transform: translateX(-4px); }
 
 .time-flip {
   position: relative;
