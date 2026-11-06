@@ -23,6 +23,7 @@ import { MusicNoteIcon, PauseIcon, PlayIcon, SkipBackIcon, SkipForwardIcon } fro
 import { ToolsPanel, useTimer } from "./Tools";
 import { QuickSettingsScreen } from "./QuickSettings";
 import { NotificationBanner } from "./NotificationBanner";
+import { LinkToast, type Link } from "./LinkToast";
 import { DropZone, ShelfScreen } from "./Shelf";
 import { NotificationHistory } from "./NotificationHistory";
 import { getCurrentWebview } from "@tauri-apps/api/webview";
@@ -36,6 +37,7 @@ const WHEEL_STEP = 60;
 const WHEEL_IDLE_MS = 180;
 const MUSIC_IDLE_BACK_MS = 5000;
 const BANNER_MS = 5000;
+const LINK_MS = 3600;
 const MARQUEE_SPEED = 30; // px/s
 const MARQUEE_MIN_SECONDS = 5;
 
@@ -311,6 +313,20 @@ export default function Notch() {
       if (off) clearTimeout(off);
     };
   }, [firstRun]);
+  // A Bluetooth device or a Wi-Fi network just connected: its name and an animated icon, for a few seconds.
+  const [link, setLink] = useState<Link | null>(null);
+  useEffect(() => {
+    let off: ReturnType<typeof setTimeout> | undefined;
+    const un = listen<Link>("link-connected", (e) => {
+      setLink(e.payload);
+      if (off) clearTimeout(off);
+      off = setTimeout(() => setLink(null), LINK_MS);
+    });
+    return () => {
+      un.then((f) => f());
+      if (off) clearTimeout(off);
+    };
+  }, []);
   // A photo was taken (the Windows Camera app saved a picture): the eyes' place shows an animated camera for a moment.
   const [shot, setShot] = useState(false);
   useEffect(() => {
@@ -613,10 +629,11 @@ export default function Notch() {
   const showWidgets = statusOn && hovered && !isMusic;
   const stats = useStats(showWidgets && needsStats(placed));
   const widgetsW = showWidgets ? widgetsWidth(placed) : 0;
-  eyesShowingRef.current = ready && !hovered && !tools && !quick && !shelfOpen && !historyOpen && !dropping && !bannerOpen;
+  const linkOpen = link !== null && !open && !tools && !quick && !shelfOpen && !historyOpen && !dropping && !bannerOpen;
+  eyesShowingRef.current = ready && !hovered && !tools && !quick && !shelfOpen && !historyOpen && !dropping && !bannerOpen && !linkOpen;
 
-  const width = !ready ? 34 : tools || quick || shelfOpen || historyOpen ? 520 : dropping ? 380 : bannerOpen ? 380 : musicOpen ? 340 : isMusic ? 240 : hovered ? 170 + widgetsW : hasMedia ? 170 : 140;
-  const height = !ready ? 34 : tools ? 280 : quick ? 312 : shelfOpen || historyOpen ? 312 : dropping ? 110 : bannerOpen ? 76 : musicOpen ? (media!.duration_ms > 0 ? 126 : 108) + (showSources ? 36 : 0) : 36;
+  const width = !ready ? 34 : tools || quick || shelfOpen || historyOpen ? 520 : dropping ? 380 : bannerOpen ? 380 : linkOpen ? 270 : musicOpen ? 340 : isMusic ? 240 : hovered ? 170 + widgetsW : hasMedia ? 170 : 140;
+  const height = !ready ? 34 : tools ? 280 : quick ? 312 : shelfOpen || historyOpen ? 312 : dropping ? 110 : bannerOpen ? 76 : linkOpen ? 46 : musicOpen ? (media!.duration_ms > 0 ? 126 : 108) + (showSources ? 36 : 0) : 36;
 
   // Only the island's own shape takes clicks; the rest of its (much larger) transparent window belongs to the programs below.
   useHitRegion("notch", islandBox(window.innerWidth, width * scale, height * scale, 12), 12);
@@ -719,6 +736,10 @@ export default function Notch() {
               >
                 ⌄
               </button>
+            </motion.div>
+          ) : linkOpen ? (
+            <motion.div key="link" className="tools-wrap" initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.98, transition: { duration: 0.1 } }} transition={{ type: "spring", stiffness: 500, damping: 30 }}>
+              <LinkToast link={link!} label={t(`link.${link!.kind}`)} />
             </motion.div>
           ) : bannerOpen ? (
             <motion.div key="banner" className="tools-wrap" initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.98, transition: { duration: 0.1 } }} transition={{ type: "spring", stiffness: 500, damping: 30 }}>

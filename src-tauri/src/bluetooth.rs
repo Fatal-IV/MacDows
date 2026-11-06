@@ -118,6 +118,23 @@ fn read_devices() -> Vec<BtDevice> {
     list
 }
 
+/// Address and name of every paired device that is connected right now (no battery lookup, cheap enough to poll).
+pub fn connected_devices() -> Vec<(String, String)> {
+    let Ok(selector) = BluetoothDevice::GetDeviceSelectorFromPairingState(true) else { return Vec::new() };
+    let Ok(found) = DeviceInformation::FindAllAsyncAqsFilter(&selector).and_then(|op| op.get()) else { return Vec::new() };
+    let mut out = Vec::new();
+    for info in found {
+        let Ok(id) = info.Id() else { continue };
+        let Ok(device) = BluetoothDevice::FromIdAsync(&id).and_then(|op| op.get()) else { continue };
+        if device.ConnectionStatus().ok() != Some(BluetoothConnectionStatus::Connected) {
+            continue;
+        }
+        let name = info.Name().map(|n| n.to_string()).unwrap_or_default();
+        out.push((address_hex(device.BluetoothAddress().unwrap_or(0)), name));
+    }
+    out
+}
+
 #[tauri::command]
 pub async fn get_bluetooth_devices() -> Vec<BtDevice> {
     tauri::async_runtime::spawn_blocking(read_devices).await.unwrap_or_default()
