@@ -59,9 +59,14 @@ export const GREETED_KEY = "macdows.greeted";
 /** How long the island stays open for its greeting. */
 export const GREETING_MS = 3200;
 
-/** TEMPORARY, for testing the greeting: when true the island waves on every start, not only on the first start of a
- *  version. Set it back to false before a release. */
+/** The island waves on every start of the app (so also after the computer has booted and the app starts with Windows),
+ *  not only on the first start of a version. */
 export const GREET_EVERY_START = true;
+
+/** How long the island waits before its next random wave: 45 s to 150 s (`rand` is 0..1). */
+export function nextWaveDelay(rand: number): number {
+  return Math.round(45_000 + Math.min(1, Math.max(0, rand)) * 105_000);
+}
 
 /** The island greets on the first start of a version: a fresh install (nothing stored) or an update (another version
  *  stored). `always` (see GREET_EVERY_START) makes it greet on every start. */

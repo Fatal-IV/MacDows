@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { buildStops, canDisable, clickTarget, mutedApp, restingStop, screenOn, shouldGreet, GREET_EVERY_START } from "./islandLogic.ts";
+import { buildStops, canDisable, clickTarget, mutedApp, restingStop, screenOn, shouldGreet, nextWaveDelay, GREET_EVERY_START } from "./islandLogic.ts";
 import { defaultIsland } from "./islandDefaults.ts";
 import type { Island, ScreenId } from "../bridge";
 
@@ -110,6 +110,12 @@ test("the temporary testing switch makes the island greet on every start", () =>
   assert.equal(shouldGreet(null, "", true), false, "still not without a version");
 });
 
-test("the testing switch is off in a release", { todo: "flip GREET_EVERY_START to false before releasing" }, () => {
-  assert.equal(GREET_EVERY_START, false);
+test("the next random wave comes 45 to 150 seconds later", () => {
+  assert.equal(nextWaveDelay(0), 45_000);
+  assert.equal(nextWaveDelay(1), 150_000);
+  assert.equal(nextWaveDelay(5), 150_000);
+});
+
+test("the island greets on every start", () => {
+  assert.equal(GREET_EVERY_START, true);
 });

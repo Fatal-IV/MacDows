@@ -5,9 +5,11 @@ Format: [Keep a Changelog](https://keepachangelog.com/), versioning: [SemVer](ht
 
 ## [Unreleased]
 
+## [0.2.2] - 2026-11-06
+
 ### Added
 - Update notes follow the app's language: release notes can carry a Turkish part under a "### Türkçe" heading, and Settings > Updates shows the English or the Turkish part to match the language setting (notes without that heading are shown whole).
-- The island's character: the two eyes are now small upside-down U shapes (arches), and a tiny robot waves hello next to them. On the very first start after an install the island drops in with a bounce, the dock rises from the bottom, and the island opens a little to wave; after an update the island opens and waves once on the first start of the new version. Then it shrinks back and keeps blinking. Both bars stay on screen for a few extra seconds on the first start, whatever the visibility mode.
+- The island's character: the two eyes are now small upside-down U shapes (arches), and a tiny robot waves hello next to them. On the very first start after an install the island drops in with a bounce, the dock rises from the bottom, and the island opens a little to wave; the island opens and waves on every start of the app, so also after the computer has booted and MacDows starts with Windows. Then it shrinks back and keeps blinking. Every so often, at random times (45 to 150 seconds apart), the robot takes the eyes' place and waves again, then the eyes come back; it only does that while the island is resting, not while it shows the player, tools, a banner or the widgets. Both bars stay on screen for a few extra seconds on the first start, whatever the visibility mode.
 
 ### Changed
 - The installer says "Updating…" (and "Update", "MacDows is updated.") instead of "Installing…" when it replaces an older version.

@@ -8,7 +8,7 @@ import { getVersion } from "@tauri-apps/api/app";
 import { listen } from "@tauri-apps/api/event";
 import { getMedia, getMediaSources, selectMediaSource, mediaNext, mediaPrev, mediaSeek, mediaToggle, onMediaChanged, islandFocus, onNotificationNew, isFirstRun, addToShelf, clearShelf, getShelf, removeFromShelf, type MediaInfo, type MediaSource, type Notice, type ShelfItem } from "../bridge";
 import { useSettings, useT } from "../i18n";
-import { buildStops, clickTarget, GREETED_KEY, GREETING_MS, GREET_EVERY_START, restingStop, screenOn, shouldGreet, type Stop } from "./islandLogic";
+import { buildStops, clickTarget, GREETED_KEY, GREETING_MS, GREET_EVERY_START, nextWaveDelay, restingStop, screenOn, shouldGreet, type Stop } from "./islandLogic";
 import { defaultIsland } from "./islandDefaults";
 import { useUpdateStatus } from "../updates";
 import { useSystemStatus } from "../system";
@@ -304,6 +304,26 @@ export default function Notch() {
       if (off) clearTimeout(off);
     };
   }, [firstRun]);
+  // Now and then, at random times, the robot takes the eyes' place and waves; it only does so while the eyes are showing.
+  const eyesShowingRef = useRef(false);
+  useEffect(() => {
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    let off: ReturnType<typeof setTimeout> | undefined;
+    const schedule = () => {
+      timer = setTimeout(() => {
+        if (eyesShowingRef.current) {
+          setGreeting(true);
+          off = setTimeout(() => setGreeting(false), GREETING_MS);
+        }
+        schedule();
+      }, nextWaveDelay(Math.random()));
+    };
+    schedule();
+    return () => {
+      if (timer) clearTimeout(timer);
+      if (off) clearTimeout(off);
+    };
+  }, []);
   const [mode, setMode] = useState<Mode>("status");
   const [ready, setReady] = useState(false);
   const [impacted, setImpacted] = useState(false);
@@ -572,6 +592,7 @@ export default function Notch() {
   const showWidgets = statusOn && hovered && !isMusic;
   const stats = useStats(showWidgets && needsStats(placed));
   const widgetsW = showWidgets ? widgetsWidth(placed) : 0;
+  eyesShowingRef.current = ready && !isMusic && !hovered && !tools && !quick && !shelfOpen && !historyOpen && !dropping && !bannerOpen;
 
   const width = !ready ? 34 : tools || quick || shelfOpen || historyOpen ? 520 : dropping ? 380 : bannerOpen ? 380 : musicOpen ? 340 : isMusic ? 200 : hovered ? 170 + widgetsW : greeting ? 230 : hasMedia ? 170 : 140;
   const height = !ready ? 34 : tools ? 280 : quick ? 312 : shelfOpen || historyOpen ? 312 : dropping ? 110 : bannerOpen ? 76 : musicOpen ? (media!.duration_ms > 0 ? 126 : 108) + (showSources ? 36 : 0) : 36;
