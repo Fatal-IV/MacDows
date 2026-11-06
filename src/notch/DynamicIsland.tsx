@@ -241,13 +241,15 @@ function Art({ url, className }: { url: string | null; className?: string }) {
   );
 }
 
-/** The island's character: two neon green arch eyes that blink now and then, and a tiny robot that waves while it greets. */
-function Eyes({ waving, robot = false }: { waving: boolean; robot?: boolean }) {
+/** The island's character: two neon green arch eyes that blink; now and then the robot swaps places with them (animated), waves, and leaves again. */
+function Eyes({ waving }: { waving: boolean }) {
   return (
-    <div className="eyes" aria-hidden>
-      <i />
-      <i />
-      <svg className={`eyes-robot${waving ? " waving" : ""}${robot ? " shown" : ""}`} width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+    <div className={`eyes${waving ? " waving" : ""}`} aria-hidden>
+      <div className="eyes-pair">
+        <i />
+        <i />
+      </div>
+      <svg className="eyes-robot" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
         <path d="M12 5V2.6" />
         <circle cx="12" cy="2" r="1" fill="currentColor" stroke="none" />
         <rect x="6" y="5" width="12" height="8.5" rx="2.6" />
@@ -594,7 +596,7 @@ export default function Notch() {
   const widgetsW = showWidgets ? widgetsWidth(placed) : 0;
   eyesShowingRef.current = ready && !hovered && !tools && !quick && !shelfOpen && !historyOpen && !dropping && !bannerOpen;
 
-  const width = !ready ? 34 : tools || quick || shelfOpen || historyOpen ? 520 : dropping ? 380 : bannerOpen ? 380 : musicOpen ? 340 : isMusic ? 270 : hovered ? 170 + widgetsW : greeting ? 230 : hasMedia ? 170 : 140;
+  const width = !ready ? 34 : tools || quick || shelfOpen || historyOpen ? 520 : dropping ? 380 : bannerOpen ? 380 : musicOpen ? 340 : isMusic ? 240 : hovered ? 170 + widgetsW : greeting ? 230 : hasMedia ? 170 : 140;
   const height = !ready ? 34 : tools ? 280 : quick ? 312 : shelfOpen || historyOpen ? 312 : dropping ? 110 : bannerOpen ? 76 : musicOpen ? (media!.duration_ms > 0 ? 126 : 108) + (showSources ? 36 : 0) : 36;
 
   // Only the island's own shape takes clicks; the rest of its (much larger) transparent window belongs to the programs below.
@@ -822,7 +824,7 @@ export default function Notch() {
               <div className="side right">
                 {isMusic ? (
                   <>
-                  {!showWidgets && <Eyes waving={greeting} robot />}
+                  {!showWidgets && <Eyes waving={greeting} />}
                   <button
                     className={`art-small${hovered ? " large" : ""}${playing ? "" : " paused"}`}
                     onClick={(e) => {
