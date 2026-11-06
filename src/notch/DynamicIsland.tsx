@@ -319,6 +319,7 @@ export default function Notch() {
   // Control Center page (`forced`) shrinks the island over whatever screen is open, which comes back afterwards.
   const [link, setLink] = useState<Link | null>(null);
   const screenBusyRef = useRef(false);
+  const forcedLinkRef = useRef(false);
   useEffect(() => {
     let off: ReturnType<typeof setTimeout> | undefined;
     let last: { key: string; at: number } | null = null;
@@ -382,6 +383,11 @@ export default function Notch() {
   const [tools, setTools] = useState(false);
   // A click opens the quick settings: its own screen, separate from the player and the tools.
   const [quick, setQuick] = useState(false);
+  const [quickPage, setQuickPage] = useState<"wifi" | "bluetooth" | "vpn" | null>(null);
+  // The page a clicked notice asked for only applies to that one opening.
+  useEffect(() => {
+    if (!quick) setQuickPage(null);
+  }, [quick]);
   // The newest notification, shown for a few seconds (and while the pointer rests on it).
   const [banner, setBanner] = useState<Notice | null>(null);
   // The shelf: files dropped on the notch. `dropping` is true while a file is being dragged over it.
@@ -572,6 +578,8 @@ export default function Notch() {
     else setMode(restingMode());
   };
   const onHoverEnd = () => {
+    // A notice for what the user just did shrinks the island under the pointer: that is not the pointer leaving, the screen has to stay.
+    if (forcedLinkRef.current) return;
     if (editing.current) {
       leftWhileEditing.current = true;
       return;
@@ -643,6 +651,7 @@ export default function Notch() {
   const widgetsW = showWidgets ? widgetsWidth(placed) : 0;
   screenBusyRef.current = open || tools || quick || shelfOpen || historyOpen || dropping || bannerOpen;
   const linkOpen = link !== null && (link.forced === true || !screenBusyRef.current);
+  forcedLinkRef.current = linkOpen && link?.forced === true;
   eyesShowingRef.current = ready && !hovered && !tools && !quick && !shelfOpen && !historyOpen && !dropping && !bannerOpen && !linkOpen;
 
   const width = !ready ? 34 : linkOpen ? 280 : tools || quick || shelfOpen || historyOpen ? 520 : dropping ? 380 : bannerOpen ? 380 : musicOpen ? 340 : isMusic ? 198 : hovered ? 170 + widgetsW : hasMedia ? 150 : 140;
@@ -716,7 +725,21 @@ export default function Notch() {
         <AnimatePresence mode="wait" initial={false}>
           {linkOpen ? (
             <motion.div key="link" className="tools-wrap" initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.98, transition: { duration: 0.1 } }} transition={{ type: "spring", stiffness: 500, damping: 30 }}>
-              <LinkToast link={link!} label={t(`link.${link!.kind}.${link!.state}`)} />
+              <LinkToast
+                link={link!}
+                label={t(`link.${link!.kind}.${link!.state}`)}
+                onOpen={
+                  buildStops(island, hasMedia).includes("quick")
+                    ? () => {
+                        // Clicking the notice opens that connection's page in the Control Center.
+                        const kind = link!.kind;
+                        setQuickPage(kind);
+                        setLink(null);
+                        goTo("quick");
+                      }
+                    : undefined
+                }
+              />
             </motion.div>
           ) : dropping ? (
             <motion.div key="drop" className="tools-wrap" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0, transition: { duration: 0.1 } }}>
@@ -767,7 +790,7 @@ export default function Notch() {
             </motion.div>
           ) : quick ? (
             <motion.div key="quick" className="tools-wrap" initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.98, transition: { duration: 0.1 } }} transition={{ type: "spring", stiffness: 500, damping: 30 }}>
-              <QuickSettingsScreen wifiPage={island.screens.quick.wifi_page} vpn={island.screens.quick.vpn} bluetoothPairing={island.screens.quick.bluetooth_pairing} onEditing={setEditing} />
+              <QuickSettingsScreen wifiPage={island.screens.quick.wifi_page} vpn={island.screens.quick.vpn} bluetoothPairing={island.screens.quick.bluetooth_pairing} onEditing={setEditing} initialPage={quickPage} onPage={setQuickPage} />
               <button
                 className="corner-arrow"
                 onClick={(e) => {

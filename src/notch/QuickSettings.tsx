@@ -50,13 +50,17 @@ const SWITCHES: { key: QuickKey; label: string }[] = [
   { key: "hotspot", label: "quick.hotspot" },
 ];
 
-export function QuickSettingsScreen({ wifiPage = true, vpn = true, bluetoothPairing = true, onEditing }: { wifiPage?: boolean; vpn?: boolean; bluetoothPairing?: boolean; onEditing?: (on: boolean) => void }) {
+export function QuickSettingsScreen({ wifiPage = true, vpn = true, bluetoothPairing = true, onEditing, initialPage = null, onPage }: { wifiPage?: boolean; vpn?: boolean; bluetoothPairing?: boolean; onEditing?: (on: boolean) => void; initialPage?: "wifi" | "bluetooth" | "vpn" | null; onPage?: (page: "wifi" | "bluetooth" | "vpn" | null) => void }) {
   const t = useT();
   const [state, setState] = useState<QuickSettings | null>(null);
   const [busy, setBusy] = useState<QuickKey | null>(null);
   const [failed, setFailed] = useState<QuickKey | null>(null);
   // Wi-Fi and Bluetooth open a page of their own; the arrow on the tile leads there.
-  const [page, setPage] = useState<QuickKey | "vpn" | null>(null);
+  const [page, setPage] = useState<QuickKey | "vpn" | null>(initialPage);
+  // The island remembers the open page: a notice can cover this screen for a moment and it has to come back to the same page.
+  useEffect(() => {
+    onPage?.(page === "wifi" || page === "bluetooth" || page === "vpn" ? page : null);
+  }, [page]);
   // The VPN card: Windows VPN connections and whether an app has a tunnel up.
   const [vpnState, setVpnState] = useState<VpnState | null>(null);
   const [vpnBusy, setVpnBusy] = useState(false);

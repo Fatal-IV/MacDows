@@ -1,9 +1,9 @@
 import type { Link } from "./linkBus";
 
 /** Something connected, disconnected or failed to connect: an animated icon (green, amber or red) and the name, inside the island. */
-export function LinkToast({ link, label }: { link: Link; label: string }) {
+export function LinkToast({ link, label, onOpen }: { link: Link; label: string; onOpen?: () => void }) {
   return (
-    <div className={`link-toast ${link.kind} ${link.state}`}>
+    <div className={`link-toast ${link.kind} ${link.state}`} onClick={onOpen} style={onOpen ? { cursor: "pointer" } : undefined}>
       <span className="link-icon" aria-hidden>
         <i className="link-ring" />
         <i className="link-ring late" />
