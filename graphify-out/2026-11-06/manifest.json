@@ -108,9 +108,9 @@
     "semantic_hash": ""
   },
   "package.json": {
-    "mtime": 1793948061.884225,
-    "seen": 1793948085.6438282,
-    "ast_hash": "c43ab7a4e78573381efab0b0e3e8b115",
+    "mtime": 1793952535.467378,
+    "seen": 1793952540.6318154,
+    "ast_hash": "e901198c043835afc7da332c3f25ee6e",
     "semantic_hash": ""
   },
   "scripts/build-installer.mjs": {
@@ -150,9 +150,9 @@
     "semantic_hash": ""
   },
   "src-tauri/Cargo.toml": {
-    "mtime": 1793948061.9327185,
-    "seen": 1793948085.6438398,
-    "ast_hash": "a3bd7e4efc07e6acd2cbafdbc686ea35",
+    "mtime": 1793952535.50729,
+    "seen": 1793952540.6318328,
+    "ast_hash": "35c374d4c2aa612fddcea419d62f8e0a",
     "semantic_hash": ""
   },
   "src-tauri/build.rs": {
@@ -192,9 +192,9 @@
     "semantic_hash": ""
   },
   "src-tauri/src/lib.rs": {
-    "mtime": 1793947838.1729066,
-    "seen": 1793947892.1904693,
-    "ast_hash": "2c0b96093c84c73324560a71da9b3eef",
+    "mtime": 1793950758.238681,
+    "seen": 1793950781.1162271,
+    "ast_hash": "28a8194deb4e53fb4378348cd79195ee",
     "semantic_hash": ""
   },
   "src-tauri/src/main.rs": {
@@ -276,9 +276,9 @@
     "semantic_hash": ""
   },
   "src-tauri/tauri.conf.json": {
-    "mtime": 1793948061.899447,
-    "seen": 1793948085.6439028,
-    "ast_hash": "2cf3a2c55a6c07380b24de4462b92aa9",
+    "mtime": 1793952535.4798205,
+    "seen": 1793952540.6319363,
+    "ast_hash": "6582cb5d167f3ec0247ec0db624cb5a7",
     "semantic_hash": ""
   },
   "src/appearance/SurfaceShape.tsx": {
@@ -300,8 +300,8 @@
     "semantic_hash": ""
   },
   "src/bridge.ts": {
-    "mtime": 1793918306.8432865,
-    "seen": 1793918627.699902,
+    "mtime": 1793949947.797802,
+    "seen": 1793949967.4282672,
     "ast_hash": "f65c4043a2d5b42bbdcc3fabe3edc80e",
     "semantic_hash": ""
   },
@@ -414,9 +414,9 @@
     "semantic_hash": ""
   },
   "CHANGELOG.md": {
-    "mtime": 1793948061.8563633,
-    "seen": 1793948085.6439967,
-    "ast_hash": "26bc8b5332645eb2c529ef315ab35277",
+    "mtime": 1793952535.4404318,
+    "seen": 1793952540.6322048,
+    "ast_hash": "0fa706efdc612cc7af2c8ce9f024932d",
     "semantic_hash": ""
   },
   "README.md": {
@@ -864,14 +864,14 @@
     "semantic_hash": ""
   },
   "src-tauri/src/preview.rs": {
-    "mtime": 1793799233.672728,
-    "seen": 1793799239.606652,
+    "mtime": 1793949947.796521,
+    "seen": 1793949967.4282386,
     "ast_hash": "92271183b525816508bc80bed229a0e1",
     "semantic_hash": ""
   },
   "src/dock/DockPreview.tsx": {
-    "mtime": 1793799233.6926332,
-    "seen": 1793799239.6066747,
+    "mtime": 1793949947.7988074,
+    "seen": 1793949967.4282706,
     "ast_hash": "a7b4bf9058786c7dd5d7dbc02d922ae1",
     "semantic_hash": ""
   },
@@ -1038,9 +1038,9 @@
     "semantic_hash": ""
   },
   "src-tauri/src/hit_region.rs": {
-    "mtime": 1793918236.506583,
-    "seen": 1793918627.6998441,
-    "ast_hash": "3af5ebb7f365b795246d57b43e72abf3",
+    "mtime": 1793950758.238681,
+    "seen": 1793950781.1162193,
+    "ast_hash": "986fe462807a8b889d3cc984f551d39c",
     "semantic_hash": ""
   },
   "src/hitBox.test.ts": {

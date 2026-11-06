@@ -1,17 +1,17 @@
 # Graph Report - MacDows  (2026-11-06)
 
 ## Corpus Check
-- 149 files · ~125,001 words
+- 149 files · ~125,330 words
 - Verdict: corpus is large enough that graph structure adds value.
 - Unclassified: 25 file(s) not represented in the graph (top: .css 10, (none) 6, .ico 3)
 
 ## Summary
-- 2402 nodes · 4506 edges · 100 communities (87 shown, 13 thin omitted)
+- 2407 nodes · 4514 edges · 106 communities (88 shown, 18 thin omitted)
 - Extraction: 97% EXTRACTED · 3% INFERRED · 0% AMBIGUOUS · INFERRED: 150 edges (avg confidence: 0.93)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `7aa8abe5`
+- Built from commit: `045ffc31`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -38,11 +38,11 @@
 - tray_panel.rs
 - File Structure
 - install.rs
-- bridge.ts
+- ref_react
 - theme.ts
 - taskbar_plan.rs
 - installer/package.json
-- custom_icons.rs
+- rig
 - logic.rs
 - island_settings.rs
 - hide
@@ -53,8 +53,8 @@
 - MacDows Installer and Logo — Design
 - make-icons.mjs
 - quick_settings.rs
-- IslandSettings.tsx
-- File Structure
+- hit_region.rs
+- MacDows In-App Update — Design
 - MacDows Taskbar Takeover — Design
 - bluetooth_pairing.rs
 - build-installer.mjs
@@ -65,47 +65,53 @@
 - fake-update-server.mjs
 - Installer facts verified on a real PC (2026-11-02)
 - In-app update facts (2026-11-02)
-- MacDows In-App Update — Design
+- UpdateStatus
 - SetupError
 - hotkeys.rs
 - installer/src-tauri/capabilities/default.json
 - notifications.rs
 - Taskbar takeover facts verified on a real PC (2026-11-02, Windows 11, one monitor)
-- Dock Features Implementation Plan
+- custom_icons.rs
 - 4. Özellikler
 - MacDows
 - MacDows.Setup.csproj
 - useT
 - fullscreen.rs
 - macdows-setup
-- QuickSettings.tsx
-- Dynamic Island Settings Implementation Plan
+- bridge.ts
+- File Structure
 - File Structure
 - Stage
 - Settings.tsx
-- Appearance.tsx
+- IslandSettings.tsx
 - i18n.rs
 - secure_store.rs
 - preview.rs
 - TaskbarState
 - launcher.rs
 - super
-- hit_region.rs
+- decide
 - visibility.rs
 - ShellAction
-- rig
+- Backend
+- Dock Features Implementation Plan
+- hook_proc
 - hitBox.ts
 - Kontrol Merkezi: Wi-Fi, Bluetooth ve VPN sayfaları, tasarım
+- APP
 - src-tauri/src/lib.rs
 - app_catalog.rs
 - devDependencies
 - Handoff — where MacDows stands (2026-11-02)
 - scripts
-- StatusWidgets.tsx
 - extract-notes.mjs
+- StatusWidgets.tsx
 - visualizer.rs
 - dependencies
-- Backend
+- HELD
+- PINNED_COUNT
+- HOOK_THREAD
+- WIN_DOWN
 - WifiPage.tsx
 
 ## God Nodes (most connected - your core abstractions)
@@ -125,17 +131,17 @@
   docs/HANDOFF.md → scripts/build-installer.mjs
 - `Task 5: Bluetooth scan and pairing` --references--> `PairPage()`  [INFERRED]
   docs/superpowers/plans/2026-11-04-control-center-network.md → src/notch/PairPage.tsx
-- `Task 3: Settings page skeleton, visibility/scale/fullscreen moved (phase 1, UI)` --references--> `Category`  [INFERRED]
-  docs/superpowers/plans/2026-11-04-dynamic-island-settings.md → src/settings/Settings.tsx
 - `Task 6: UI and uninstall hook` --references--> `useSystemStatus()`  [INFERRED]
   docs/superpowers/plans/2026-11-02-taskbar-takeover.md → src/system.ts
 - `4. Arayüz` --references--> `Row()`  [INFERRED]
   docs/superpowers/specs/2026-11-03-dynamic-island-settings-design.md → src/ui/controls.tsx
+- `Task 8: Build script, release workflow, docs` --references--> `findPayload()`  [INFERRED]
+  docs/superpowers/plans/2026-11-02-installer-and-logo.md → scripts/build-installer.mjs
 
 ## Import Cycles
 - None detected.
 
-## Communities (100 total, 13 thin omitted)
+## Communities (106 total, 18 thin omitted)
 
 ### Community 0 - "windows_list.rs"
 Cohesion: 0.06
@@ -146,8 +152,8 @@ Cohesion: 0.12
 Nodes (22): add_to_shelf(), clear_shelf(), CREATE_NO_WINDOW, current_session(), file_name(), get_shelf(), icon_for(), ICONS (+14 more)
 
 ### Community 2 - "DynamicIsland.tsx"
-Cohesion: 0.07
-Nodes (58): Task 2: Pure navigation logic (phase 2 core, TypeScript), Task 5: The island obeys screen and navigation settings (phase 2, runtime), Task 6: Status, Music and Tools sub-features (phase 3), Props, silhouette(), SurfaceEdge, SurfaceShape(), addToShelf() (+50 more)
+Cohesion: 0.08
+Nodes (53): Task 2: Pure navigation logic (phase 2 core, TypeScript), Task 5: The island obeys screen and navigation settings (phase 2, runtime), Task 6: Status, Music and Tools sub-features (phase 3), addToShelf(), clearShelf(), getMedia(), getMediaSources(), getShelf() (+45 more)
 
 ### Community 3 - "media.rs"
 Cohesion: 0.06
@@ -155,7 +161,7 @@ Nodes (37): Dock (running apps, stable order), Decision: written from scratch, M
 
 ### Community 4 - "package.json"
 Cohesion: 0.12
-Nodes (15): react, react-dom, @tauri-apps/api, @tauri-apps/cli, @types/react, @types/react-dom, typescript, vite (+7 more)
+Nodes (16): react, react-dom, @tauri-apps/api, @tauri-apps/cli, @types/react, @types/react-dom, typescript, vite (+8 more)
 
 ### Community 5 - "tauri.conf.json"
 Cohesion: 0.07
@@ -170,7 +176,7 @@ Cohesion: 0.10
 Nodes (19): compilerOptions, allowImportingTsExtensions, isolatedModules, jsx, lib, module, moduleResolution, noEmit (+11 more)
 
 ### Community 8 - "dock_menu.rs"
-Cohesion: 0.08
+Cohesion: 0.07
 Nodes (25): ALL_ACTIONS, change_icon(), CURRENT, dock_menu(), DockMenuTarget, icon_key(), menu_plan(), MenuAction (+17 more)
 
 ### Community 9 - "compilerOptions"
@@ -194,40 +200,40 @@ Cohesion: 0.07
 Nodes (32): accent_from_registry(), get_system_accent_color(), abgr(), ACCENT, apply(), Backup, backup_path(), broadcast() (+24 more)
 
 ### Community 18 - "Dock.tsx"
-Cohesion: 0.08
-Nodes (35): Task 2: Right-click menu, pin and unpin, new window, quit app, AppWindow, dockMenu(), Drive, focusWindow(), getCustomIcons(), isFirstRun(), launchNewApp() (+27 more)
+Cohesion: 0.11
+Nodes (28): dockMenu(), Drive, focusWindow(), getCustomIcons(), isFirstRun(), launchNewApp(), launchPinned(), listDrives() (+20 more)
 
 ### Community 19 - "updates.rs"
 Cohesion: 0.06
 Nodes (40): after_check(), available(), begin_check(), begin_install(), build_updater(), can_start(), check_for_update(), CHECK_INTERVAL_SECS (+32 more)
 
 ### Community 20 - "bluetooth.rs"
-Cohesion: 0.05
+Cohesion: 0.06
 Nodes (31): address_hex(), batteries(), BATTERY_KEY, BATTERY_TIME_KEY, BtDevice, freshest(), get_bluetooth_devices(), kind_of() (+23 more)
 
 ### Community 21 - "api.ts"
 Cohesion: 0.08
-Nodes (35): File Structure, Global Constraints, MacDows Installer and Logo Implementation Plan, Review Focus, Self-review, Task 1: Verify the real Windows facts before coding against them, Task 2: Logo sources and icon generation, Task 3: Pure installer logic (Rust, tests first) (+27 more)
+Nodes (36): File Structure, Global Constraints, MacDows Installer and Logo Implementation Plan, Review Focus, Self-review, Task 1: Verify the real Windows facts before coding against them, Task 2: Logo sources and icon generation, Task 3: Pure installer logic (Rust, tests first) (+28 more)
 
 ### Community 22 - "tray_panel.rs"
-Cohesion: 0.13
+Cohesion: 0.12
 Nodes (25): activate(), automation(), BUSY, capture(), class_name(), close_flyout(), collect(), find_by_class() (+17 more)
 
 ### Community 23 - "File Structure"
-Cohesion: 0.22
-Nodes (9): File Structure, Task 1: Dock settings model, Task 3: Drag to reorder pins (saved order), Task 4: Custom icons, Task 5: Drives, Task 6: Win+1..9, Task 8: Add app panel, Task 9: Settings switches, texts, changelog (+1 more)
+Cohesion: 0.11
+Nodes (16): File Structure, Task 1: Dock settings model, Task 2: Right-click menu, pin and unpin, new window, quit app, Task 3: Drag to reorder pins (saved order), Task 4: Custom icons, Task 5: Drives, Task 6: Win+1..9, Task 8: Add app panel (+8 more)
 
 ### Community 24 - "install.rs"
 Cohesion: 0.08
 Nodes (21): BUNDLED_VERSION, CREATE_NO_WINDOW, ErrorEvent, extract_payload(), extract_payload_works_with_non_ascii_dir(), install_state(), InstalledInfo, InstallInfo (+13 more)
 
-### Community 25 - "bridge.ts"
-Cohesion: 0.08
-Nodes (39): Task 7: Window previews and count badge, initTheme(), btPair(), btPairingAnswer(), BtPairingRequest, btScanStart(), btScanStop(), CatalogApp (+31 more)
+### Community 25 - "ref_react"
+Cohesion: 0.12
+Nodes (20): Task 7: Window previews and count badge, Props, silhouette(), SurfaceEdge, SurfaceShape(), CatalogApp, closeAddAppPanel(), closePreview() (+12 more)
 
 ### Community 26 - "theme.ts"
-Cohesion: 0.13
-Nodes (24): applyBackdrop(), clearBackdrop(), enableBackdrop(), STYLE_BLUR, usesBackdrop(), VARS, WallpaperBackdrop, wallpaperRect() (+16 more)
+Cohesion: 0.11
+Nodes (27): applyBackdrop(), clearBackdrop(), enableBackdrop(), STYLE_BLUR, usesBackdrop(), VARS, WallpaperBackdrop, wallpaperRect() (+19 more)
 
 ### Community 27 - "taskbar_plan.rs"
 Cohesion: 0.09
@@ -237,9 +243,9 @@ Nodes (12): a_restart_after_a_crash_keeps_the_stored_original(), hidden(), hidde
 Cohesion: 0.07
 Nodes (28): dependencies, react, react-dom, @tauri-apps/api, devDependencies, @tauri-apps/cli, @types/react, @types/react-dom (+20 more)
 
-### Community 29 - "custom_icons.rs"
-Cohesion: 0.13
-Nodes (17): a_file_that_is_not_an_image_is_rejected(), a_missing_file_is_rejected(), a_picture_is_saved_as_a_128_png(), a_wide_image_is_fitted_with_transparent_bars_above_and_below(), fit_to_square(), get_custom_icons(), icon_file_name(), icons_dir() (+9 more)
+### Community 29 - "rig"
+Cohesion: 0.20
+Nodes (4): FakeBackend, FakeStore, nothing_is_hidden_when_the_state_cannot_be_saved(), rig()
 
 ### Community 30 - "logic.rs"
 Cohesion: 0.11
@@ -281,13 +287,13 @@ Nodes (13): png-to-ico, @resvg/resvg-js, appIcons, assets, icoSizes, installerIc
 Cohesion: 0.07
 Nodes (28): airplane_on(), airplane_tile(), banners_on(), clamp_percent(), CREATE_NO_WINDOW, get_brightness(), get_quick_settings(), has_battery() (+20 more)
 
-### Community 40 - "IslandSettings.tsx"
-Cohesion: 0.17
-Nodes (11): framer-motion, ClickMode, FullscreenMode, SCREEN_IDS, Visibility, DEFAULT_ORDER, CLICK_MODES, FULLSCREEN_MODES (+3 more)
+### Community 40 - "hit_region.rs"
+Cohesion: 0.15
+Nodes (10): clamp_to_window(), clear_hit_region(), is_bar(), point_in(), remember(), screen_rect(), SCREEN_RECTS, set_hit_region() (+2 more)
 
-### Community 41 - "File Structure"
-Cohesion: 0.22
-Nodes (13): File Structure, Task 10: Reset buttons, texts, polish (phase 4), Task 1: Island settings model, migration, normalization (phase 1, Rust), Task 4: Screens and navigation sections in the settings page (phase 2, UI), Task 8: Notification sub-features (phase 3, Rust + UI), Task 9: Shelf sub-features (phase 3, Rust + UI), NotifCfg, setSetting() (+5 more)
+### Community 41 - "MacDows In-App Update — Design"
+Cohesion: 0.20
+Nodes (9): Behavior, Decisions (user), Errors, Goal, MacDows In-App Update — Design, Out of scope, Risks, Success criteria (+1 more)
 
 ### Community 42 - "MacDows Taskbar Takeover — Design"
 Cohesion: 0.15
@@ -298,8 +304,8 @@ Cohesion: 0.06
 Nodes (27): ANSWER, bool_prop(), bt_pair(), bt_scan_start(), bt_unpair(), FILTER, Found, KNOWN_PAIRED (+19 more)
 
 ### Community 44 - "build-installer.mjs"
-Cohesion: 0.19
-Nodes (7): Task 8: Build script, release workflow, docs, findPayload(), main(), root, run(), sumsLine(), root
+Cohesion: 0.21
+Nodes (6): findPayload(), main(), root, run(), sumsLine(), root
 
 ### Community 45 - "Dinamik Ada ayarları: tasarım"
 Cohesion: 0.17
@@ -329,17 +335,17 @@ Nodes (6): End-to-end run of the built installer (2026-11-02, this PC, Windows 1
 Cohesion: 0.29
 Nodes (6): End-to-end run on this PC (2026-11-02), Fake release for the local test, From the plugin source (`tauri-plugin-updater` 2.14.1, `config.rs`, `updater.rs`), In-app update facts (2026-11-02), Not verified, Still to be answered by the end-to-end run (Task 5)
 
-### Community 52 - "MacDows In-App Update — Design"
-Cohesion: 0.09
-Nodes (22): File Structure, Global Constraints, MacDows In-App Update Implementation Plan, Review Focus, Self-review, Task 1: Pure update logic and settings fields (tests first), Task 2: Prove the update path with a local fake release, Task 3: Update effects (state, background task, commands) (+14 more)
+### Community 52 - "UpdateStatus"
+Cohesion: 0.18
+Nodes (12): File Structure, Global Constraints, MacDows In-App Update Implementation Plan, Review Focus, Self-review, Task 1: Pure update logic and settings fields (tests first), Task 2: Prove the update path with a local fake release, Task 3: Update effects (state, background task, commands) (+4 more)
 
 ### Community 53 - "SetupError"
 Cohesion: 0.40
 Nodes (6): io(), run_nsis(), SetupError, Io, NotInstalled, PayloadMissing
 
 ### Community 54 - "hotkeys.rs"
-Cohesion: 0.06
-Nodes (20): APP, apply(), auto_repeat_is_swallowed_without_firing_again(), decide(), Decision, HELD, hook_proc(), HOOK_THREAD (+12 more)
+Cohesion: 0.12
+Nodes (4): MASK_VK, OWN_TAG, Shortcut, WIN_ONE
 
 ### Community 55 - "installer/src-tauri/capabilities/default.json"
 Cohesion: 0.33
@@ -353,9 +359,9 @@ Nodes (30): a_cleared_history_does_not_take_the_old_ones_back(), after_cutoff(),
 Cohesion: 0.40
 Nodes (4): Flyouts while the taskbar is hidden (screenshots checked), Hiding, Not verified, Taskbar takeover facts verified on a real PC (2026-11-02, Windows 11, one monitor)
 
-### Community 58 - "Dock Features Implementation Plan"
-Cohesion: 0.33
-Nodes (5): Dock Features Implementation Plan, Global Constraints, Review Focus, Self-Review, DockMenuTarget
+### Community 58 - "custom_icons.rs"
+Cohesion: 0.13
+Nodes (17): a_file_that_is_not_an_image_is_rejected(), a_missing_file_is_rejected(), a_picture_is_saved_as_a_128_png(), a_wide_image_is_fitted_with_transparent_bars_above_and_below(), fit_to_square(), get_custom_icons(), icon_file_name(), icons_dir() (+9 more)
 
 ### Community 59 - "4. Özellikler"
 Cohesion: 0.11
@@ -366,20 +372,20 @@ Cohesion: 0.40
 Nodes (4): Develop, Install, MacDows, Updates
 
 ### Community 62 - "useT"
-Cohesion: 0.11
-Nodes (27): @crabnebula/tauri-plugin-drag, clearNotificationHistory(), getNotificationHistory(), getSettings(), onNotificationHistoryChanged(), onSettingsChanged(), openShelfItem(), revealShelfItem() (+19 more)
+Cohesion: 0.10
+Nodes (28): @crabnebula/tauri-plugin-drag, clearNotificationHistory(), getNotificationHistory(), getSettings(), Notice, onNotificationHistoryChanged(), onSettingsChanged(), openShelfItem() (+20 more)
 
 ### Community 66 - "fullscreen.rs"
-Cohesion: 0.11
-Nodes (11): Event-driven, no polling for windows and media, APP, class_of(), covers_monitor(), LAST, on_event(), probe(), should_hide() (+3 more)
+Cohesion: 0.10
+Nodes (12): Event-driven, no polling for windows and media, Rule: hide bars only for fullscreen apps (default Fixed), Visibility modes Fixed/Smart/Peek, APP, class_of(), covers_monitor(), LAST, on_event() (+4 more)
 
-### Community 69 - "QuickSettings.tsx"
-Cohesion: 0.08
-Nodes (40): Task 7: Quick settings sub-features (phase 3), BtDevice, BtKind, btUnpair(), getBluetoothDevices(), getBrightness(), getQuickSettings(), getVolume() (+32 more)
+### Community 69 - "bridge.ts"
+Cohesion: 0.06
+Nodes (60): Task 7: Quick settings sub-features (phase 3), BtDevice, BtKind, btPair(), btPairingAnswer(), BtPairingRequest, btScanStart(), btScanStop() (+52 more)
 
-### Community 70 - "Dynamic Island Settings Implementation Plan"
-Cohesion: 0.25
-Nodes (7): Dynamic Island Settings Implementation Plan, Global Constraints, Review Focus, Self-Review, Status (2026-11-04, evening), Where the spec is silent (interpretations; no feature of the spec is dropped), ToolsCfg
+### Community 70 - "File Structure"
+Cohesion: 0.18
+Nodes (10): Dynamic Island Settings Implementation Plan, File Structure, Global Constraints, Review Focus, Self-Review, Status (2026-11-04, evening), Task 10: Reset buttons, texts, polish (phase 4), Task 1: Island settings model, migration, normalization (phase 1, Rust) (+2 more)
 
 ### Community 71 - "File Structure"
 Cohesion: 0.14
@@ -390,12 +396,12 @@ Cohesion: 0.40
 Nodes (5): Stage, Done, Finishing, Installing, Preparing
 
 ### Community 73 - "Settings.tsx"
-Cohesion: 0.13
-Nodes (20): Task 4: UI, Settings, CATEGORIES, Category, Ctx, Item, ITEMS, LANGUAGES (+12 more)
+Cohesion: 0.14
+Nodes (20): Task 4: UI, Units, Settings, CATEGORIES, Ctx, Item, ITEMS, LANGUAGES (+12 more)
 
-### Community 74 - "Appearance.tsx"
-Cohesion: 0.28
-Nodes (14): Task 3: Settings page skeleton, visibility/scale/fullscreen moved (phase 1, UI), ACCENTS, Appearance(), MODES, FoldCard(), IslandSettings(), StatusWidgetsEditor(), useStored() (+6 more)
+### Community 74 - "IslandSettings.tsx"
+Cohesion: 0.12
+Nodes (34): Task 3: Settings page skeleton, visibility/scale/fullscreen moved (phase 1, UI), Task 4: Screens and navigation sections in the settings page (phase 2, UI), Task 8: Notification sub-features (phase 3, Rust + UI), Task 9: Shelf sub-features (phase 3, Rust + UI), ClickMode, FullscreenMode, NotifCfg, SCREEN_IDS (+26 more)
 
 ### Community 75 - "i18n.rs"
 Cohesion: 0.18
@@ -421,21 +427,25 @@ Nodes (18): BOOTSTRAPPER_URL, CLIENT_KEY, CREATE_NO_WINDOW, download(), download
 Cohesion: 0.25
 Nodes (5): Cli, Guard, Normal, RestoreTaskbar, parse()
 
-### Community 81 - "hit_region.rs"
-Cohesion: 0.20
-Nodes (8): clamp_to_window(), clear_hit_region(), is_bar(), remember(), screen_rect(), SCREEN_RECTS, set_hit_region(), the_reported_shape_is_remembered_and_forgotten()
+### Community 81 - "decide"
+Cohesion: 0.29
+Nodes (7): auto_repeat_is_swallowed_without_firing_again(), decide(), Decision, shortcut_for(), should_swallow(), the_key_up_of_a_swallowed_digit_is_swallowed_and_resets(), win_plus_one_fires_once_and_masks_start()
 
 ### Community 82 - "visibility.rs"
 Cohesion: 0.08
-Nodes (25): Rule: hide bars only for fullscreen apps (default Fixed), Visibility modes Fixed/Smart/Peek, MON, Rect, cursor(), foreground_exe(), hidden_in_fullscreen(), hold_notch() (+17 more)
+Nodes (24): MON, Rect, cursor(), foreground_exe(), hidden_in_fullscreen(), hold_notch(), hold_notch_for_typing(), inp() (+16 more)
 
 ### Community 83 - "ShellAction"
 Cohesion: 0.17
 Nodes (12): hidden_icons_jump_to_the_chevron_with_home_before_pressing_enter(), key_steps(), KeyStep, Chord, Wait, ShellAction, HiddenIcons, Notifications (+4 more)
 
-### Community 85 - "rig"
-Cohesion: 0.20
-Nodes (4): FakeBackend, FakeStore, nothing_is_hidden_when_the_state_cannot_be_saved(), rig()
+### Community 85 - "Dock Features Implementation Plan"
+Cohesion: 0.33
+Nodes (5): Dock Features Implementation Plan, Global Constraints, Review Focus, Self-Review, DockMenuTarget
+
+### Community 86 - "hook_proc"
+Cohesion: 0.33
+Nodes (4): apply(), hook_proc(), shift_down(), tap_mask_key()
 
 ### Community 87 - "hitBox.ts"
 Cohesion: 0.35
@@ -446,7 +456,7 @@ Cohesion: 0.15
 Nodes (12): 1. Amaç, 2.1 Wi-Fi sayfası, 2.2 Şifre ve klavye odağı, 2.3 Bluetooth sayfası, 2.4 VPN sayfası, 2. Arayüz, 3. Ayarlar, 4. Teknik tasarım (+4 more)
 
 ### Community 91 - "src-tauri/src/lib.rs"
-Cohesion: 0.11
+Cohesion: 0.12
 Nodes (26): Single instance: second launch opens Settings, activate_tray_item(), announce_update(), apply_replace_taskbar(), AppSettings, bring_to_front(), build_tray(), close_tray() (+18 more)
 
 ### Community 93 - "app_catalog.rs"
@@ -465,13 +475,13 @@ Nodes (9): Decisions to keep, Handoff — where MacDows stands (2026-11-02), Kno
 Cohesion: 0.25
 Nodes (8): scripts, build, dev, icons, preview, tauri, test:logic, test:scripts
 
-### Community 102 - "StatusWidgets.tsx"
-Cohesion: 0.07
-Nodes (60): File Structure, Global Constraints, Review Focus, Status Widgets Implementation Plan, Task 1: Settings model, normalization, migration, Task 2: System stats command, Task 3: Widget logic (pure TS), Task 4: Widget row in the island (+52 more)
-
-### Community 103 - "extract-notes.mjs"
+### Community 98 - "extract-notes.mjs"
 Cohesion: 0.50
 Nodes (3): end, lines, start
+
+### Community 102 - "StatusWidgets.tsx"
+Cohesion: 0.07
+Nodes (61): File Structure, Global Constraints, Review Focus, Status Widgets Implementation Plan, Task 1: Settings model, normalization, migration, Task 2: System stats command, Task 3: Widget logic (pure TS), Task 4: Widget row in the island (+53 more)
 
 ### Community 104 - "visualizer.rs"
 Cohesion: 0.05
@@ -487,23 +497,23 @@ Nodes (30): Control Center Network Pages Implementation Plan, File Structure, Gl
 
 ## Knowledge Gaps
 - **534 isolated node(s):** `net8.0-windows`, `Microsoft.NET.Sdk`, `ProgressBar`, `Button`, `InstalledExe` (+529 more)
-  These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 946 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
-- **13 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+  These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 950 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
+- **18 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
 - **Why does `Dock (running apps, stable order)` connect `media.rs` to `windows_list.rs`, `Dock.tsx`?**
-  _High betweenness centrality (0.071) - this node is a cross-community bridge._
+  _High betweenness centrality (0.068) - this node is a cross-community bridge._
 - **What connects `net8.0-windows`, `Microsoft.NET.Sdk`, `ProgressBar` to the rest of the system?**
   _534 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `windows_list.rs` be split into smaller, more focused modules?**
   _Cohesion score 0.05706214689265537 - nodes in this community are weakly interconnected._
-- **Why does `Visibility modes Fixed/Smart/Peek` connect `visibility.rs` to `Settings.tsx`?**
-  _High betweenness centrality (0.055) - this node is a cross-community bridge._
+- **Why does `Visibility modes Fixed/Smart/Peek` connect `fullscreen.rs` to `Settings.tsx`, `visibility.rs`?**
+  _High betweenness centrality (0.054) - this node is a cross-community bridge._
 - **Should `shelf.rs` be split into smaller, more focused modules?**
   _Cohesion score 0.12096774193548387 - nodes in this community are weakly interconnected._
 - **Why does `Languages: English and Turkish` connect `i18n.rs` to `useT`?**
-  _High betweenness centrality (0.037) - this node is a cross-community bridge._
+  _High betweenness centrality (0.038) - this node is a cross-community bridge._
 - **Should `DynamicIsland.tsx` be split into smaller, more focused modules?**
-  _Cohesion score 0.06965174129353234 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.08022598870056497 - nodes in this community are weakly interconnected._
