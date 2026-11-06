@@ -623,6 +623,21 @@ img { -webkit-user-drag: none; user-select: none; }
 .eyes-robot { width: 22px; height: 22px; overflow: visible; opacity: 0; transform: translate(-50%, -50%) scale(0.4); filter: drop-shadow(0 0 3px #39ff14); }
 .eyes.waving .eyes-pair { opacity: 0; transform: translate(-50%, -50%) scale(0.4); }
 .eyes.waving .eyes-robot { opacity: 1; transform: translate(-50%, -50%) scale(1); animation: robot-bob 0.8s ease-in-out 0.35s infinite; }
+.eyes-camera { position: absolute; left: 50%; top: 50%; overflow: visible; opacity: 0; transform: translate(-50%, -50%) scale(0.4); transition: opacity 0.2s ease, transform 0.35s cubic-bezier(0.34, 1.4, 0.64, 1); filter: drop-shadow(0 0 3px #39ff14); }
+.cam-flash { opacity: 0; transform-origin: 12px 12px; }
+.eyes.shot .eyes-pair, .eyes.shot .eyes-robot { opacity: 0; transform: translate(-50%, -50%) scale(0.4); animation: none; }
+.eyes.shot .eyes-camera { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+.eyes.shot .cam-lens { transform-origin: 12px 12px; animation: cam-shutter 0.5s ease-in-out 0.45s; }
+.eyes.shot .cam-flash { animation: cam-flash 0.5s ease-out 0.45s; }
+@keyframes cam-shutter {
+  0%, 100% { transform: scale(1); }
+  40% { transform: scale(0.35); }
+}
+@keyframes cam-flash {
+  0% { opacity: 0; transform: scale(1); }
+  30% { opacity: 1; transform: scale(2.4); filter: drop-shadow(0 0 8px #39ff14); }
+  100% { opacity: 0; transform: scale(3.2); }
+}
 .robot-arm { transform-origin: 16px 16.6px; }
 .eyes.waving .robot-arm { animation: robot-wave 0.38s ease-in-out infinite alternate; }
 @keyframes robot-wave {
@@ -634,6 +649,6 @@ img { -webkit-user-drag: none; user-select: none; }
   50% { transform: translate(-50%, calc(-50% - 1.5px)) scale(1); }
 }
 @media (prefers-reduced-motion: reduce) {
-  .eyes-pair i, .eyes.waving .eyes-robot, .eyes.waving .robot-arm { animation: none; }
+  .eyes-pair i, .eyes.waving .eyes-robot, .eyes.waving .robot-arm, .eyes.shot .cam-lens, .eyes.shot .cam-flash { animation: none; }
   .eyes-pair, .eyes-robot { transition: opacity 0.2s ease; }
 }

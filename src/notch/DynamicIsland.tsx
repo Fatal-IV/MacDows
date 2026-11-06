@@ -242,9 +242,9 @@ function Art({ url, className }: { url: string | null; className?: string }) {
 }
 
 /** The island's character: two neon green arch eyes that blink; now and then the robot swaps places with them (animated), waves, and leaves again. */
-function Eyes({ waving }: { waving: boolean }) {
+function Eyes({ waving, shot }: { waving: boolean; shot: boolean }) {
   return (
-    <div className={`eyes${waving ? " waving" : ""}`} aria-hidden>
+    <div className={`eyes${waving ? " waving" : ""}${shot ? " shot" : ""}`} aria-hidden>
       <div className="eyes-pair">
         <i />
         <i />
@@ -259,6 +259,11 @@ function Eyes({ waving }: { waving: boolean }) {
         <path d="M8 16.6 5 19" />
         <path className="robot-arm" d="M16 16.6 19.4 12.4" />
         <path d="M10.4 20.6v1.8M13.6 20.6v1.8" />
+      </svg>
+      <svg className="eyes-camera" width="24" height="22" viewBox="0 0 24 22" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M3 7.5a2 2 0 0 1 2-2h2.4l1.3-2h6.6l1.3 2H19a2 2 0 0 1 2 2V17a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z" />
+        <circle className="cam-lens" cx="12" cy="12" r="3.4" />
+        <circle className="cam-flash" cx="12" cy="12" r="3.4" fill="currentColor" stroke="none" />
       </svg>
     </div>
   );
@@ -306,6 +311,20 @@ export default function Notch() {
       if (off) clearTimeout(off);
     };
   }, [firstRun]);
+  // A photo was taken (the Windows Camera app saved a picture): the eyes' place shows an animated camera for a moment.
+  const [shot, setShot] = useState(false);
+  useEffect(() => {
+    let off: ReturnType<typeof setTimeout> | undefined;
+    const un = listen("camera-shot", () => {
+      setShot(true);
+      if (off) clearTimeout(off);
+      off = setTimeout(() => setShot(false), 2200);
+    });
+    return () => {
+      un.then((f) => f());
+      if (off) clearTimeout(off);
+    };
+  }, []);
   // Now and then, at random times, the robot takes the eyes' place and waves; it only does so while the eyes are showing.
   const eyesShowingRef = useRef(false);
   useEffect(() => {
@@ -824,7 +843,7 @@ export default function Notch() {
               <div className="side right">
                 {isMusic ? (
                   <>
-                  {!showWidgets && <Eyes waving={greeting} />}
+                  {!showWidgets && <Eyes waving={greeting} shot={shot} />}
                   <button
                     className={`art-small${hovered ? " large" : ""}${playing ? "" : " paused"}`}
                     onClick={(e) => {
@@ -845,7 +864,7 @@ export default function Notch() {
                 ) : (
                   <>
                     {showWidgets && <StatusWidgets ids={placed.right} cfg={statusCfg} stats={stats} weather={weather} status={system} />}
-                    {!showWidgets && <Eyes waving={greeting} />}
+                    {!showWidgets && <Eyes waving={greeting} shot={shot} />}
                   </>
                 )}
               </div>

@@ -8,6 +8,7 @@ mod system_theme;
 mod tray_panel;
 mod updates;
 mod whats_new;
+mod camera;
 mod visualizer;
 mod volume;
 mod quick_settings;
@@ -400,6 +401,7 @@ pub fn run() {
             media::start(app.handle().clone());
             notifications::start(app.handle().clone());
             visualizer::start(app.handle().clone());
+            camera::start(app.handle().clone());
             visibility::start(app.handle().clone());
             updates::start(app.handle().clone());
             start_taskbar_takeover(app.handle());
