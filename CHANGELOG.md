@@ -8,11 +8,11 @@ Format: [Keep a Changelog](https://keepachangelog.com/), versioning: [SemVer](ht
 ## [0.2.6] - 2026-11-06
 
 ### Fixed
-- The island no longer grows wider when the robot comes to wave; it keeps its normal width.
+- The island keeps its normal width while it greets you.
 
 ### Türkçe
 ### Düzeltildi
-- Robot el sallamaya geldiğinde ada artık genişlemiyor; normal genişliğinde kalıyor.
+- Ada sizi selamlarken normal genişliğinde kalıyor.
 
 ## [0.2.5] - 2026-11-06
 
@@ -74,14 +74,14 @@ Format: [Keep a Changelog](https://keepachangelog.com/), versioning: [SemVer](ht
 - Visibility "Fixed" now also stays on screen over fullscreen apps (for the island unless "In fullscreen apps: Never show" is chosen, and for the dock). Smart and Peek still wait for the pointer at the screen edge there.
 
 ### Added
-- Two small neon green bars sit on the right of the island's clock and blink now and then, in every visibility mode. They give way to the status widgets while the pointer is over the island, and stay still when Windows asks for reduced motion.
+- A small new detail on the island's right side makes it feel more alive; it gives way to the status widgets while the pointer is over the island.
 
 ### Türkçe
 ### Değişti
 - "Sabit" görünürlük artık tam ekran uygulamaların üstünde de ekranda kalır (ada için, "Tam ekran uygulamalarda: Hiç göster" seçili değilse; dock için de). Akıllı ve Peek modları orada yine imleci ekran kenarında bekler.
 
 ### Eklendi
-- Adanın saatinin sağında iki minik neon yeşil çizgi (göz) durur ve ara sıra göz kırpar, tüm görünürlük modlarında. İmleç adanın üzerine gelince durum widget'larına yer açarlar; Windows "animasyonları azalt" istiyorsa sabit kalırlar.
+- Adanın sağ tarafındaki küçük yeni bir detay onu daha canlı gösteriyor; imleç adanın üzerine gelince durum widget'larına yer açar.
 
 ## [0.2.0] - 2026-11-05
 
