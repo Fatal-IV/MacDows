@@ -1,8 +1,9 @@
 name: Release
 
+# Started by hand only (Actions > Release > Run workflow, choosing the version tag as the ref). Releases are built, signed and
+# uploaded from the maintainer's PC; a tag push must not start this and overwrite those files (latest.json above all).
 on:
-  push:
-    tags: ["v*"]
+  workflow_dispatch:
 
 permissions:
   contents: write
