@@ -318,15 +318,15 @@
     "semantic_hash": ""
   },
   "src/locales/en.json": {
-    "mtime": 1793973025.2011693,
-    "seen": 1793973035.636896,
-    "ast_hash": "3da2a3da28172a7318e8d46c45e6e42f",
+    "mtime": 1793973524.23343,
+    "seen": 1793973552.2045858,
+    "ast_hash": "373d2ec274a3a60206938939a2e9d4b1",
     "semantic_hash": ""
   },
   "src/locales/tr.json": {
-    "mtime": 1793973025.2021701,
-    "seen": 1793973035.636899,
-    "ast_hash": "a9aba634d5eab9abe2b2319af49bc972",
+    "mtime": 1793973524.234439,
+    "seen": 1793973552.204587,
+    "ast_hash": "ceebbf051a081ef285d5e1778768d474",
     "semantic_hash": ""
   },
   "src/main.tsx": {
@@ -348,9 +348,9 @@
     "semantic_hash": ""
   },
   "src/settings/Settings.tsx": {
-    "mtime": 1793947870.0796795,
-    "seen": 1793947892.1905482,
-    "ast_hash": "af4b00fef1270968fb777965b63e123a",
+    "mtime": 1793973535.4651475,
+    "seen": 1793973552.204614,
+    "ast_hash": "5042e38a9c2c6224f964072ad05b0e2e",
     "semantic_hash": ""
   },
   "src/system.ts": {
@@ -732,9 +732,9 @@
     "semantic_hash": ""
   },
   "src/notch/DynamicIsland.tsx": {
-    "mtime": 1793971913.4033012,
-    "seen": 1793971927.2714229,
-    "ast_hash": "f1b4d2a6edb2ffb84f453c60300c665b",
+    "mtime": 1793973524.23343,
+    "seen": 1793973552.2045896,
+    "ast_hash": "0abe52c6333475021ab01908804ee886",
     "semantic_hash": ""
   },
   "src/notch/Shelf.tsx": {
@@ -756,9 +756,9 @@
     "semantic_hash": ""
   },
   "src/notch/BluetoothPage.tsx": {
-    "mtime": 1793823921.5594463,
-    "seen": 1793823971.5750475,
-    "ast_hash": "6b5391a975c77f1de90342b738e5971d",
+    "mtime": 1793973524.3378298,
+    "seen": 1793973552.2045887,
+    "ast_hash": "1f3f08005ac6dc628c8eadce848ab82b",
     "semantic_hash": ""
   },
   "src-tauri/src/secure_store.rs": {
@@ -954,9 +954,9 @@
     "semantic_hash": ""
   },
   "src/notch/WifiPage.tsx": {
-    "mtime": 1793973025.2011693,
-    "seen": 1793973035.6369233,
-    "ast_hash": "cab4947ae65bc985ab343f8b9056ecde",
+    "mtime": 1793973524.3212807,
+    "seen": 1793973552.2045994,
+    "ast_hash": "2964ee5680c8928151d70ff63fbc3ba3",
     "semantic_hash": ""
   },
   "src-tauri/src/vpn.rs": {
@@ -966,9 +966,9 @@
     "semantic_hash": ""
   },
   "src/notch/VpnPage.tsx": {
-    "mtime": 1793823438.075363,
-    "seen": 1793823484.1947868,
-    "ast_hash": "bfcbf5697b77aba8fb754ec3511fc27e",
+    "mtime": 1793973524.3768742,
+    "seen": 1793973552.2045982,
+    "ast_hash": "c40bd6c119e30c9aa9bdaa039cc465b3",
     "semantic_hash": ""
   },
   "src-tauri/src/bluetooth_pairing.rs": {
@@ -1086,15 +1086,27 @@
     "semantic_hash": ""
   },
   "src-tauri/src/links.rs": {
-    "mtime": 1793971859.7139416,
-    "seen": 1793971927.271333,
-    "ast_hash": "fcdabf64465d0a7a7f13e65ac543d15a",
+    "mtime": 1793973469.766472,
+    "seen": 1793973552.2045476,
+    "ast_hash": "0252a3c71e08e0827206ced45c4e0caf",
     "semantic_hash": ""
   },
   "src/notch/LinkToast.tsx": {
-    "mtime": 1793971897.626217,
-    "seen": 1793971927.2714245,
-    "ast_hash": "054dc0d0855f7497c4ebf3d325ea281a",
+    "mtime": 1793973496.8533883,
+    "seen": 1793973552.2045903,
+    "ast_hash": "ab1a7423ef9ec01312a392218bac2cf4",
+    "semantic_hash": ""
+  },
+  "src/notch/linkBus.test.ts": {
+    "mtime": 1793973496.8290803,
+    "seen": 1793973552.2046056,
+    "ast_hash": "196fc9a5824bc7a99cbf266a1635de56",
+    "semantic_hash": ""
+  },
+  "src/notch/linkBus.ts": {
+    "mtime": 1793973496.8032966,
+    "seen": 1793973552.2046065,
+    "ast_hash": "b09ffc05d0d05b1f2977e5159aa9ae36",
     "semantic_hash": ""
   }
 }
