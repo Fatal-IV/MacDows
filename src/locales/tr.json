@@ -189,6 +189,8 @@
   "net.secured": "Korumalı",
   "net.enterprise": "Kurumsal",
   "net.wifiTitle": "Wi-Fi",
+  "net.scan": "Ağları tara",
+  "net.scanning": "Taranıyor…",
   "net.noAdapter": "Wi-Fi bağdaştırıcısı yok",
   "net.wifiOff": "Wi-Fi kapalı",
   "net.noNetworks": "Ağ bulunamadı",

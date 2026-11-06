@@ -677,3 +677,11 @@ img { -webkit-user-drag: none; user-select: none; }
   .bt-rune { animation: none; stroke-dashoffset: 0; }
   .wf-arc, .wf-dot { animation: none; opacity: 1; }
 }
+
+/* The Wi-Fi page's scan button */
+.wifi-scan { flex: none; display: flex; align-items: center; justify-content: center; width: 26px; height: 26px; margin-left: auto; margin-right: 6px; border: 0; border-radius: 50%; background: rgba(255,255,255,0.1); color: inherit; cursor: pointer; }
+.wifi-scan:hover:not(:disabled) { background: rgba(255,255,255,0.2); }
+.wifi-scan:disabled { cursor: default; }
+.wifi-scan.spinning svg { animation: wifi-scan-spin 0.9s linear infinite; }
+@keyframes wifi-scan-spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .wifi-scan.spinning svg { animation: none; opacity: 0.5; } }

@@ -192,9 +192,9 @@
     "semantic_hash": ""
   },
   "src-tauri/src/lib.rs": {
-    "mtime": 1793969583.4946237,
-    "seen": 1793969678.6532903,
-    "ast_hash": "04caeb4ecb753e33363e8b0dd91b384f",
+    "mtime": 1793971859.7154226,
+    "seen": 1793971927.2713308,
+    "ast_hash": "3c3eb9b5b28b88fda1f8ac12db8f8a3b",
     "semantic_hash": ""
   },
   "src-tauri/src/main.rs": {
@@ -318,15 +318,15 @@
     "semantic_hash": ""
   },
   "src/locales/en.json": {
-    "mtime": 1793947869.5986836,
-    "seen": 1793947892.1905172,
-    "ast_hash": "8f8c98320afde40bcdd0b5683a12cbc0",
+    "mtime": 1793971913.2984333,
+    "seen": 1793971927.2714148,
+    "ast_hash": "5c6418acd4abf1b09d1bdece800bf20c",
     "semantic_hash": ""
   },
   "src/locales/tr.json": {
-    "mtime": 1793947869.5986836,
-    "seen": 1793947892.1905184,
-    "ast_hash": "83fbc17402db2bf47500e1902829c14a",
+    "mtime": 1793971913.2984333,
+    "seen": 1793971927.271417,
+    "ast_hash": "472ce8eeeea3cfd7202a741a6d96d294",
     "semantic_hash": ""
   },
   "src/main.tsx": {
@@ -732,9 +732,9 @@
     "semantic_hash": ""
   },
   "src/notch/DynamicIsland.tsx": {
-    "mtime": 1793969665.585167,
-    "seen": 1793969678.653335,
-    "ast_hash": "4202089837e6efece12a4585dbaf4032",
+    "mtime": 1793971913.4033012,
+    "seen": 1793971927.2714229,
+    "ast_hash": "f1b4d2a6edb2ffb84f453c60300c665b",
     "semantic_hash": ""
   },
   "src/notch/Shelf.tsx": {
@@ -750,9 +750,9 @@
     "semantic_hash": ""
   },
   "src-tauri/src/bluetooth.rs": {
-    "mtime": 1793799233.664221,
-    "seen": 1793799239.6066337,
-    "ast_hash": "1f9db55ede1a56cc05636548ead08f10",
+    "mtime": 1793971859.7139416,
+    "seen": 1793971927.2713017,
+    "ast_hash": "be3ddd7125ccc8a7ffae416ffb5f4a14",
     "semantic_hash": ""
   },
   "src/notch/BluetoothPage.tsx": {
@@ -1083,6 +1083,18 @@
     "mtime": 1793969635.7999136,
     "seen": 1793969678.6532757,
     "ast_hash": "3745a2d8f7e905209e0ba53d2c66f0b8",
+    "semantic_hash": ""
+  },
+  "src-tauri/src/links.rs": {
+    "mtime": 1793971859.7139416,
+    "seen": 1793971927.271333,
+    "ast_hash": "fcdabf64465d0a7a7f13e65ac543d15a",
+    "semantic_hash": ""
+  },
+  "src/notch/LinkToast.tsx": {
+    "mtime": 1793971897.626217,
+    "seen": 1793971927.2714245,
+    "ast_hash": "054dc0d0855f7497c4ebf3d325ea281a",
     "semantic_hash": ""
   }
 }

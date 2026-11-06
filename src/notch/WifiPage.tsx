@@ -83,6 +83,25 @@ export function WifiPage({ onBack, onEditing = () => {} }: { onBack: () => void;
     };
   }, []);
 
+  // The scan button: asks for a fresh scan, then reads the list again while the radio works (a scan takes a few seconds).
+  const [scanning, setScanning] = useState(false);
+  const scanTimers = useRef<number[]>([]);
+  useEffect(() => () => scanTimers.current.forEach(clearTimeout), []);
+  const scanNow = () => {
+    if (scanning || busy) return;
+    setScanning(true);
+    wifiScan().catch(() => {});
+    const reload = () => getWifiState().then(setState).catch(() => {});
+    scanTimers.current = [
+      window.setTimeout(reload, 1500),
+      window.setTimeout(reload, 3000),
+      window.setTimeout(() => {
+        reload();
+        setScanning(false);
+      }, 4200),
+    ];
+  };
+
   const run = async (ssid: string, action: () => Promise<unknown>) => {
     if (busy) return;
     setBusy(ssid);
@@ -196,6 +215,11 @@ export function WifiPage({ onBack, onEditing = () => {} }: { onBack: () => void;
       <div className="devpage-head">
         <button className="devpage-back" onClick={onBack} aria-label={t("common.back")}>‹</button>
         <span className="shelf-title">{t("net.wifiTitle")}</span>
+        <button className={`wifi-scan${scanning ? " spinning" : ""}`} onClick={scanNow} disabled={scanning || busy !== null} aria-label={scanning ? t("net.scanning") : t("net.scan")} title={scanning ? t("net.scanning") : t("net.scan")}>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+            <path d="M20 7v5h-5M4 17v-5h5M6.3 9A7 7 0 0 1 18 7.5M17.7 15A7 7 0 0 1 6 16.5" />
+          </svg>
+        </button>
         <button className="shelf-clear" onClick={() => setHiddenOpen((v) => !v)}>{t("net.hidden")}</button>
       </div>
       {hiddenOpen && (

@@ -189,6 +189,8 @@
   "net.secured": "Secured",
   "net.enterprise": "Enterprise",
   "net.wifiTitle": "Wi-Fi",
+  "net.scan": "Scan for networks",
+  "net.scanning": "Scanning…",
   "net.noAdapter": "No Wi-Fi adapter",
   "net.wifiOff": "Wi-Fi is off",
   "net.noNetworks": "No networks found",
