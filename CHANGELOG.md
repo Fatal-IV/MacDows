@@ -5,6 +5,15 @@ Format: [Keep a Changelog](https://keepachangelog.com/), versioning: [SemVer](ht
 
 ## [Unreleased]
 
+## [0.2.6] - 2026-11-06
+
+### Fixed
+- The island no longer grows wider when the robot comes to wave; it keeps its normal width.
+
+### Türkçe
+### Düzeltildi
+- Robot el sallamaya geldiğinde ada artık genişlemiyor; normal genişliğinde kalıyor.
+
 ## [0.2.5] - 2026-11-06
 
 ### Changed
