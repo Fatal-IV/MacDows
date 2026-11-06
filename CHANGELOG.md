@@ -5,6 +5,19 @@ Format: [Keep a Changelog](https://keepachangelog.com/), versioning: [SemVer](ht
 
 ## [Unreleased]
 
+### Fixed
+- The Start and Search buttons of the dock show up right after MacDows starts instead of up to 20 seconds later.
+- While music plays, the visualizer sits closer to the clock and the island is narrower; the eyes and the cover keep their room.
+- A connect or disconnect notice for something you just did in the Control Center brings you back to the same page afterwards, and clicking a notice opens that page.
+- Disconnecting a Bluetooth device no longer says "could not connect" when Windows is slow to report the new state.
+
+### Türkçe
+### Düzeltildi
+- Dock'taki Başlat ve Arama düğmeleri MacDows açıldıktan sonra 20 saniyeye kadar beklemeden hemen görünüyor.
+- Müzik çalarken ses çubuğu saate daha yakın duruyor ve ada daha dar; göz ile kapak yerlerini koruyor.
+- Kontrol Merkezi'nde yaptığınız bir bağlanma veya kesme için gelen bildirimden sonra aynı sayfaya dönülüyor; bildirime tıklamak da o sayfayı açıyor.
+- Windows yeni durumu geç bildirdiğinde bir Bluetooth cihazının bağlantısını kesmek artık "bağlanamadı" demiyor.
+
 ## [0.2.7] - 2026-11-06
 
 ### Added
