@@ -5,6 +5,15 @@ Format: [Keep a Changelog](https://keepachangelog.com/), versioning: [SemVer](ht
 
 ## [Unreleased]
 
+## [0.2.4] - 2026-11-06
+
+### Fixed
+- A white box no longer shows up around and under the island (and around the dock). It came from cutting their windows down to their shape. Now the island and the dock ignore the mouse while the pointer is outside what is drawn, so clicks still reach the programs next to them, and nothing is painted around them.
+
+### Türkçe
+### Düzeltildi
+- Adanın çevresinde, altında (ve dock'un çevresinde) beyaz bir kutu görünmesi giderildi. Pencerelerin çizilen şekle kırpılmasından geliyordu. Artık imleç çizilenin dışındayken ada ve dock fareyi yok sayıyor; yanlarındaki programlar tıklamaları almaya devam ediyor ve çevrelerine hiçbir şey çizilmiyor.
+
 ## [0.2.3] - 2026-11-06
 
 ### Added
