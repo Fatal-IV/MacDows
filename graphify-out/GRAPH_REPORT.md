@@ -1,7 +1,7 @@
 # Graph Report - MacDows  (2026-11-06)
 
 ## Corpus Check
-- 151 files · ~125,823 words
+- 151 files · ~125,858 words
 - Verdict: corpus is large enough that graph structure adds value.
 - Unclassified: 25 file(s) not represented in the graph (top: .css 10, (none) 6, .ico 3)
 
@@ -11,7 +11,7 @@
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `8c4e8277`
+- Built from commit: `b5b89e04`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -528,13 +528,13 @@ Nodes (30): Control Center Network Pages Implementation Plan, File Structure, Gl
 _Questions this graph is uniquely positioned to answer:_
 
 - **Why does `Dock (running apps, stable order)` connect `media.rs` to `windows_list.rs`, `Dock.tsx`?**
-  _High betweenness centrality (0.069) - this node is a cross-community bridge._
+  _High betweenness centrality (0.071) - this node is a cross-community bridge._
 - **What connects `net8.0-windows`, `Microsoft.NET.Sdk`, `ProgressBar` to the rest of the system?**
   _537 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `windows_list.rs` be split into smaller, more focused modules?**
   _Cohesion score 0.05706214689265537 - nodes in this community are weakly interconnected._
 - **Why does `Visibility modes Fixed/Smart/Peek` connect `fullscreen.rs` to `Settings.tsx`, `visibility.rs`?**
-  _High betweenness centrality (0.059) - this node is a cross-community bridge._
+  _High betweenness centrality (0.057) - this node is a cross-community bridge._
 - **Should `shelf.rs` be split into smaller, more focused modules?**
   _Cohesion score 0.12096774193548387 - nodes in this community are weakly interconnected._
 - **Why does `Languages: English and Turkish` connect `i18n.rs` to `useT`?**

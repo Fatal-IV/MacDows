@@ -8487,7 +8487,7 @@
       "source_file": "src-tauri/Cargo.toml",
       "source_location": "L1",
       "type": "package",
-      "version": "0.2.5"
+      "version": "0.2.6"
     },
     {
       "id": "src_vite_env_d",
@@ -80005,5 +80005,5 @@
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "8c4e8277ebb1fecd32ee8039788568cb79ae16ed"
+  "built_at_commit": "b5b89e04a0ca8d7f2264b6dc793abc7f88680455"
 }
