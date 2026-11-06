@@ -209,20 +209,34 @@ async fn download_and_install(app: &AppHandle) -> Result<(), &'static str> {
         }
     };
     let mut downloaded: u64 = 0;
-    update
-        .download_and_install(
+    // The release carries MacDows's own installer; the plugin checks its signature, then the installer's window
+    // (not a plain NSIS one) shows the update.
+    let bytes = update
+        .download(
             |chunk, total| {
                 downloaded += chunk as u64;
                 let percent = total.filter(|t| *t > 0).map(|t| ((downloaded * 100) / t).min(100) as u8);
                 publish(app, UpdateStatus::Installing { percent });
             },
-            || log("download finished, installing"),
+            || log("download finished, starting the installer"),
         )
         .await
         .map_err(|e| {
             log(&format!("install failed: {e}"));
             classify_install_error(&e)
-        })
+        })?;
+    let dir = std::env::temp_dir().join("MacDows-Update");
+    let file = dir.join("MacDows-Setup.exe");
+    std::fs::create_dir_all(&dir)
+        .and_then(|_| std::fs::write(&file, &bytes))
+        .and_then(|_| std::process::Command::new(&file).arg("--update").spawn().map(|_| ()))
+        .map_err(|e| {
+            log(&format!("could not start the installer: {e}"));
+            "install_failed"
+        })?;
+    // The installer replaces the files of this running program: step aside.
+    app.exit(0);
+    Ok(())
 }
 
 #[tauri::command]
@@ -235,7 +249,7 @@ pub async fn check_for_update(app: AppHandle) -> UpdateStatus {
     run_check(&app, true).await
 }
 
-/// Installs the update that is `Available`. On success the NSIS package ends this process itself.
+/// Installs the update that is `Available`. On success MacDows's installer window takes over and this process exits.
 #[tauri::command]
 pub async fn install_update(app: AppHandle) -> Result<(), String> {
     if !begin_install(&app.state::<UpdateState>().0) {

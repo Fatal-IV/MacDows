@@ -35,3 +35,10 @@ export function useAppVersion(): string {
   }, []);
   return version;
 }
+
+export interface WhatsNew {
+  version: string;
+  notes: string;
+}
+/** The notes of the version that has just been installed (once), or null when this start did not follow an update. */
+export const takeWhatsNew = () => invoke<WhatsNew | null>("take_whats_new");

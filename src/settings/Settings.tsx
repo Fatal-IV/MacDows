@@ -8,6 +8,7 @@ import { Button, Group, Row, Select, Toggle } from "../ui/controls";
 import WindowControls from "../ui/WindowControls";
 import Appearance from "./Appearance";
 import IslandSettings from "./IslandSettings";
+import WhatsNewDialog from "./WhatsNewDialog";
 import "./Settings.css";
 
 const VISIBILITIES: Visibility[] = ["fixed", "smart", "peek"];
@@ -206,6 +207,7 @@ export default function Settings() {
   return (
     <div className="settings-app">
       <WindowControls />
+      <WhatsNewDialog />
       <nav className="settings-sidebar" aria-label={t("settings.categories")}>
         {used.map((c) => (
           <button key={c.id} className={`side-item${c.id === active ? " active" : ""}`} aria-current={c.id === active ? "page" : undefined} onClick={() => setCategory(c.id)}>

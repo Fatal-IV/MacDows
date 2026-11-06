@@ -98,3 +98,15 @@ html, body, #root { margin: 0; height: 100%; background: transparent; }
 .wcity-list { position: absolute; right: 0; top: 100%; z-index: 20; margin: 4px 0 0; padding: 4px; min-width: 240px; list-style: none; border-radius: 10px; background: var(--s-bg); border: 1px solid var(--s-border); box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35); }
 .wcity-list button { display: block; width: 100%; text-align: left; padding: 6px 8px; border: 0; border-radius: 6px; background: none; color: var(--s-text); font: inherit; font-size: 13px; cursor: pointer; }
 .wcity-list button:hover { background: var(--s-border); }
+
+/* What's new: a dialog over Settings after an update */
+.wn-backdrop { position: absolute; inset: 0; z-index: 50; display: flex; align-items: center; justify-content: center; background: rgba(0, 0, 0, 0.45); backdrop-filter: blur(6px); }
+.wn-dialog { width: min(520px, calc(100% - 48px)); max-height: calc(100% - 64px); display: flex; flex-direction: column; border-radius: 18px; padding: 22px 24px 20px; background: var(--s-bg); color: var(--s-text); box-shadow: 0 24px 60px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.08); }
+.wn-title { font-size: 20px; font-weight: 650; }
+.wn-version { margin-top: 2px; font-size: 13px; opacity: 0.6; }
+.wn-body { margin: 16px 0; overflow-y: auto; font-size: 13.5px; line-height: 1.5; }
+.wn-body h4 { margin: 14px 0 6px; font-size: 12px; text-transform: uppercase; letter-spacing: 0.06em; opacity: 0.55; }
+.wn-body p { margin: 0 0 8px; }
+.wn-item { position: relative; padding-left: 14px; }
+.wn-item::before { content: ""; position: absolute; left: 2px; top: 0.65em; width: 5px; height: 5px; border-radius: 50%; background: #39ff14; }
+.wn-ok { align-self: flex-end; border: 0; border-radius: 10px; padding: 8px 22px; font: inherit; font-weight: 600; color: #000; background: #39ff14; cursor: pointer; }

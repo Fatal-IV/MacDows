@@ -67,6 +67,8 @@ pub struct Settings {
     pub dock: Dock,
     /// The Dynamic Island: its screens, what they offer, how it is navigated.
     pub island: crate::island_settings::Island,
+    /// The version that ran last; tells the next start whether an update happened.
+    pub last_run_version: Option<String>,
 }
 
 impl Default for Settings {
@@ -84,6 +86,7 @@ impl Default for Settings {
             hidden_pinned: Vec::new(),
             dock: Dock::default(),
             island: crate::island_settings::Island::default(),
+            last_run_version: None,
         }
     }
 }
@@ -216,6 +219,7 @@ mod tests {
             show_pinned_apps: false,
             hidden_pinned: vec!["a".into()],
             dock: Dock { win_number: false, ..Dock::default() },
+            last_run_version: Some("0.2.2".into()),
         };
         let json = serde_json::to_string(&s).unwrap();
         assert_eq!(Settings::from_json(&json), s);

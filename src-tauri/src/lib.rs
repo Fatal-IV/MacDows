@@ -7,6 +7,7 @@ mod taskbar_plan;
 mod system_theme;
 mod tray_panel;
 mod updates;
+mod whats_new;
 mod visualizer;
 mod volume;
 mod quick_settings;
@@ -232,6 +233,31 @@ fn toggle_tray_panel(app: AppHandle, center_x: f64, dock_top: f64) {
     });
 }
 
+/// After an update: remember the new version and open Settings, which shows what is new.
+fn announce_update(app: &AppHandle) {
+    let current = env!("CARGO_PKG_VERSION");
+    let (language, updated) = {
+        let state = app.state::<AppSettings>();
+        let mut g = state.0.lock().unwrap();
+        let updated = whats_new::is_update(settings::first_run(), g.last_run_version.as_deref(), current);
+        if g.last_run_version.as_deref() != Some(current) {
+            g.last_run_version = Some(current.to_string());
+            let _ = settings::save(&g);
+        }
+        (g.language.clone(), updated)
+    };
+    if !updated {
+        return;
+    }
+    let Some(news) = whats_new::built_in(current, &language) else { return };
+    *app.state::<whats_new::Pending>().0.lock().unwrap() = Some(news);
+    let handle = app.clone();
+    std::thread::spawn(move || {
+        std::thread::sleep(std::time::Duration::from_millis(1500));
+        open_settings(&handle);
+    });
+}
+
 fn open_settings(app: &AppHandle) {
     if let Some(w) = app.get_webview_window("settings") {
         bring_to_front(&w);
@@ -352,7 +378,8 @@ pub fn run() {
         .on_menu_event(|app, event| dock_menu::on_menu_event(app, event.id().as_ref()))
         .manage(AppSettings(Mutex::new(settings::load())))
         .manage(updates::UpdateState::default())
-        .invoke_handler(tauri::generate_handler![get_settings, is_first_run, hit_region::set_hit_region, hit_region::clear_hit_region, set_setting, windows_list::list_windows, windows_list::focus_window, pinned_apps::list_pinned, pinned_apps::launch_pinned, pinned_apps::set_pinned_order, dock_menu::dock_menu, custom_icons::get_custom_icons, hotkeys::set_dock_pinned_count, app_catalog::get_catalog, app_catalog::pin_catalog_app, app_catalog::close_add_app_panel, preview::show_preview, preview::preview_hover, preview::preview_items, preview::close_preview, preview::preview_activate, preview::preview_close_window, pinned_apps::launch_new_app, drives::list_drives, drives::open_drive, media::get_media, media::media_toggle, media::media_next, media::media_prev, media::media_seek, media::get_media_sources, media::select_media_source, volume::get_volume, volume::set_volume, quick_settings::get_quick_settings, quick_settings::set_quick_setting, quick_settings::get_brightness, quick_settings::quick_launch, open_macdows_settings, notifications::get_notifications, notifications::remove_notification, notifications::clear_notifications, notifications::get_notification_history, notifications::clear_notification_history, bluetooth::get_bluetooth_devices, bluetooth::set_bluetooth_connection, bluetooth_pairing::bt_scan_start, bluetooth_pairing::bt_scan_stop, bluetooth_pairing::bt_pair, bluetooth_pairing::bt_unpair, bluetooth_pairing::bt_pairing_answer, wifi::wifi_state, wifi::wifi_scan, wifi::wifi_connect, wifi::wifi_connect_new, island_focus, wifi::wifi_disconnect, wifi::wifi_forget, vpn::vpn_state, vpn::vpn_connect, vpn::vpn_disconnect, shelf::get_shelf, shelf::add_to_shelf, shelf::remove_from_shelf, shelf::clear_shelf, shelf::open_shelf_item, shelf::reveal_shelf_item, quick_settings::set_brightness, updates::get_update_status, updates::check_for_update, updates::install_update, appearance::get_system_accent_color, wallpaper::get_wallpaper_backdrop, taskbar::get_system_status, system_stats::get_system_stats, taskbar::shell_action, toggle_tray_panel, get_tray_items, activate_tray_item, close_tray_panel, system_theme::sync_system_theme])
+        .manage(whats_new::Pending::default())
+        .invoke_handler(tauri::generate_handler![get_settings, is_first_run, hit_region::set_hit_region, hit_region::clear_hit_region, set_setting, windows_list::list_windows, windows_list::focus_window, pinned_apps::list_pinned, pinned_apps::launch_pinned, pinned_apps::set_pinned_order, dock_menu::dock_menu, custom_icons::get_custom_icons, hotkeys::set_dock_pinned_count, app_catalog::get_catalog, app_catalog::pin_catalog_app, app_catalog::close_add_app_panel, preview::show_preview, preview::preview_hover, preview::preview_items, preview::close_preview, preview::preview_activate, preview::preview_close_window, pinned_apps::launch_new_app, drives::list_drives, drives::open_drive, media::get_media, media::media_toggle, media::media_next, media::media_prev, media::media_seek, media::get_media_sources, media::select_media_source, volume::get_volume, volume::set_volume, quick_settings::get_quick_settings, quick_settings::set_quick_setting, quick_settings::get_brightness, quick_settings::quick_launch, open_macdows_settings, notifications::get_notifications, notifications::remove_notification, notifications::clear_notifications, notifications::get_notification_history, notifications::clear_notification_history, bluetooth::get_bluetooth_devices, bluetooth::set_bluetooth_connection, bluetooth_pairing::bt_scan_start, bluetooth_pairing::bt_scan_stop, bluetooth_pairing::bt_pair, bluetooth_pairing::bt_unpair, bluetooth_pairing::bt_pairing_answer, wifi::wifi_state, wifi::wifi_scan, wifi::wifi_connect, wifi::wifi_connect_new, island_focus, wifi::wifi_disconnect, wifi::wifi_forget, vpn::vpn_state, vpn::vpn_connect, vpn::vpn_disconnect, shelf::get_shelf, shelf::add_to_shelf, shelf::remove_from_shelf, shelf::clear_shelf, shelf::open_shelf_item, shelf::reveal_shelf_item, quick_settings::set_brightness, updates::get_update_status, updates::check_for_update, updates::install_update, whats_new::take_whats_new, appearance::get_system_accent_color, wallpaper::get_wallpaper_backdrop, taskbar::get_system_status, system_stats::get_system_stats, taskbar::shell_action, toggle_tray_panel, get_tray_items, activate_tray_item, close_tray_panel, system_theme::sync_system_theme])
         .setup(|app| {
             for label in ["notch", "dock"] {
                 if let Some(hwnd) = app.get_webview_window(label).and_then(|w| w.hwnd().ok()) {
@@ -376,6 +403,7 @@ pub fn run() {
             visibility::start(app.handle().clone());
             updates::start(app.handle().clone());
             start_taskbar_takeover(app.handle());
+            announce_update(app.handle());
             Ok(())
         })
         .build(tauri::generate_context!())

@@ -268,5 +268,8 @@
   "widget.unit.celsius": "Celsius (°C)",
   "widget.unit.fahrenheit": "Fahrenheit (°F)",
   "widget.low": "Düşük pil uyarısı",
-  "widget.reset": "Widget'ları sıfırla"
+  "widget.reset": "Widget'ları sıfırla",
+  "whatsNew.title": "Yenilikler",
+  "whatsNew.updated": "MacDows {v} sürümüne güncellendi",
+  "whatsNew.ok": "Anladım"
 }

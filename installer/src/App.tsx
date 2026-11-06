@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import mark from "./assets/mark.svg";
 import { closeWindow, installState, launchApp, mockScreen, onDone, onError, onStage, startInstall, type InstallInfo, type StageEvent } from "./api";
 import { text, type Key } from "./i18n";
@@ -45,6 +45,23 @@ export default function App() {
       setScreen("error");
     });
   };
+
+  // MacDows started this installer to update itself: no button to press, and the app opens again when it is done.
+  const autoStarted = useRef(false);
+  useEffect(() => {
+    if (!info?.auto_update || autoStarted.current) return;
+    if (info.decision === "older" || info.decision === "reinstall") {
+      autoStarted.current = true;
+      install();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [info]);
+  useEffect(() => {
+    if (screen !== "done" || !info?.auto_update) return;
+    const id = setTimeout(open, 1800);
+    return () => clearTimeout(id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [screen, info]);
 
   const open = () => {
     launchApp()

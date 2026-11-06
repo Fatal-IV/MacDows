@@ -128,6 +128,8 @@ pub struct InstallInfo {
     pub bundled_version: String,
     pub lang: String,
     pub log_path: String,
+    /// MacDows started this installer to update itself (`--update`): no questions, install and reopen the app.
+    pub auto_update: bool,
 }
 
 #[tauri::command]
@@ -141,6 +143,7 @@ pub fn install_state() -> InstallInfo {
         bundled_version: BUNDLED_VERSION.to_string(),
         lang: lang.to_string(),
         log_path: log_path().display().to_string(),
+        auto_update: std::env::args().any(|a| a == "--update"),
     }
 }
 

@@ -10,6 +10,7 @@ export interface InstallInfo {
   bundled_version: string;
   lang: Lang;
   log_path: string;
+  auto_update: boolean;
 }
 export interface StageEvent {
   stage: "preparing" | "installing" | "finishing" | "done";
@@ -31,6 +32,7 @@ const mockInfo = (): InstallInfo => {
     bundled_version: "0.1.0",
     lang: query.get("lang") === "tr" ? "tr" : "en",
     log_path: String.raw`C:\Users\you\AppData\Local\MacDows-Setup\setup.log`,
+    auto_update: query.get("auto") === "1",
   };
 };
 

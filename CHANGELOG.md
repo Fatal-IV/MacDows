@@ -5,6 +5,21 @@ Format: [Keep a Changelog](https://keepachangelog.com/), versioning: [SemVer](ht
 
 ## [Unreleased]
 
+### Added
+- After an update, MacDows opens Settings by itself and shows a "What's new" window with the notes of the new version, in the app's language (English or Turkish). It appears once per update, never after a fresh install.
+- While media plays, the island's eyes and the little robot sit next to the album art and are always visible. The robot still waves now and then at random, also while media plays.
+
+### Changed
+- Updates no longer show the plain Windows installer window. MacDows downloads its own installer (its signature is checked first) and the same branded window used for installing shows "Updating…", then opens MacDows again by itself. (Versions up to 0.2.2 still need one click on "Update" in that window.)
+
+### Türkçe
+### Eklendi
+- Güncellemeden sonra MacDows kendiliğinden Ayarlar'ı açar ve yeni sürümün notlarını uygulamanın dilinde (İngilizce ya da Türkçe) bir "Yenilikler" penceresinde gösterir. Her güncellemede bir kez çıkar, yeni kurulumdan sonra çıkmaz.
+- Medya çalarken adanın gözleri ve minik robot albüm kapağının yanında durur ve hep görünür. Robot arada bir rastgele el sallamaya devam eder, medya çalarken de.
+
+### Değişti
+- Güncellemeler artık sade Windows kurucu penceresini göstermez. MacDows kendi kurucusunu indirir (önce imzası doğrulanır) ve kurulumdaki markalı pencere "Güncelleniyor…" yazar, sonra MacDows'u kendiliğinden yeniden açar. (0.2.2 ve öncesi sürümlerde bu pencerede bir kez "Güncelle"ye basmak gerekir.)
+
 ## [0.2.2] - 2026-11-06
 
 ### Added

@@ -54,6 +54,8 @@ function main() {
   mkdirSync(dist, { recursive: true });
   const out = join(dist, "MacDows-Setup.exe");
   copyFileSync(built, out);
+  // The in-app updater downloads this installer itself, so it carries its own updater signature.
+  run("bun", ["run", "tauri", "signer", "sign", `"${out}"`], root);
   writeFileSync(join(dist, "SHA256SUMS.txt"), [sumsLine("MacDows-Setup.exe", readFileSync(out)), sumsLine(`MacDows_${version}_x64-setup.exe`, readFileSync(payload))].join("\n") + "\n");
   console.log(`MacDows-Setup.exe: ${(readFileSync(out).length / 1048576).toFixed(2)} MB`);
 }

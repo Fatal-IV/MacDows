@@ -268,5 +268,8 @@
   "widget.unit.celsius": "Celsius (°C)",
   "widget.unit.fahrenheit": "Fahrenheit (°F)",
   "widget.low": "Low battery warning",
-  "widget.reset": "Reset widgets"
+  "widget.reset": "Reset widgets",
+  "whatsNew.title": "What's new",
+  "whatsNew.updated": "MacDows is updated to version {v}",
+  "whatsNew.ok": "Got it"
 }

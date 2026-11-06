@@ -621,6 +621,7 @@ img { -webkit-user-drag: none; user-select: none; }
   filter: drop-shadow(0 0 3px #39ff14);
   transition: width 0.25s ease, margin-left 0.25s ease, opacity 0.25s ease;
 }
+.eyes-robot.shown { width: 22px; margin-left: 5px; opacity: 1; }
 .eyes-robot.waving { width: 22px; margin-left: 5px; opacity: 1; animation: robot-bob 0.8s ease-in-out infinite; }
 .robot-arm { transform-origin: 16px 16.6px; }
 .eyes-robot.waving .robot-arm { animation: robot-wave 0.38s ease-in-out infinite alternate; }
