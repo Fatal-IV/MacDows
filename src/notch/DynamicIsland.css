@@ -655,8 +655,7 @@ img { -webkit-user-drag: none; user-select: none; }
 
 /* A device or network just connected: animated icon + name */
 .link-toast { display: flex; align-items: center; gap: 12px; height: 100%; box-sizing: border-box; padding: 0 18px; color: var(--nectar-text, #fff); cursor: default; }
-.link-icon { position: relative; display: flex; align-items: center; justify-content: center; flex: none; width: 30px; height: 30px; color: #4da3ff; }
-.link-toast.wifi .link-icon { color: #39ff14; }
+.link-icon { position: relative; display: flex; align-items: center; justify-content: center; flex: none; width: 30px; height: 30px; color: #39ff14; }
 .link-icon svg { position: relative; filter: drop-shadow(0 0 4px currentColor); }
 .link-ring { position: absolute; inset: 0; border-radius: 50%; border: 1.5px solid currentColor; opacity: 0; animation: link-ring 1.4s ease-out 0.2s 2; }
 .link-ring.late { animation-delay: 0.55s; }

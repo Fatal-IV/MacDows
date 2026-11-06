@@ -318,15 +318,15 @@
     "semantic_hash": ""
   },
   "src/locales/en.json": {
-    "mtime": 1793971913.2984333,
-    "seen": 1793971927.2714148,
-    "ast_hash": "5c6418acd4abf1b09d1bdece800bf20c",
+    "mtime": 1793973025.2011693,
+    "seen": 1793973035.636896,
+    "ast_hash": "3da2a3da28172a7318e8d46c45e6e42f",
     "semantic_hash": ""
   },
   "src/locales/tr.json": {
-    "mtime": 1793971913.2984333,
-    "seen": 1793971927.271417,
-    "ast_hash": "472ce8eeeea3cfd7202a741a6d96d294",
+    "mtime": 1793973025.2021701,
+    "seen": 1793973035.636899,
+    "ast_hash": "a9aba634d5eab9abe2b2319af49bc972",
     "semantic_hash": ""
   },
   "src/main.tsx": {
@@ -954,9 +954,9 @@
     "semantic_hash": ""
   },
   "src/notch/WifiPage.tsx": {
-    "mtime": 1793903828.004629,
-    "seen": 1793903838.4011276,
-    "ast_hash": "106cdf27cbdc663d94f97778117a0e43",
+    "mtime": 1793973025.2011693,
+    "seen": 1793973035.6369233,
+    "ast_hash": "cab4947ae65bc985ab343f8b9056ecde",
     "semantic_hash": ""
   },
   "src-tauri/src/vpn.rs": {

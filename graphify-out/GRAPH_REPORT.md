@@ -1,7 +1,7 @@
 # Graph Report - MacDows  (2026-11-06)
 
 ## Corpus Check
-- 154 files · ~126,848 words
+- 154 files · ~126,994 words
 - Verdict: corpus is large enough that graph structure adds value.
 - Unclassified: 25 file(s) not represented in the graph (top: .css 10, (none) 6, .ico 3)
 
@@ -11,7 +11,7 @@
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `b2eb2b69`
+- Built from commit: `75cd02e8`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -131,16 +131,16 @@
 10. `Notice` - 16 edges
 
 ## Surprising Connections (you probably didn't know these)
-- `Task 1: Settings model, normalization, migration` --references--> `Screens`  [INFERRED]
-  docs/superpowers/plans/2026-11-05-status-widgets.md → src/bridge.ts
 - `5. Ayarlar modeli` --references--> `StatusCfg`  [INFERRED]
   docs/superpowers/specs/2026-11-04-status-widgets-design.md → src/bridge.ts
+- `Task 1: Settings model, normalization, migration` --references--> `Screens`  [INFERRED]
+  docs/superpowers/plans/2026-11-05-status-widgets.md → src/bridge.ts
 - `Task 3: Settings page skeleton, visibility/scale/fullscreen moved (phase 1, UI)` --references--> `Category`  [INFERRED]
   docs/superpowers/plans/2026-11-04-dynamic-island-settings.md → src/settings/Settings.tsx
-- `Task 5: Bluetooth scan and pairing` --references--> `PairPage()`  [INFERRED]
-  docs/superpowers/plans/2026-11-04-control-center-network.md → src/notch/PairPage.tsx
 - `Task 6: UI and uninstall hook` --references--> `useSystemStatus()`  [INFERRED]
   docs/superpowers/plans/2026-11-02-taskbar-takeover.md → src/system.ts
+- `Task 5: Bluetooth scan and pairing` --references--> `PairPage()`  [INFERRED]
+  docs/superpowers/plans/2026-11-04-control-center-network.md → src/notch/PairPage.tsx
 
 ## Import Cycles
 - None detected.
@@ -532,7 +532,7 @@ Cohesion: 0.11
 Nodes (30): Control Center Network Pages Implementation Plan, File Structure, Global Constraints, Review Focus, Self-Review, Task 1: Wi-Fi backend: adapters, scan, list, profile XML (no connecting yet), Task 2: Wi-Fi page: list, connect to saved or open networks, disconnect, forget, Task 3: Password entry, new secured networks, hidden networks, keyboard focus (+22 more)
 
 ## Knowledge Gaps
-- **538 isolated node(s):** `BATTERY_KEY`, `BATTERY_TIME_KEY`, `TRAY_CELL`, `TRAY_PAD`, `TRAY_COLUMNS` (+533 more)
+- **538 isolated node(s):** `Props`, `SurfaceEdge`, `StatGlyphId`, `Placed`, `CityResult` (+533 more)
   These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 967 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
 - **21 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
@@ -540,16 +540,16 @@ Nodes (30): Control Center Network Pages Implementation Plan, File Structure, Gl
 _Questions this graph is uniquely positioned to answer:_
 
 - **Why does `Dock (running apps, stable order)` connect `media.rs` to `windows_list.rs`, `Dock.tsx`?**
-  _High betweenness centrality (0.076) - this node is a cross-community bridge._
-- **What connects `BATTERY_KEY`, `BATTERY_TIME_KEY`, `TRAY_CELL` to the rest of the system?**
+  _High betweenness centrality (0.079) - this node is a cross-community bridge._
+- **What connects `Props`, `SurfaceEdge`, `StatGlyphId` to the rest of the system?**
   _538 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `windows_list.rs` be split into smaller, more focused modules?**
   _Cohesion score 0.05706214689265537 - nodes in this community are weakly interconnected._
 - **Why does `Visibility modes Fixed/Smart/Peek` connect `visibility.rs` to `Settings.tsx`?**
-  _High betweenness centrality (0.059) - this node is a cross-community bridge._
+  _High betweenness centrality (0.057) - this node is a cross-community bridge._
 - **Should `shelf.rs` be split into smaller, more focused modules?**
   _Cohesion score 0.12096774193548387 - nodes in this community are weakly interconnected._
 - **Why does `framer-motion` connect `Appearance.tsx` to `DynamicIsland.tsx`, `Settings.tsx`, `IslandSettings.tsx`, `Dock.tsx`, `package.json`?**
-  _High betweenness centrality (0.048) - this node is a cross-community bridge._
+  _High betweenness centrality (0.034) - this node is a cross-community bridge._
 - **Should `DynamicIsland.tsx` be split into smaller, more focused modules?**
   _Cohesion score 0.09639953542392567 - nodes in this community are weakly interconnected._
