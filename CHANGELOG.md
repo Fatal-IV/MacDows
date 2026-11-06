@@ -36,7 +36,7 @@ Format: [Keep a Changelog](https://keepachangelog.com/), versioning: [SemVer](ht
 
 ### Added
 - After an update, MacDows opens Settings by itself and shows a "What's new" window with the notes of the new version, in the app's language (English or Turkish). It appears once per update, never after a fresh install.
-- While media plays, the island's eyes and the little robot sit next to the album art and are always visible. The robot still waves now and then at random, also while media plays.
+- MacDows says hi when it starts: look closely at the island, it has a little character now. Nothing to worry about.
 
 ### Changed
 - Updates no longer show the plain Windows installer window. MacDows downloads its own installer (its signature is checked first) and the same branded window used for installing shows "Updating…", then opens MacDows again by itself. (Versions up to 0.2.2 still need one click on "Update" in that window.)
@@ -44,7 +44,7 @@ Format: [Keep a Changelog](https://keepachangelog.com/), versioning: [SemVer](ht
 ### Türkçe
 ### Eklendi
 - Güncellemeden sonra MacDows kendiliğinden Ayarlar'ı açar ve yeni sürümün notlarını uygulamanın dilinde (İngilizce ya da Türkçe) bir "Yenilikler" penceresinde gösterir. Her güncellemede bir kez çıkar, yeni kurulumdan sonra çıkmaz.
-- Medya çalarken adanın gözleri ve minik robot albüm kapağının yanında durur ve hep görünür. Robot arada bir rastgele el sallamaya devam eder, medya çalarken de.
+- MacDows açılırken selam veriyor: adaya dikkatli bakın, artık küçük bir karakteri var. Endişelenecek bir şey yok.
 
 ### Değişti
 - Güncellemeler artık sade Windows kurucu penceresini göstermez. MacDows kendi kurucusunu indirir (önce imzası doğrulanır) ve kurulumdaki markalı pencere "Güncelleniyor…" yazar, sonra MacDows'u kendiliğinden yeniden açar. (0.2.2 ve öncesi sürümlerde bu pencerede bir kez "Güncelle"ye basmak gerekir.)
@@ -53,7 +53,7 @@ Format: [Keep a Changelog](https://keepachangelog.com/), versioning: [SemVer](ht
 
 ### Added
 - Update notes follow the app's language: release notes can carry a Turkish part under a "### Türkçe" heading, and Settings > Updates shows the English or the Turkish part to match the language setting (notes without that heading are shown whole).
-- The island's character: the two eyes are now small upside-down U shapes (arches), and a tiny robot waves hello next to them. On the very first start after an install the island drops in with a bounce, the dock rises from the bottom, and the island opens a little to wave; the island opens and waves on every start of the app, so also after the computer has booted and MacDows starts with Windows. Then it shrinks back and keeps blinking. Every so often, at random times (45 to 150 seconds apart), the robot takes the eyes' place and waves again, then the eyes come back; it only does that while the island is resting, not while it shows the player, tools, a banner or the widgets. Both bars stay on screen for a few extra seconds on the first start, whatever the visibility mode.
+- A friendlier island: on the very first start after an install it drops in with a bounce and the dock rises from the bottom, and the island greets you every time MacDows starts, also after the computer has booted.
 
 ### Changed
 - The installer says "Updating…" (and "Update", "MacDows is updated.") instead of "Installing…" when it replaces an older version.
@@ -62,7 +62,7 @@ Format: [Keep a Changelog](https://keepachangelog.com/), versioning: [SemVer](ht
 ### Türkçe
 ### Eklendi
 - Güncelleme notları uygulamanın diline göre gösterilir: sürüm notlarında "### Türkçe" başlığı altında Türkçe bir bölüm olabilir, Ayarlar > Güncellemeler dil ayarına göre İngilizce ya da Türkçe bölümü gösterir (bu başlığı olmayan notlar olduğu gibi gösterilir).
-- Adanın karakteri: iki göz artık ters U şeklinde minik kemerler ve yanlarında minik bir robot merhaba diye el sallıyor. Kurulumdan sonraki ilk açılışta ada zıplayarak iner, dock alttan yükselir ve ada biraz açılıp el sallar; güncellemeden sonra yeni sürümün ilk açılışında ada bir kez açılıp el sallar. Sonra küçülür ve göz kırpmaya devam eder. İlk açılışta iki çubuk, görünürlük modu ne olursa olsun birkaç saniye fazla ekranda kalır.
+- Daha cana yakın bir ada: kurulumdan sonraki ilk açılışta ada zıplayarak iner, dock alttan yükselir; ayrıca MacDows her açıldığında, bilgisayar yeniden başladıktan sonra da, ada sizi selamlar.
 
 ### Değişti
 - Kurucu, eski bir sürümün yerine geçerken "Kuruluyor…" yerine "Güncelleniyor…" (ve "Güncelleyin", "MacDows güncellendi.") yazar.
