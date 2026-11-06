@@ -17,11 +17,11 @@ Format: [Keep a Changelog](https://keepachangelog.com/), versioning: [SemVer](ht
 ## [0.2.5] - 2026-11-06
 
 ### Changed
-- The island's eyes are its resting face everywhere, also while media plays (the robot no longer stays next to them). Now and then, at random times, the robot takes the eyes' place with a short animation, waves, and leaves again; the eyes come back the same way.
+- MacDows now greets you. Don't worry, it isn't watching you.
 
 ### Türkçe
 ### Değişti
-- Adanın gözleri her yerde, medya çalarken de, duran yüzüdür (robot artık yanlarında sürekli durmaz). Arada bir, rastgele zamanlarda robot kısa bir animasyonla gözlerin yerine gelir, el sallar ve gider; gözler de aynı şekilde geri gelir.
+- MacDows artık sizi selamlıyor, endişelenmeyin sizi izlemiyor.
 
 ## [0.2.4] - 2026-11-06
 

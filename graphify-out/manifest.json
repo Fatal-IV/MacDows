@@ -192,9 +192,9 @@
     "semantic_hash": ""
   },
   "src-tauri/src/lib.rs": {
-    "mtime": 1793950758.238681,
-    "seen": 1793950781.1162271,
-    "ast_hash": "28a8194deb4e53fb4378348cd79195ee",
+    "mtime": 1793969583.4946237,
+    "seen": 1793969678.6532903,
+    "ast_hash": "04caeb4ecb753e33363e8b0dd91b384f",
     "semantic_hash": ""
   },
   "src-tauri/src/main.rs": {
@@ -732,9 +732,9 @@
     "semantic_hash": ""
   },
   "src/notch/DynamicIsland.tsx": {
-    "mtime": 1793967228.912076,
-    "seen": 1793967286.3317308,
-    "ast_hash": "e2b9cacda1c475b8cd90d4dfbbea6d24",
+    "mtime": 1793969665.585167,
+    "seen": 1793969678.653335,
+    "ast_hash": "4202089837e6efece12a4585dbaf4032",
     "semantic_hash": ""
   },
   "src/notch/Shelf.tsx": {
@@ -1077,6 +1077,12 @@
     "mtime": 1793954506.474665,
     "seen": 1793954536.9686575,
     "ast_hash": "270bc2c9654d36726cae0b2600c0db31",
+    "semantic_hash": ""
+  },
+  "src-tauri/src/camera.rs": {
+    "mtime": 1793969635.7999136,
+    "seen": 1793969678.6532757,
+    "ast_hash": "3745a2d8f7e905209e0ba53d2c66f0b8",
     "semantic_hash": ""
   }
 }
