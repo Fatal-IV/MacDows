@@ -75,8 +75,15 @@ export function BluetoothPage({ onBack, pairing = true, onEditing }: { onBack: (
     try {
       const next = await setBluetoothConnection(d.address, !d.connected);
       setDevices(next);
-      const now = next.find((x) => x.address === d.address);
-      // A device that did not change state could not be switched this way.
+      let now = next.find((x) => x.address === d.address);
+      // Windows can be slow to report a new state (a disconnect especially): look once more before calling it a failure.
+      if (now && now.connected === d.connected) {
+        await new Promise((r) => setTimeout(r, 1500));
+        const again = await getBluetoothDevices();
+        setDevices(again);
+        now = again.find((x) => x.address === d.address);
+      }
+      // A device that still did not change state could not be switched this way.
       const changed = !now || now.connected !== d.connected;
       if (!changed) setFailed(d.address);
       announceLink({ kind: "bluetooth", name: d.name, state: !changed ? "failed" : d.connected ? "disconnected" : "connected" });
