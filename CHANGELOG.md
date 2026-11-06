@@ -5,6 +5,15 @@ Format: [Keep a Changelog](https://keepachangelog.com/), versioning: [SemVer](ht
 
 ## [Unreleased]
 
+## [0.2.7] - 2026-11-06
+
+### Added
+- When you take a photo with the Windows Camera app, the island shows an animated camera icon for a moment (the shutter closes and a flash goes off). MacDows only notices that a new picture was saved in your Camera Roll folder; it never looks at the picture.
+
+### Türkçe
+### Eklendi
+- Windows Kamera uygulamasıyla fotoğraf çektiğinizde ada kısa süreliğine animasyonlu bir kamera simgesi gösterir (deklanşör kapanır ve flaş patlar). MacDows yalnızca Camera Roll klasörünüze yeni bir resim kaydedildiğini fark eder; resme hiç bakmaz.
+
 ## [0.2.6] - 2026-11-06
 
 ### Fixed
