@@ -5,6 +5,8 @@ Format: [Keep a Changelog](https://keepachangelog.com/), versioning: [SemVer](ht
 
 ## [Unreleased]
 
+## [0.2.3] - 2026-11-06
+
 ### Added
 - After an update, MacDows opens Settings by itself and shows a "What's new" window with the notes of the new version, in the app's language (English or Turkish). It appears once per update, never after a fresh install.
 - While media plays, the island's eyes and the little robot sit next to the album art and are always visible. The robot still waves now and then at random, also while media plays.
