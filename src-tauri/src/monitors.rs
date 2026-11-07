@@ -302,6 +302,30 @@ pub fn reconcile(app: &AppHandle) {
     let _ = app.emit("monitors-changed", ());
 }
 
+/// The label of the dock whose monitor contains the point (`docks`: each dock window with the rectangle of its monitor).
+pub fn pick_dock(docks: &[(String, Rect)], point: (i32, i32)) -> Option<String> {
+    docks.iter().find(|(_, r)| point.0 >= r.left && point.0 < r.right && point.1 >= r.top && point.1 < r.bottom).map(|(label, _)| label.clone())
+}
+
+/// The dock a keyboard shortcut belongs to: the one on the monitor under the pointer, else the primary dock.
+pub fn dock_label_under_pointer(app: &AppHandle) -> String {
+    let mut p = windows::Win32::Foundation::POINT::default();
+    unsafe {
+        let _ = windows::Win32::UI::WindowsAndMessaging::GetCursorPos(&mut p);
+    }
+    let monitors = list(app);
+    let docks: Vec<(String, Rect)> = bar::bar_labels(app)
+        .into_iter()
+        .filter(|l| bar::kind_of(l) == Some(BarKind::Dock))
+        .filter_map(|l| {
+            let key = monitor_of(&l)?;
+            let rect = monitors.iter().find(|m| m.key == key)?.rect;
+            Some((l, rect))
+        })
+        .collect();
+    pick_dock(&docks, (p.x, p.y)).unwrap_or_else(|| "dock".to_string())
+}
+
 /// The monitors that have a dock: their Windows taskbar is hidden while MacDows replaces it.
 pub fn dock_rects(app: &AppHandle) -> Vec<Rect> {
     let want = lock(&WANT).clone();
@@ -507,5 +531,15 @@ mod tests {
         scaled[1].scale = 1.5;
         assert_ne!(signature(&a), signature(&scaled), "the scale changed");
         assert_ne!(signature(&a), signature(&a[..1]), "a monitor was unplugged");
+    }
+
+    #[test]
+    fn the_shortcut_goes_to_the_dock_on_the_monitor_under_the_pointer() {
+        let docks = [("dock".to_string(), r(0, 1920)), ("dock-2".to_string(), r(1920, 3840))];
+        assert_eq!(pick_dock(&docks, (2000, 500)), Some("dock-2".to_string()));
+        assert_eq!(pick_dock(&docks, (10, 10)), Some("dock".to_string()));
+        assert_eq!(pick_dock(&docks, (1919, 1079)), Some("dock".to_string()), "the edges belong to the monitor on their inside");
+        assert_eq!(pick_dock(&docks, (5000, 10)), None);
+        assert_eq!(pick_dock(&[], (1, 1)), None);
     }
 }

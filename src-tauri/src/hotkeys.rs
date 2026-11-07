@@ -121,7 +121,8 @@ unsafe extern "system" fn hook_proc(code: i32, wparam: WPARAM, lparam: LPARAM) -
                     if let Some(app) = APP.get().cloned() {
                         // Never wait for the webview inside the hook.
                         tauri::async_runtime::spawn(async move {
-                            let _ = app.emit_to("dock", "dock-shortcut", Shortcut { index, new_instance });
+                            let dock = crate::monitors::dock_label_under_pointer(&app);
+                            let _ = app.emit_to(dock.as_str(), "dock-shortcut", Shortcut { index, new_instance });
                         });
                     }
                 }
