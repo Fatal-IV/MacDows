@@ -173,17 +173,19 @@ fn refresh_items(hwnds: &[isize], icon: &Option<String>) -> Vec<PreviewItem> {
 
 /// Opens (or updates) the panel above the dock icon. `center_x` and `dock_top` are CSS px in the dock window.
 #[tauri::command]
-pub fn show_preview(app: AppHandle, center_x: f64, dock_top: f64, icon: Option<String>, hwnds: Vec<isize>) {
+pub fn show_preview(app: AppHandle, window: tauri::WebviewWindow, center_x: f64, dock_top: f64, icon: Option<String>, hwnds: Vec<isize>) {
     if hwnds.is_empty() {
         return;
     }
     DOCK_HOVER.store(true, Ordering::SeqCst);
     LEFT_AT.store(0, Ordering::SeqCst);
     PANEL_OPEN.store(true, Ordering::SeqCst);
+    // The panel opens above the dock that asked (there is one dock per monitor).
+    let dock_label = window.label().to_string();
     std::thread::spawn(move || {
         let items = refresh_items(&hwnds, &icon);
         *ITEMS.lock().unwrap() = items;
-        let Some(dock) = app.get_webview_window("dock") else { return };
+        let Some(dock) = app.get_webview_window(&dock_label) else { return };
         let (Ok(pos), Ok(Some(monitor))) = (dock.outer_position(), dock.current_monitor()) else {
             PANEL_OPEN.store(false, Ordering::SeqCst);
             return;
@@ -224,12 +226,12 @@ pub fn show_preview(app: AppHandle, center_x: f64, dock_top: f64, icon: Option<S
                 }
             }
         });
-        monitor_panel(app, generation, hwnds, icon);
+        monitor_panel(app, generation, hwnds, icon, dock_label);
     });
 }
 
 /// Keeps the thumbnails fresh and closes the panel when the pointer has left (or the dock hid).
-fn monitor_panel(app: AppHandle, generation: u64, hwnds: Vec<isize>, icon: Option<String>) {
+fn monitor_panel(app: AppHandle, generation: u64, hwnds: Vec<isize>, icon: Option<String>, dock_label: String) {
     let _guard = OpenGuard(generation);
     let mut last_refresh = now_ms();
     loop {
@@ -244,7 +246,7 @@ fn monitor_panel(app: AppHandle, generation: u64, hwnds: Vec<isize>, icon: Optio
             }
             continue;
         };
-        let dock_visible = app.get_webview_window("dock").and_then(|d| d.is_visible().ok()).unwrap_or(false);
+        let dock_visible = app.get_webview_window(&dock_label).and_then(|d| d.is_visible().ok()).unwrap_or(false);
         let left = LEFT_AT.load(Ordering::SeqCst);
         let since = if left == 0 { 0 } else { now_ms().saturating_sub(left) };
         let hovering = DOCK_HOVER.load(Ordering::SeqCst) || PANEL_HOVER.load(Ordering::SeqCst);

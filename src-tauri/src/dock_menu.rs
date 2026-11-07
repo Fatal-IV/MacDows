@@ -99,11 +99,14 @@ pub struct DockMenuTarget {
 
 /// The icon the open menu belongs to; the chosen item is handled against it.
 static CURRENT: Mutex<Option<DockMenuTarget>> = Mutex::new(None);
+/// The dock (label) the open menu belongs to: there is one dock per monitor.
+static CURRENT_DOCK: Mutex<String> = Mutex::new(String::new());
 const PREFIX: &str = "dock-menu:";
 
 /// Shows the right-click menu for the icon (or the empty dock) at the pointer.
 #[tauri::command]
-pub fn dock_menu(app: AppHandle, target: DockMenuTarget) -> Result<(), String> {
+pub fn dock_menu(app: AppHandle, caller: tauri::WebviewWindow, target: DockMenuTarget) -> Result<(), String> {
+    *CURRENT_DOCK.lock().unwrap() = caller.label().to_string();
     let kind = MenuTarget::parse(&target.kind).ok_or("unknown menu target")?;
     let (lang, custom) = {
         let state = app.state::<crate::AppSettings>();
@@ -117,7 +120,7 @@ pub fn dock_menu(app: AppHandle, target: DockMenuTarget) -> Result<(), String> {
     }
     if let Some(&hwnd) = target.hwnds.first() {
         // A running app: the dock's own items first, then the window's own Windows menu (Restore, Move, Size, Minimize, Maximize, Close).
-        let window = app.get_webview_window("dock").ok_or("no dock window")?;
+        let window = caller.clone();
         let owner = HWND(window.hwnd().map_err(|e| e.to_string())?.0 as *mut _);
         let labels: Vec<String> = actions.iter().map(|a| crate::i18n::dock_menu_label(&lang, a.id()).to_string()).collect();
         let chosen = window_menu::popup(owner, HWND(hwnd as *mut _), &labels);
@@ -137,7 +140,7 @@ pub fn dock_menu(app: AppHandle, target: DockMenuTarget) -> Result<(), String> {
     let refs: Vec<&dyn IsMenuItem<_>> = items.iter().map(|i| i as &dyn IsMenuItem<_>).collect();
     let menu = Menu::with_items(&app, &refs).map_err(|e| e.to_string())?;
     *CURRENT.lock().unwrap() = Some(target);
-    let window = app.get_webview_window("dock").ok_or("no dock window")?;
+    let window = caller;
     menu.popup(window.as_ref().window().clone()).map_err(|e| e.to_string())
 }
 
@@ -161,7 +164,7 @@ fn run_action(app: &AppHandle, action: MenuAction, target: DockMenuTarget) {
             }
             MenuAction::ChangeIcon => change_icon(&app, &target),
             MenuAction::ResetIcon => reset_icon(&app, &target),
-            MenuAction::AddApp => crate::app_catalog::toggle_panel(&app),
+            MenuAction::AddApp => crate::app_catalog::toggle_panel(&app, &CURRENT_DOCK.lock().unwrap()),
         }
         let _ = app.emit("dock-menu-closed", ());
     });

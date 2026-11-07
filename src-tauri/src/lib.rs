@@ -201,13 +201,15 @@ fn activate_tray_item(app: AppHandle, index: usize, name: String) {
 /// Opens (or closes) the hidden-icons panel just above the dock. `center_x` and `dock_top` are CSS pixels in
 /// the dock window.
 #[tauri::command]
-fn toggle_tray_panel(app: AppHandle, center_x: f64, dock_top: f64) {
+fn toggle_tray_panel(app: AppHandle, window: tauri::WebviewWindow, center_x: f64, dock_top: f64) {
     if close_tray(&app) || now_ms().saturating_sub(TRAY_CLOSED_AT_MS.load(std::sync::atomic::Ordering::SeqCst)) < 500 {
         return;
     }
+    // The panel opens above the dock that was clicked (there is one dock per monitor).
+    let dock_label = window.label().to_string();
     std::thread::spawn(move || {
         let Some(items) = tray_panel::collect().filter(|i| !i.is_empty()) else { return };
-        let Some(dock) = app.get_webview_window("dock") else { return };
+        let Some(dock) = app.get_webview_window(&dock_label) else { return };
         let (Ok(pos), Ok(Some(monitor))) = (dock.outer_position(), dock.current_monitor()) else { return };
         let scale = dock.scale_factor().unwrap_or(1.0);
         let columns = items.len().min(TRAY_COLUMNS);
@@ -332,12 +334,11 @@ fn is_first_run() -> bool {
 
 /// While a text field in the island is being typed in, the island takes keyboard focus and stays on screen.
 #[tauri::command]
-fn island_focus(app: tauri::AppHandle, on: bool) {
+fn island_focus(window: tauri::WebviewWindow, on: bool) {
     if on {
         visibility::hold_notch_for_typing(10 * 60 * 1000);
-        if let Some(win) = app.get_webview_window("notch") {
-            let _ = win.set_focus();
-        }
+        // The island that asked (there is one per monitor).
+        let _ = window.set_focus();
     } else {
         visibility::hold_notch_for_typing(0);
     }

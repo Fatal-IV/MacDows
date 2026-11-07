@@ -212,13 +212,13 @@ pub fn pin_catalog_app(app: AppHandle, id: String) {
 // The panel
 // ---------------------------------------------------------------------------------------------
 
-/// Opens (or closes, if open) the panel above the middle of the dock.
-pub fn toggle_panel(app: &AppHandle) {
+/// Opens (or closes, if open) the panel above the middle of the dock `dock_label` (one dock per monitor).
+pub fn toggle_panel(app: &AppHandle, dock_label: &str) {
     if let Some(existing) = app.get_webview_window("addapp") {
         let _ = existing.destroy();
         return;
     }
-    let Some(dock) = app.get_webview_window("dock") else { return };
+    let Some(dock) = app.get_webview_window(dock_label) else { return };
     let (Ok(pos), Ok(size), Ok(Some(monitor))) = (dock.outer_position(), dock.outer_size(), dock.current_monitor()) else { return };
     let scale = dock.scale_factor().unwrap_or(1.0);
     let work = monitor.work_area();
