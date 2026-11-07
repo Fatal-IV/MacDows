@@ -20,6 +20,7 @@ import { initTheme } from "../appearance/theme";
 import { SurfaceShape } from "../appearance/SurfaceShape";
 import { FALLBACK_PALETTE, GRADIENT_FX } from "./gradientFx";
 import { mediaActivity } from "./mediaActivity";
+import { readWatchStyle, watchProgress, WATCH_STYLE_KEY, type WatchStyle } from "./watchStyle";
 import "../appearance/surfaces.css";
 import { MusicNoteIcon, PauseIcon, PlayIcon, SkipBackIcon, SkipForwardIcon } from "./icons";
 import { ToolsPanel, useTimer } from "./Tools";
@@ -294,10 +295,10 @@ function Art({ url, className }: { url: string | null; className?: string }) {
 }
 
 /** The island's character: two neon green arch eyes that blink; now and then the robot swaps places with them (animated), waves, and leaves again. */
-function Eyes({ waving, shot, music = false, still = false, watch = false }: { waving: boolean; shot: boolean; music?: boolean; still?: boolean; watch?: boolean }) {
+function Eyes({ waving, shot, music = false, still = false, watch = false, watchStyle = "popcorn", progress = 0 }: { waving: boolean; shot: boolean; music?: boolean; still?: boolean; watch?: boolean; watchStyle?: WatchStyle; progress?: number }) {
   // While music plays the robot stays in the eyes' place and only shakes its head (still: music is paused).
   return (
-    <div className={`eyes${waving || (music && !watch) ? " waving" : ""}${music && !watch ? " robot-only" : ""}${music && watch ? " watching" : ""}${still ? " still" : ""}${shot ? " shot" : ""}`} aria-hidden>
+    <div className={`eyes${waving || (music && !watch) ? " waving" : ""}${music && !watch ? " robot-only" : ""}${music && watch ? ` watching watch-${watchStyle}` : ""}${still ? " still" : ""}${shot ? " shot" : ""}`} aria-hidden>
       <div className="eyes-pair">
         <i />
         <i />
@@ -317,7 +318,7 @@ function Eyes({ waving, shot, music = false, still = false, watch = false }: { w
         <path className="robot-arm" d={music ? "M16 16.6 19 19" : "M16 16.6 19.4 12.4"} />
         <path d="M10.4 20.6v1.8M13.6 20.6v1.8" />
       </svg>
-      {/* Video: the robot sits in an armchair and watches a screen. */}
+      {/* Video: the robot sits in an armchair and watches a screen (popcorn or progress, see watchStyle.ts). */}
       <svg className="eyes-watcher" width="28" height="22" viewBox="0 0 28 22" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
         <path d="M3 6.5v10.5M3 14.5h10M13 14.5V17M3 17v2.5M13 17v2.5" />
         <g className="watcher-head">
@@ -331,6 +332,19 @@ function Eyes({ waving, shot, music = false, still = false, watch = false }: { w
         <rect x="17" y="4.5" width="9.5" height="7" rx="1.4" />
         <rect className="watcher-screen" x="18.4" y="5.9" width="6.7" height="4.2" rx="0.6" fill="currentColor" stroke="none" />
         <path d="M21.7 11.5V14M19.2 14h5" />
+        {/* Popcorn: a bucket in the lap; now and then the hand brings a piece to the mouth. */}
+        <g className="watch-popcorn-parts">
+          <path d="M11.6 12.4l.5 2.2h2.4l.5-2.2z" strokeWidth="1.1" />
+          <circle cx="12.3" cy="11.9" r="0.7" fill="currentColor" stroke="none" />
+          <circle cx="13.5" cy="11.8" r="0.7" fill="currentColor" stroke="none" />
+          <path className="popcorn-arm" d="M10.6 12.6L12.4 13.6" strokeWidth="1.3" />
+        </g>
+        {/* Progress: a play sign and a line on the screen that fills as the video goes on. */}
+        <g className="watch-progress-parts">
+          <path d="M20 6.9v2l1.7-1z" fill="var(--screen-bg, #000)" stroke="none" />
+          <rect x="19.2" y="9.3" width="5.3" height="0.7" rx="0.3" fill="var(--screen-bg, #000)" stroke="none" opacity="0.4" />
+          <rect x="19.2" y="9.3" width={5.3 * progress} height="0.7" rx="0.3" fill="var(--screen-bg, #000)" stroke="none" />
+        </g>
       </svg>
       <svg className="eyes-camera" width="24" height="22" viewBox="0 0 24 22" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
         <path d="M3 7.5a2 2 0 0 1 2-2h2.4l1.3-2h6.6l1.3 2H19a2 2 0 0 1 2 2V17a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z" />
@@ -473,6 +487,21 @@ export default function Notch() {
   // Video (Netflix, YouTube, a film) or music: the robot watches or shakes its head. The cover tells too (wide thumbnail or square cover).
   const artAspect = useArtAspect(art);
   const activity = media ? mediaActivity(media, artAspect) : "music";
+  // How the robot watches (Settings) and how far the video is (the line on the screen; read every few seconds, it is a few pixels).
+  const [watchStyle, setWatchStyle] = useState<WatchStyle>(() => readWatchStyle(localStorage.getItem(WATCH_STYLE_KEY)));
+  useEffect(() => {
+    const onStorage = (e: StorageEvent) => e.key === WATCH_STYLE_KEY && setWatchStyle(readWatchStyle(localStorage.getItem(WATCH_STYLE_KEY)));
+    window.addEventListener("storage", onStorage);
+    return () => window.removeEventListener("storage", onStorage);
+  }, []);
+  const [progress, setProgress] = useState(0);
+  useEffect(() => {
+    if (!media || activity !== "video" || watchStyle !== "progress") return;
+    const read = () => setProgress(watchProgress(media.position_ms, media.duration_ms, media.updated_at_ms, media.playing, Date.now()));
+    read();
+    const id = setInterval(read, 4000);
+    return () => clearInterval(id);
+  }, [media, activity, watchStyle]);
   // 0 in Settings is off; 1 to 8 are the effects in `GRADIENT_FX`.
   const gradientFx = Math.min(GRADIENT_FX.length, Math.max(0, island.screens.music.gradient)) - 1;
   // The moving gradient follows the "reduce motion" choice of Windows (the page media query is not enough: framer-motion moves it from JS).
@@ -1009,7 +1038,7 @@ export default function Notch() {
                 {isMusic ? (
                   <>
                     {island.screens.music.visualizer && <Visualizer playing={playing} bars={4} height={16} />}
-                    {!showWidgets && <Eyes waving={greeting} shot={shot} music still={!playing} watch={activity === "video"} />}
+                    {!showWidgets && <Eyes waving={greeting} shot={shot} music still={!playing} watch={activity === "video"} watchStyle={watchStyle} progress={progress} />}
                   </>
                 ) : (
                   <>

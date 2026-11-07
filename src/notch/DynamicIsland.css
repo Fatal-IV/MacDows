@@ -759,18 +759,27 @@ img { -webkit-user-drag: none; user-select: none; }
 @keyframes wifi-scan-spin { to { transform: rotate(360deg); } }
 @media (prefers-reduced-motion: reduce) { .wifi-scan.spinning svg { animation: none; opacity: 0.5; } }
 
-/* Video: the robot sits in an armchair in front of a screen. The screen only glows softly (a flickering one would pull the eye away from the show) and the head leans a little now and then. */
+/* Video: the robot sits in an armchair in front of a screen. Nothing flickers (it would pull the eye away from the show). */
 .eyes-watcher { position: absolute; left: 50%; top: 50%; width: 28px; height: 22px; overflow: visible; opacity: 0; transform: translate(-50%, -50%) scale(0.4); filter: drop-shadow(0 0 3px var(--eye)); transition: opacity 0.25s ease, transform 0.35s cubic-bezier(0.34, 1.4, 0.64, 1); }
 .eyes.watching .eyes-pair, .eyes.watching .eyes-robot { opacity: 0; transform: translate(-50%, -50%) scale(0.4); }
 .eyes.watching .eyes-watcher { opacity: 1; transform: translate(-50%, -50%) scale(1); }
 .eyes.shot .eyes-watcher { opacity: 0; transform: translate(-50%, -50%) scale(0.4); }
 .watcher-head { transform-box: view-box; transform-origin: 8px 13px; }
-.eyes.watching .watcher-head { animation: watcher-lean 9s ease-in-out infinite; }
-.eyes.watching .watcher-screen { opacity: 0.7; animation: watcher-glow 6s ease-in-out infinite; }
-.eyes.watching.still .watcher-head, .eyes.watching.still .watcher-screen { animation: none; }
+.watcher-screen { opacity: 0.6; }
+.watch-popcorn-parts, .watch-progress-parts { display: none; }
+.eyes.watch-popcorn .watch-popcorn-parts, .eyes.watch-progress .watch-progress-parts { display: inline; }
+/* Popcorn: the hand goes to the mouth every few seconds and the head follows a little. */
+.popcorn-arm { transform-box: view-box; transform-origin: 10.6px 12.6px; }
+.eyes.watch-popcorn .popcorn-arm { animation: popcorn-eat 8s ease-in-out infinite; }
+.eyes.watch-popcorn .watcher-head { animation: popcorn-nod 8s ease-in-out infinite; }
+@keyframes popcorn-eat { 0%, 55%, 100% { transform: rotate(0deg); } 62%, 70% { transform: rotate(-95deg); } 78% { transform: rotate(0deg); } 82%, 88% { transform: rotate(-95deg); } 94% { transform: rotate(0deg); } }
+@keyframes popcorn-nod { 0%, 55%, 100% { transform: rotate(0deg); } 66% { transform: rotate(3deg); } 85% { transform: rotate(3deg); } }
+/* Progress: a calm head, a screen with a play sign and a line that fills. */
+.eyes.watch-progress .watcher-head { animation: watcher-lean 12s ease-in-out infinite; }
+.eyes.watch-progress .watcher-screen { opacity: 0.85; }
+.eyes.watching.still .watcher-head, .eyes.watching.still .popcorn-arm { animation: none; }
 .eyes.watching.still .watcher-screen { opacity: 0.15; }
-@keyframes watcher-lean { 0%, 100% { transform: rotate(0deg); } 50% { transform: rotate(4deg); } }
-@keyframes watcher-glow { 0%, 100% { opacity: 0.55; } 50% { opacity: 0.8; } }
+@keyframes watcher-lean { 0%, 100% { transform: rotate(0deg); } 50% { transform: rotate(3deg); } }
 @media (prefers-reduced-motion: reduce) {
-  .eyes.watching .watcher-head, .eyes.watching .watcher-screen { animation: none; }
+  .eyes.watching .watcher-head, .eyes.watching .popcorn-arm { animation: none; }
 }

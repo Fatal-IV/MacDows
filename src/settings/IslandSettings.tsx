@@ -120,6 +120,7 @@ function OrderList({ s, t }: { s: AppSettings; t: T }) {
 /** The "Dynamic Island" settings page. */
 export default function IslandSettings({ s, t }: { s: AppSettings; t: T }) {
   const [scale, setScale] = useStored("nectar-scale", "1");
+  const [watchStyle, setWatchStyle] = useStored("macdows-watch-style", "popcorn");
   const system = useSystemStatus();
 
   const resetLayout = () => {
@@ -190,6 +191,9 @@ export default function IslandSettings({ s, t }: { s: AppSettings; t: T }) {
             <>
               <Row title={t("island.music.sources")} description={t("island.music.sourcesHelp")}>
                 <Toggle label={t("island.music.sources")} checked={s.island.screens.music.sources} onChange={(v) => updateIsland(s, (i) => (i.screens.music.sources = v))} />
+              </Row>
+              <Row title={t("island.music.watch")} description={t("island.music.watchHelp")}>
+                <Select label={t("island.music.watch")} value={watchStyle} onChange={setWatchStyle} options={["popcorn", "progress"].map((w) => ({ value: w, label: t(`island.music.watch.${w}`) }))} />
               </Row>
               <GradientPicker value={s.island.screens.music.gradient} onChange={(n) => updateIsland(s, (i) => (i.screens.music.gradient = n))} t={t} />
             </>
