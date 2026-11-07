@@ -9,6 +9,7 @@
     "build": "tsc && vite build",
     "preview": "vite preview",
     "tauri": "tauri",
+    "fast": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/fast.ps1",
     "icons": "node scripts/make-icons.mjs",
     "test:scripts": "node --test scripts",
     "test:logic": "node --test src/notch/*.test.ts"
