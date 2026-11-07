@@ -5,6 +5,13 @@ Format: [Keep a Changelog](https://keepachangelog.com/), versioning: [SemVer](ht
 
 ## [Unreleased]
 
+### Added
+- The color mode, the style and the accent of the theme are chosen on tiles with a small picture of each option (Settings > Appearance > Theme).
+
+### Türkçe
+### Eklendi
+- Temanın renk modu, stili ve vurgu rengi her seçeneğin küçük bir resmini gösteren kutucuklarla seçilir (Ayarlar > Görünüm > Tema).
+
 ## [0.2.8] - 2026-11-08
 
 ### Added
