@@ -1,3 +1,4 @@
+mod bar;
 mod system_stats;
 mod hit_region;
 mod i18n;
