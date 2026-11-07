@@ -17,6 +17,17 @@ pub enum FullscreenMode {
     Hidden,
 }
 
+/// How the island sits on the screen.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
+#[serde(rename_all = "lowercase")]
+pub enum IslandStyle {
+    /// Stuck to the top edge of the screen (how it always was).
+    #[default]
+    Notch,
+    /// A pill that floats a little below the top edge.
+    Dynamic,
+}
+
 /// What a click on the island opens.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
@@ -60,6 +71,9 @@ pub struct StatusCfg {
     pub battery_percent: Option<bool>,
 }
 
+/// How many gradient effects the player has (`MusicCfg::gradient` is 0 for none, or 1 to this).
+pub const GRADIENT_EFFECTS: u8 = 8;
+
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(default)]
 pub struct MusicCfg {
@@ -72,6 +86,9 @@ pub struct MusicCfg {
     pub artwork: bool,
     /// Buttons to switch between programs that play media (shown from two programs).
     pub sources: bool,
+    /// The moving gradient behind the player and the small island: 0 is off, 1 to 8 pick one of the eight effects
+    /// (see `GRADIENT_FX` in `DynamicIsland.tsx`).
+    pub gradient: u8,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -171,6 +188,7 @@ pub struct Nav {
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(default)]
 pub struct Island {
+    pub style: IslandStyle,
     pub visibility: Visibility,
     pub fullscreen: FullscreenMode,
     pub nav: Nav,
@@ -199,7 +217,7 @@ impl Default for Widgets {
 }
 impl Default for MusicCfg {
     fn default() -> Self {
-        MusicCfg { enabled: true, visualizer: true, album_glow: true, progress: true, auto_open: true, artwork: true, sources: true }
+        MusicCfg { enabled: true, visualizer: true, album_glow: true, progress: true, auto_open: true, artwork: true, sources: true, gradient: 1 }
     }
 }
 impl Default for ToolsCfg {
@@ -229,7 +247,7 @@ impl Default for Nav {
 }
 impl Default for Island {
     fn default() -> Self {
-        Island { visibility: Visibility::Fixed, fullscreen: FullscreenMode::Edge, nav: Nav::default(), screens: Screens::default() }
+        Island { style: IslandStyle::Notch, visibility: Visibility::Fixed, fullscreen: FullscreenMode::Edge, nav: Nav::default(), screens: Screens::default() }
     }
 }
 
@@ -305,6 +323,7 @@ impl Island {
         n.banner_seconds = n.banner_seconds.clamp(3, 10);
         n.history_max = nearest(&HISTORY_CHOICES, n.history_max);
         self.screens.shelf.max_items = self.screens.shelf.max_items.clamp(1, 100);
+        self.screens.music.gradient = self.screens.music.gradient.min(GRADIENT_EFFECTS);
     }
 }
 
@@ -317,9 +336,11 @@ mod tests {
         let i = Island::default();
         assert_eq!(i.visibility, Visibility::Fixed);
         assert_eq!(i.fullscreen, FullscreenMode::Edge);
+        assert_eq!(i.style, IslandStyle::Notch);
         assert!(i.enabled_flags().iter().all(|on| *on));
         assert!(!i.screens.status.clock_12h);
         assert!(i.screens.music.sources);
+        assert_eq!(i.screens.music.gradient, 1);
         assert!(i.screens.tools.week_starts_monday && i.screens.tools.timer_sound && i.screens.tools.timer_progress);
         assert_eq!((i.screens.notifications.banner_seconds, i.screens.notifications.history_max), (5, 100));
         assert!(!i.screens.shelf.persist);
@@ -327,6 +348,28 @@ mod tests {
         assert!(i.nav.wheel && i.nav.middle && !i.nav.remember && i.nav.hover_player);
         assert_eq!(i.nav.click, ClickMode::Smart);
         assert_eq!(i.nav.order, SCREEN_IDS.map(String::from).to_vec());
+    }
+
+    #[test]
+    fn the_island_style_is_read_and_defaults_to_the_notch() {
+        let floating: Island = serde_json::from_str(r#"{"style":"dynamic"}"#).unwrap();
+        assert_eq!(floating.style, IslandStyle::Dynamic);
+        let notch: Island = serde_json::from_str(r#"{"style":"notch"}"#).unwrap();
+        assert_eq!(notch.style, IslandStyle::Notch);
+        let old: Island = serde_json::from_str(r#"{"visibility":"fixed"}"#).unwrap();
+        assert_eq!(old.style, IslandStyle::Notch, "files from before the setting stay on the notch");
+        assert_eq!(serde_json::to_string(&IslandStyle::Dynamic).unwrap(), r#""dynamic""#);
+    }
+
+    #[test]
+    fn the_gradient_choice_is_kept_inside_its_range() {
+        for (given, kept) in [(0u8, 0u8), (5, 5), (8, 8), (9, 8), (255, 8)] {
+            let mut i: Island = serde_json::from_str(&format!(r#"{{"screens":{{"music":{{"gradient":{given}}}}}}}"#)).unwrap();
+            i.normalize();
+            assert_eq!(i.screens.music.gradient, kept, "given {given}");
+        }
+        let old: Island = serde_json::from_str(r#"{"screens":{"music":{"sources":false}}}"#).unwrap();
+        assert_eq!(old.screens.music.gradient, 1, "files from before the setting get the default effect");
     }
 
     fn status_from(json: &str) -> StatusCfg {

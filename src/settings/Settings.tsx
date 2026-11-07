@@ -6,7 +6,6 @@ import { useSettings, useT } from "../i18n";
 import { checkForUpdate, installUpdate, useAppVersion, useUpdateStatus, type UpdateStatus } from "../updates";
 import { Button, Group, Row, Select, Toggle } from "../ui/controls";
 import WindowControls from "../ui/WindowControls";
-import Appearance from "./Appearance";
 import IslandSettings from "./IslandSettings";
 import WhatsNewDialog from "./WhatsNewDialog";
 import "./Settings.css";
@@ -37,7 +36,7 @@ function statusLine(t: (key: string) => string, status: UpdateStatus): string {
 // Every setting says which category it belongs to; the left menu and the pages are built from that list. A new
 // setting only needs an entry in ITEMS, and a category with no settings does not show up in the menu.
 // ---------------------------------------------------------------------------------------------
-type Category = "general" | "island" | "dock" | "appearance" | "updates" | "about";
+type Category = "general" | "island" | "dock" | "updates" | "about";
 
 const stroke = (d: string) => <path d={d} fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />;
 
@@ -63,7 +62,6 @@ const CATEGORIES: { id: Category; icon: ReactNode }[] = [
       </>
     ),
   },
-  { id: "appearance", icon: stroke("M12 3c3.5 4 6 6.5 6 10a6 6 0 0 1-12 0c0-3.5 2.5-6 6-10Z") },
   { id: "updates", icon: stroke("M20 7v5h-5M4 17v-5h5M6.3 9A7 7 0 0 1 18 7.5M17.7 15A7 7 0 0 1 6 16.5") },
   {
     id: "about",
@@ -147,7 +145,6 @@ const ITEMS: Item[] = [
       </Group>
     ),
   },
-  { id: "appearance", category: "appearance", render: () => <Appearance /> },
   {
     id: "updates",
     category: "updates",

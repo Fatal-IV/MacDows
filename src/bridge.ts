@@ -20,6 +20,8 @@ export interface Dock {
 }
 
 export type FullscreenMode = "edge" | "hidden";
+/** How the island sits on the screen: stuck to the top edge, or a pill floating a little below it. */
+export type IslandStyle = "notch" | "dynamic";
 export type ClickMode = "smart" | "quick" | "player";
 export type ScreenId = "status" | "music" | "tools" | "quick" | "notifications" | "shelf";
 export const SCREEN_IDS: ScreenId[] = ["status", "music", "tools", "quick", "notifications", "shelf"];
@@ -47,6 +49,8 @@ export interface MusicCfg {
   artwork: boolean;
   /** Buttons to switch between programs that play media (shown from two programs). */
   sources: boolean;
+  /** The moving gradient behind the player and the small island: 0 off, 1 to 8 one of the effects. */
+  gradient: number;
 }
 export interface ToolsCfg {
   enabled: boolean;
@@ -109,13 +113,14 @@ export interface Nav {
   click: ClickMode;
   middle: boolean;
   remember: boolean;
-  /** While media exists, hovering the island opens the player by itself. */
+  /** While media plays, hovering the island opens the player by itself (paused media: the widgets show instead). */
   hover_player: boolean;
 }
 /** The Dynamic Island: its screens, what each offers, how it is navigated. */
 export interface Island {
   visibility: Visibility;
   fullscreen: FullscreenMode;
+  style: IslandStyle;
   nav: Nav;
   screens: Screens;
 }

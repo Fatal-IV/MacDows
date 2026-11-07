@@ -5,6 +5,7 @@ import { useStored } from "./useStored";
 
 const MODES = ["auto", "light", "dark", "adaptive"] as const;
 const ACCENTS = ["mono", "system"] as const;
+const LIGHT_CONTRASTS = ["none", "outline", "gray"] as const;
 
 export default function Appearance() {
   const t = useT();
@@ -13,6 +14,8 @@ export default function Appearance() {
   const [accent, setAccent] = useStored("nectar-theme-accent", "mono");
   const [opacity, setOpacity] = useStored("nectar-theme-opacity", "0.8");
   const [startTint, setStartTint] = useStored("macdows-start-tint", "true");
+  // How the island stands out on a light theme (white windows behind a dark island).
+  const [lightVariant, setLightVariant] = useStored("macdows-light-variant", "none");
 
   return (
     <>
@@ -40,6 +43,11 @@ export default function Appearance() {
         <Row title={t("appearance.opacity")}>
           <Slider label={t("appearance.opacity")} value={parseFloat(opacity)} min={0.3} max={1} step={0.01} onChange={(v) => setOpacity(String(v))} />
           <span className="ui-value">{Math.round(parseFloat(opacity) * 100)}%</span>
+        </Row>
+      </Group>
+      <Group>
+        <Row title={t("appearance.lightContrast")} description={t("appearance.lightContrastHelp")}>
+          <Select label={t("appearance.lightContrast")} value={lightVariant} onChange={setLightVariant} options={LIGHT_CONTRASTS.map((c) => ({ value: c, label: t(`appearance.lightContrast.${c}`) }))} />
         </Row>
       </Group>
       <Group>

@@ -229,3 +229,8 @@
 .light-mode .notch-ambient-glow::after {
     background: radial-gradient(ellipse at center, transparent 25%, rgba(255, 255, 255, 0.3) 55%, var(--notch-bg, var(--nectar-bg)) 88%);
 }
+
+/* Light theme contrast: how the island stands out against a white window, chosen in Settings > Appearance > Theme. */
+:root.light-mode.light-v-outline { --surface-outline: rgba(0, 0, 0, 0.34); }
+:root.light-mode.light-v-outline .nectar { filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.32)); }
+:root.light-mode.light-v-gray .nectar { --notch-bg: rgba(214, 214, 220, 0.98); }

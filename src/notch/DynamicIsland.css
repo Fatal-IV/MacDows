@@ -35,6 +35,8 @@ img { -webkit-user-drag: none; user-select: none; }
   transition: background 0.3s ease;
 }
 
+/* Dynamic Island type: floats below the top edge, so it gets a soft shadow. */
+.nectar.floating { box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35); }
 .nectar.expanded { --notch-bg: var(--nectar-bg-expanded, rgba(0, 0, 0, 0.92)); }
 
 /* Concave top corners: the "bridge" that joins the notch to the screen edge */
@@ -84,7 +86,7 @@ img { -webkit-user-drag: none; user-select: none; }
 .side.right { justify-content: flex-end; }
 /* Playing music: the cover and the song name are on the left, the clock in the middle, the robot on the right. */
 .music-title { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 12px; font-weight: 500; opacity: 0.9; }
-.side.right.music { gap: 4px; }
+.side.right.music { gap: 4px; justify-content: space-between; }
 .side.right.music .eyes { margin-right: 4px; }
 
 .time-flip {
@@ -354,9 +356,10 @@ img { -webkit-user-drag: none; user-select: none; }
 
 /* Media panel gradient from the artwork's own color */
 /* The color of the cover flows across the player from left to right: framer-motion moves the position of the pattern (the sweep is in DynamicIsland.tsx). */
-.music-gradient {
-  position: absolute; inset: 0; z-index: 0; pointer-events: none; border-radius: 0 0 18px 18px;
-}
+/* The clip keeps every layer (also the turned diagonal one) inside the island; it is there on the small island too. */
+.music-gradient-clip { position: absolute; inset: 0; z-index: 0; pointer-events: none; border-radius: 0 0 18px 18px; overflow: hidden; }
+.music-gradient-clip.small .music-gradient { opacity: 0.85; }
+.music-gradient { position: absolute; inset: 0; }
 /* 0: left to right. A pattern twice as wide as the panel that starts and ends on the same color, so it repeats without a seam. */
 .music-gradient.fx0 {
   background: linear-gradient(90deg, rgba(var(--art), 0.8) 0%, rgba(var(--art2), 0.6) 25%, rgba(var(--art), 0.12) 50%, rgba(var(--art2), 0.55) 75%, rgba(var(--art), 0.8) 100%);
@@ -379,6 +382,15 @@ img { -webkit-user-drag: none; user-select: none; }
   background: radial-gradient(ellipse at center, rgba(var(--art2), 0.85) 0%, rgba(var(--art), 0.5) 40%, rgba(var(--art), 0) 72%);
   background-position: center; background-repeat: no-repeat;
 }
+/* 6 and 7: diagonals. A square layer turned by 45 degrees (big enough to cover the island) with the 1-D pattern, 50% wide so the
+   period is about the island's width; sliding it along its own axis moves the colors along the diagonal, with no seam. */
+.music-gradient.diag {
+  inset: auto; left: 50%; top: 50%; width: 220%; aspect-ratio: 1;
+  background: linear-gradient(90deg, rgba(var(--art), 0.8) 0%, rgba(var(--art2), 0.6) 25%, rgba(var(--art), 0.12) 50%, rgba(var(--art2), 0.55) 75%, rgba(var(--art), 0.8) 100%);
+  background-size: 50% 100%; background-repeat: repeat-x;
+}
+.music-gradient.diag1 { transform: translate(-50%, -50%) rotate(45deg); }
+.music-gradient.diag2 { transform: translate(-50%, -50%) rotate(-45deg); }
 
 /* Arrow in the panel's top-right corner */
 .corner-arrow {

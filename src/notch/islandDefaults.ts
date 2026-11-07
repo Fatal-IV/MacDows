@@ -7,12 +7,13 @@ export const DEFAULT_ORDER: ScreenId[] = ["status", "music", "tools", "quick", "
 /** The island settings as they are when nothing was changed. Mirrors `Island::default()` in `island_settings.rs`. */
 export function defaultIsland(): Island {
   return {
+    style: "notch",
     visibility: "fixed",
     fullscreen: "edge",
     nav: { wheel: true, order: [...DEFAULT_ORDER], click: "smart", middle: true, remember: false, hover_player: true },
     screens: {
       status: { enabled: true, clock_12h: false, widgets: { left: ["weather"], right: ["battery"] }, weather_city: "", weather_lat: 0, weather_lon: 0, temp_unit: "celsius", low_battery: 20 },
-      music: { enabled: true, visualizer: true, album_glow: true, progress: true, auto_open: true, artwork: true, sources: true },
+      music: { enabled: true, visualizer: true, album_glow: true, progress: true, auto_open: true, artwork: true, sources: true, gradient: 1 },
       tools: { enabled: true, calendar: true, week_starts_monday: true, timer: true, timer_sound: true, timer_progress: true, stopwatch: true },
       quick: { enabled: true, wifi: true, bluetooth: true, dnd: true, battery_saver: true, airplane: true, hotspot: true, accessibility: true, brightness: true, volume: true, lock: true, macdows_settings: true, windows_settings: true, wifi_page: true, vpn: true, bluetooth_pairing: true },
       notifications: { enabled: true, banner: true, banner_seconds: 5, save_history: true, history_max: 100, muted_apps: [] },

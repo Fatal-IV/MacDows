@@ -361,6 +361,13 @@ export async function applyTheme(
 }
 
 // `backdrop`: this window draws the notch or dock, which show the wallpaper in the glass styles.
+// Light theme contrast (Settings > Appearance > Theme): which way the island stands out against a white window.
+const LIGHT_VARIANTS = ['outline', 'gray'];
+function applyLightVariant() {
+  const v = localStorage.getItem('macdows-light-variant') || 'none';
+  for (const name of LIGHT_VARIANTS) document.documentElement.classList.toggle(`light-v-${name}`, v === name);
+}
+
 export function initTheme(options: { backdrop?: boolean; syncSystem?: boolean } = {}) {
   if (options.backdrop) enableBackdrop();
   if (options.syncSystem) syncSystemTheme = true;
@@ -402,6 +409,7 @@ export function initTheme(options: { backdrop?: boolean; syncSystem?: boolean } 
 
   // The settings window writes localStorage; every other window of the app gets a `storage` event.
   const onStorage = (e: StorageEvent) => {
+    if (e.key === 'macdows-light-variant') applyLightVariant();
     if (e.key && nectarThemeKeys.includes(e.key)) applyThemeFromStorage();
   };
   window.addEventListener('storage', onStorage);

@@ -42,6 +42,12 @@ export function restingStop(island: Island, hasMedia: boolean, playing: boolean)
   return hasMedia && playing && screenOn(island, "music") ? "music" : "status";
 }
 
+/** Whether resting the pointer on the island opens the player by itself: only while media plays. With paused media the island
+ *  widens sideways and shows its widgets instead (a click still opens the player). */
+export function hoverOpensPlayer(island: Island, hasMedia: boolean, playing: boolean): boolean {
+  return island.nav.hover_player && screenOn(island, "music") && hasMedia && playing;
+}
+
 /** The last screen that is on cannot be switched off; anything else can. */
 export function canDisable(island: Island, id: ScreenId): boolean {
   if (!screenOn(island, id)) return true;

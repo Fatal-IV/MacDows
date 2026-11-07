@@ -3,12 +3,12 @@
 // mouse wheel or a click on the clock, auto-switching to music when playback starts, and the
 // concave "bridge" corners that join the notch to the screen edge.
 import { useEffect, useMemo, useRef, useState } from "react";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { getVersion } from "@tauri-apps/api/app";
 import { listen } from "@tauri-apps/api/event";
 import { getMedia, getMediaSources, selectMediaSource, mediaNext, mediaPrev, mediaSeek, mediaToggle, onMediaChanged, islandFocus, onNotificationNew, isFirstRun, addToShelf, clearShelf, getShelf, removeFromShelf, type MediaInfo, type MediaSource, type Notice, type ShelfItem } from "../bridge";
 import { useSettings, useT } from "../i18n";
-import { buildStops, clickTarget, GREETED_KEY, GREETING_MS, GREET_EVERY_START, nextWaveDelay, restingStop, screenOn, shouldGreet, type Stop } from "./islandLogic";
+import { buildStops, clickTarget, GREETED_KEY, GREETING_MS, GREET_EVERY_START, hoverOpensPlayer, nextWaveDelay, restingStop, screenOn, shouldGreet, type Stop } from "./islandLogic";
 import { defaultIsland } from "./islandDefaults";
 import { useUpdateStatus } from "../updates";
 import { useSystemStatus } from "../system";
@@ -33,6 +33,9 @@ import "./DynamicIsland.css";
 type Mode = "status" | "music";
 
 // One critically damped spring for width, height and corners so the shape settles together.
+/** Dynamic Island type: how far the pill floats below the top edge of the screen (px, before the UI scale). */
+const FLOAT_GAP = 8;
+
 const SHELL_SPRING = { type: "spring", stiffness: 400, damping: 40 } as const;
 const WHEEL_STEP = 60;
 const WHEEL_IDLE_MS = 180;
@@ -43,16 +46,30 @@ const MARQUEE_SPEED = 30; // px/s
 const MARQUEE_MIN_SECONDS = 5;
 
 /** The strongest color of the artwork (saturated pixels count more), for the soft gradient behind the player. */
-/** The moving gradients of the player (the look of each is in DynamicIsland.css as `.music-gradient.fx0` .. `fx3`); a track keeps the one its title picks. */
+/**
+ * The moving gradients behind the player and the small island (`look` is the pattern in DynamicIsland.css, `from`/`to`/`move` is how
+ * framer-motion slides it, `still` is the resting picture for people who asked for less motion). The effect is the one picked in Settings (1 to 8 there; 0 is off).
+ * Directional ones slide a seamless 1-D pattern by exactly one period; the diagonals slide the same pattern on a larger turned layer,
+ * because a tiled 135 degree gradient would show a seam. Moving the pattern by p% of (box - image) is one period when
+ * p = size / (1 - size): -200% / +200% for the 200% patterns, +100% for the 50% pattern of the diagonals.
+ */
 const GRADIENT_FX = [
-  // 0: the colors flow from left to right
-  { from: { backgroundPosition: "0% 0%" }, to: { backgroundPosition: "-200% 0%" }, move: { duration: 6, ease: "linear", repeat: Infinity } },
-  // 1: the colors flow from top to bottom
-  { from: { backgroundPosition: "0% 0%" }, to: { backgroundPosition: "0% -200%" }, move: { duration: 7, ease: "linear", repeat: Infinity } },
-  // 2: two soft spots of color drift around like an aurora
-  { from: { backgroundPosition: "0% 0%" }, to: { backgroundPosition: "100% 100%" }, move: { duration: 7, ease: "easeInOut", repeat: Infinity, repeatType: "reverse" as const } },
-  // 3: a light that breathes from the middle
-  { from: { backgroundSize: "90% 90%" }, to: { backgroundSize: "240% 240%" }, move: { duration: 4, ease: "easeInOut", repeat: Infinity, repeatType: "reverse" as const } },
+  // 1: left to right
+  { look: "fx0", from: { backgroundPosition: "0% 0%" }, to: { backgroundPosition: "-200% 0%" }, still: { backgroundPosition: "0% 0%" }, move: { duration: 6, ease: "linear", repeat: Infinity } },
+  // 2: right to left
+  { look: "fx0", from: { backgroundPosition: "0% 0%" }, to: { backgroundPosition: "200% 0%" }, still: { backgroundPosition: "0% 0%" }, move: { duration: 6, ease: "linear", repeat: Infinity } },
+  // 3: top to bottom
+  { look: "fx1", from: { backgroundPosition: "0% 0%" }, to: { backgroundPosition: "0% -200%" }, still: { backgroundPosition: "0% 0%" }, move: { duration: 7, ease: "linear", repeat: Infinity } },
+  // 4: bottom to top
+  { look: "fx1", from: { backgroundPosition: "0% 0%" }, to: { backgroundPosition: "0% 200%" }, still: { backgroundPosition: "0% 0%" }, move: { duration: 7, ease: "linear", repeat: Infinity } },
+  // 5: diagonal, top left to bottom right
+  { look: "diag diag1", from: { backgroundPosition: "0% 0%" }, to: { backgroundPosition: "100% 0%" }, still: { backgroundPosition: "0% 0%" }, move: { duration: 5, ease: "linear", repeat: Infinity } },
+  // 6: diagonal, bottom left to top right
+  { look: "diag diag2", from: { backgroundPosition: "0% 0%" }, to: { backgroundPosition: "100% 0%" }, still: { backgroundPosition: "0% 0%" }, move: { duration: 5, ease: "linear", repeat: Infinity } },
+  // 7: aurora: two soft spots of color drift around
+  { look: "fx2", from: { backgroundPosition: "0% 0%" }, to: { backgroundPosition: "100% 100%" }, still: { backgroundPosition: "50% 50%" }, move: { duration: 7, ease: "easeInOut", repeat: Infinity, repeatType: "reverse" as const } },
+  // 8: a light that breathes from the middle
+  { look: "fx3", from: { backgroundSize: "90% 90%" }, to: { backgroundSize: "240% 240%" }, still: { backgroundSize: "150% 150%" }, move: { duration: 4, ease: "easeInOut", repeat: Infinity, repeatType: "reverse" as const } },
 ] as const;
 
 /** Used while a source gives no cover (a video, a Short): a soft blue and violet. */
@@ -446,7 +463,10 @@ export default function Notch() {
   const playing = media?.playing ?? false;
   const art = useMemo(() => artUrl(media), [media]);
   const artPalette = useArtPalette(art);
-  const gradientFx = [...`${media?.title ?? ""}${media?.artist ?? ""}`].reduce((h, ch) => (h * 31 + ch.charCodeAt(0)) >>> 0, 7) % GRADIENT_FX.length;
+  // 0 in Settings is off; 1 to 8 are the effects in `GRADIENT_FX`.
+  const gradientFx = Math.min(GRADIENT_FX.length, Math.max(0, island.screens.music.gradient)) - 1;
+  // The moving gradient follows the "reduce motion" choice of Windows (the page media query is not enough: framer-motion moves it from JS).
+  const reduceMotion = useReducedMotion();
 
   // Manual choice sticks: the auto-return to status only applies to music that opened itself.
   const manualMusic = useRef(false);
@@ -619,8 +639,8 @@ export default function Notch() {
     setHovered(true);
     const back = lastStop.current;
     if (island.nav.remember && back && stops().includes(back)) goTo(back);
-    // With media around, hovering opens the player by itself (the click is for the other screens).
-    else if (island.nav.hover_player && musicOn && hasMedia) goTo("player");
+    // While media plays, hovering opens the player by itself (the click is for the other screens); paused media leaves the widgets.
+    else if (hoverOpensPlayer(island, hasMedia, playing)) goTo("player");
     else setMode(restingMode());
   };
   const onHoverEnd = () => {
@@ -697,27 +717,34 @@ export default function Notch() {
   const widgetsW = showWidgets ? widgetsWidth(placed) : 0;
   screenBusyRef.current = open || tools || quick || shelfOpen || historyOpen || dropping || bannerOpen;
   const linkOpen = link !== null && (link.forced === true || !screenBusyRef.current);
+  // The moving gradient belongs to the media widget only (the small island and the player), never to the other panels, a banner or a link.
+  const gradientShown = isMusic && !tools && !quick && !shelfOpen && !historyOpen && !dropping && !bannerOpen && !linkOpen;
   forcedLinkRef.current = linkOpen && link?.forced === true;
   eyesShowingRef.current = ready && !hovered && !tools && !quick && !shelfOpen && !historyOpen && !dropping && !bannerOpen && !linkOpen;
 
+  // Dynamic Island type: a pill that floats FLOAT_GAP below the top edge, all corners round, without the flares that join the notch to the edge.
+  const floating = island.style === "dynamic";
+  const gap = floating ? FLOAT_GAP : 0;
+  const flush = impacted && !floating;
   const width = !ready ? 34 : linkOpen ? 280 : tools || quick || shelfOpen || historyOpen ? 520 : dropping ? 380 : bannerOpen ? 380 : musicOpen ? 340 : isMusic ? (hovered ? 276 : 260) : hovered ? 170 + widgetsW : hasMedia ? 150 : 140;
   const height = !ready ? 34 : linkOpen ? 46 : tools ? 280 : quick ? 312 : shelfOpen || historyOpen ? 312 : dropping ? 110 : bannerOpen ? 76 : musicOpen ? (media!.duration_ms > 0 ? 126 : 108) + (showSources ? 36 : 0) : 36;
 
   // Only the island's own shape takes clicks; the rest of its (much larger) transparent window belongs to the programs below.
-  useHitRegion("notch", islandBox(window.innerWidth, width * scale, height * scale, 12), 12);
+  // (The gap above a floating island counts as part of its shape, so the pointer at the very top still reaches it.)
+  useHitRegion("notch", islandBox(window.innerWidth, width * scale, (height + gap) * scale, 12), 12);
 
   return (
     <div className="screen" style={{ zoom: scale }}>
       <motion.div
-        className={`nectar${hovered ? " expanded" : ""}${impacted ? " is-impacted" : ""}`}
+        className={`nectar${hovered ? " expanded" : ""}${flush ? " is-impacted" : ""}${floating ? " floating" : ""}`}
         initial={{ y: -48, width: 34, height: 34, opacity: 0, borderBottomLeftRadius: 18, borderBottomRightRadius: 18 }}
         animate={{
-          y: ready ? 0 : -48,
+          y: ready ? gap : -48,
           width,
           height,
           opacity: ready ? 1 : 0,
-          borderTopLeftRadius: impacted ? 0 : 18,
-          borderTopRightRadius: impacted ? 0 : 18,
+          borderTopLeftRadius: flush ? 0 : 18,
+          borderTopRightRadius: flush ? 0 : 18,
           borderBottomLeftRadius: 18,
           borderBottomRightRadius: 18,
         }}
@@ -742,7 +769,7 @@ export default function Notch() {
           toggleTools();
         }}
       >
-        <SurfaceShape edge="top" flare={impacted ? 13 : 0} radius={18} edgeRadius={18} />
+        <SurfaceShape edge="top" flare={flush ? 13 : 0} radius={18} edgeRadius={18} />
         {update.kind === "available" && <span className="update-dot" />}
 
         <AnimatePresence>
@@ -756,17 +783,18 @@ export default function Notch() {
         </AnimatePresence>
 
         <AnimatePresence>
-          {musicOpen && (
-            <motion.div
-              key={gradientFx}
-              className={`music-gradient fx${gradientFx}`}
-              // No cover (a video, a Short): a soft blue and violet instead, so the player still has its moving gradient.
-              style={{ "--art": (artPalette ?? FALLBACK_PALETTE)[0], "--art2": (artPalette ?? FALLBACK_PALETTE)[1] } as React.CSSProperties}
-              initial={{ opacity: 0, ...GRADIENT_FX[gradientFx].from }}
-              animate={{ opacity: 1, ...GRADIENT_FX[gradientFx].to }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.3, backgroundPosition: GRADIENT_FX[gradientFx].move, backgroundSize: GRADIENT_FX[gradientFx].move }}
-            />
+          {gradientShown && gradientFx >= 0 && (
+            <motion.div className={`music-gradient-clip${musicOpen ? "" : " small"}`} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.3 }}>
+              <motion.div
+                key={gradientFx}
+                className={`music-gradient ${GRADIENT_FX[gradientFx].look}`}
+                // No cover (a video, a Short): a soft blue and violet instead, so the player still has its moving gradient.
+                style={{ "--art": (artPalette ?? FALLBACK_PALETTE)[0], "--art2": (artPalette ?? FALLBACK_PALETTE)[1] } as React.CSSProperties}
+                initial={GRADIENT_FX[gradientFx].from}
+                animate={reduceMotion ? GRADIENT_FX[gradientFx].still : GRADIENT_FX[gradientFx].to}
+                transition={reduceMotion ? { duration: 0 } : { backgroundPosition: GRADIENT_FX[gradientFx].move, backgroundSize: GRADIENT_FX[gradientFx].move }}
+              />
+            </motion.div>
           )}
         </AnimatePresence>
 
@@ -970,6 +998,7 @@ export default function Notch() {
               <div className={`side right${isMusic ? " music" : ""}`}>
                 {isMusic ? (
                   <>
+                    {island.screens.music.visualizer && <Visualizer playing={playing} bars={4} height={16} />}
                     {!showWidgets && <Eyes waving={greeting} shot={shot} music still={!playing} />}
                   </>
                 ) : (

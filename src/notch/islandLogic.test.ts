@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { buildStops, canDisable, clickTarget, mutedApp, restingStop, screenOn, shouldGreet, nextWaveDelay, GREET_EVERY_START } from "./islandLogic.ts";
+import { buildStops, canDisable, clickTarget, hoverOpensPlayer, mutedApp, restingStop, screenOn, shouldGreet, nextWaveDelay, GREET_EVERY_START } from "./islandLogic.ts";
 import { defaultIsland } from "./islandDefaults.ts";
 import type { Island, ScreenId } from "../bridge";
 
@@ -74,6 +74,18 @@ test("the resting pill is music only while media plays and the music screen is o
   const i = defaultIsland();
   i.screens.music.enabled = false;
   assert.equal(restingStop(i, true, true), "status");
+});
+
+test("hovering opens the player only while media plays", () => {
+  assert.equal(hoverOpensPlayer(defaultIsland(), true, true), true);
+  assert.equal(hoverOpensPlayer(defaultIsland(), true, false), false, "paused: the widgets show instead");
+  assert.equal(hoverOpensPlayer(defaultIsland(), false, false), false);
+  const off = defaultIsland();
+  off.nav.hover_player = false;
+  assert.equal(hoverOpensPlayer(off, true, true), false);
+  const noMusic = defaultIsland();
+  noMusic.screens.music.enabled = false;
+  assert.equal(hoverOpensPlayer(noMusic, true, true), false);
 });
 
 test("the last enabled screen cannot be switched off", () => {

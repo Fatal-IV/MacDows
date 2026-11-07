@@ -5,6 +5,8 @@ import { DEFAULT_ORDER } from "../notch/islandDefaults";
 import { canDisable } from "../notch/islandLogic";
 import { Button, Group, Row, Select, Slider, Toggle } from "../ui/controls";
 import { useSystemStatus } from "../system";
+import Appearance from "./Appearance";
+import { IslandStylePicker } from "./IslandStylePicker";
 import { StatusWidgetsEditor } from "./StatusWidgetsEditor";
 import { useStored } from "./useStored";
 
@@ -146,6 +148,7 @@ export default function IslandSettings({ s, t }: { s: AppSettings; t: T }) {
 
   const resetLayout = () => {
     updateIsland(s, (i) => {
+      i.style = "notch";
       i.visibility = "fixed";
       i.fullscreen = "edge";
     });
@@ -160,6 +163,7 @@ export default function IslandSettings({ s, t }: { s: AppSettings; t: T }) {
     <>
       <h2 className="section-title">{t("island.sectionLayout")}</h2>
       <Group>
+        <IslandStylePicker value={s.island.style} onChange={(v) => updateIsland(s, (i) => (i.style = v))} t={t} />
         <Row title={t("settings.notch")} description={t("settings.visibilityHelp")}>
           <Select label={t("settings.notch")} value={s.island.visibility} onChange={(v) => updateIsland(s, (i) => (i.visibility = v as Visibility))} options={VISIBILITIES.map((v) => ({ value: v, label: t(`vis.${v}`) }))} />
         </Row>
@@ -174,6 +178,9 @@ export default function IslandSettings({ s, t }: { s: AppSettings; t: T }) {
           <Button onClick={resetLayout}>{t("island.reset")}</Button>
         </div>
       </Group>
+
+      <h2 className="section-title">{t("island.sectionTheme")}</h2>
+      <Appearance />
 
       <h2 className="section-title">{t("island.sectionScreens")}</h2>
       {SCREEN_IDS.map((id) => (
@@ -204,9 +211,19 @@ export default function IslandSettings({ s, t }: { s: AppSettings; t: T }) {
             />
           )}
           {id === "music" && (
-            <Row title={t("island.music.sources")} description={t("island.music.sourcesHelp")}>
-              <Toggle label={t("island.music.sources")} checked={s.island.screens.music.sources} onChange={(v) => updateIsland(s, (i) => (i.screens.music.sources = v))} />
-            </Row>
+            <>
+              <Row title={t("island.music.sources")} description={t("island.music.sourcesHelp")}>
+                <Toggle label={t("island.music.sources")} checked={s.island.screens.music.sources} onChange={(v) => updateIsland(s, (i) => (i.screens.music.sources = v))} />
+              </Row>
+              <Row title={t("island.music.gradient")} description={t("island.music.gradientHelp")}>
+                <Select
+                  label={t("island.music.gradient")}
+                  value={String(s.island.screens.music.gradient)}
+                  onChange={(v) => updateIsland(s, (i) => (i.screens.music.gradient = Number(v)))}
+                  options={Array.from({ length: 9 }, (_, n) => ({ value: String(n), label: t(`island.music.gradient.${n}`) }))}
+                />
+              </Row>
+            </>
           )}
         </ScreenSection>
       ))}
