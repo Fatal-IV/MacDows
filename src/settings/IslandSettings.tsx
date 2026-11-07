@@ -7,6 +7,7 @@ import { Button, Group, Row, Select, Slider, Toggle } from "../ui/controls";
 import { useSystemStatus } from "../system";
 import Appearance from "./Appearance";
 import { IslandStylePicker } from "./IslandStylePicker";
+import { MonitorsSection } from "./MonitorsSection";
 import { VisibilityPicker } from "./VisibilityPicker";
 import { StatusWidgetsEditor } from "./StatusWidgetsEditor";
 import { useStored } from "./useStored";
@@ -176,6 +177,8 @@ export default function IslandSettings({ s, t }: { s: AppSettings; t: T }) {
           <Button onClick={resetLayout}>{t("island.reset")}</Button>
         </div>
       </Group>
+
+      <MonitorsSection s={s} t={t} />
 
       <h2 className="section-title">{t("island.sectionTheme")}</h2>
       <Appearance />

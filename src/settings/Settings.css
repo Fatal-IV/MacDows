@@ -208,3 +208,10 @@ html, body, #root { margin: 0; height: 100%; background: transparent; }
   .monitor-window, .monitor-island, .monitor-cursor, .monitor-screen::before { animation: none !important; }
   .island-style-tile, .island-style-tile:hover { transform: none; }
 }
+
+/* Monitors section: one card per monitor. */
+.monitor-cards { display: flex; flex-wrap: wrap; gap: 12px; }
+.monitor-card { flex: 1 1 170px; max-width: 230px; display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 14px 12px 10px; border: 1px solid var(--s-border-strong); border-radius: 12px; background: var(--s-raised); color: var(--s-text); }
+.monitor-card.away { opacity: 0.6; }
+.monitor-flag { width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 10px; font-size: 13px; }
+.monitor-dock { position: absolute; left: 50%; bottom: 6%; width: 52%; height: 9%; transform: translateX(-50%); border-radius: 999px; background: rgba(255, 255, 255, 0.85); }

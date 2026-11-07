@@ -125,6 +125,22 @@ export interface Island {
   screens: Screens;
 }
 
+/** A monitor that is plugged in, with what the settings say about it (from the `get_monitors` command). */
+export interface MonitorView {
+  key: string;
+  name: string;
+  width: number;
+  height: number;
+  x: number;
+  y: number;
+  primary: boolean;
+  island: boolean;
+  dock: boolean;
+}
+export const getMonitors = () => invoke<MonitorView[]>("get_monitors");
+/** The monitors or the bars on them changed (a monitor was plugged or unplugged, or its switches were changed). */
+export const onMonitorsChanged = (cb: () => void): Promise<UnlistenFn> => listen("monitors-changed", () => cb());
+
 /** What the user chose for one monitor: whether it has an island and a dock (`name` is the last display name seen). */
 export interface MonitorCfg {
   key: string;
@@ -134,6 +150,8 @@ export interface MonitorCfg {
 }
 
 export interface Settings {
+  /** Which monitors have an island and a dock (empty: only the primary monitor has both). */
+  monitors: MonitorCfg[];
   language: string;
   dock_visibility: Visibility;
   check_updates: boolean;
