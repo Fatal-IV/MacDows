@@ -29,7 +29,7 @@ pub fn clamp_to_window(x: i32, y: i32, w: i32, h: i32, win_w: i32, win_h: i32) -
 }
 
 fn is_bar(label: &str) -> bool {
-    matches!(label, "notch" | "dock")
+    crate::bar::is_bar(label)
 }
 
 /// The visible shape of a bar in screen coordinates, when the front end has reported one.
@@ -103,14 +103,16 @@ pub fn ignore_update(visible: bool, current: Option<bool>, want: bool) -> Option
 /// Watches the pointer and lets each bar's window ignore the mouse while the pointer is outside its drawn shape.
 pub fn start(app: AppHandle) {
     std::thread::spawn(move || {
-        let mut ignoring: HashMap<&'static str, bool> = HashMap::new();
+        let mut ignoring: HashMap<String, bool> = HashMap::new();
         loop {
             std::thread::sleep(std::time::Duration::from_millis(16));
             let mut p = POINT::default();
             if unsafe { GetCursorPos(&mut p) }.is_err() {
                 continue;
             }
-            for label in ["notch", "dock"] {
+            let labels = crate::bar::bar_labels(&app);
+            ignoring.retain(|l, _| labels.contains(l));
+            for label in labels.iter().map(String::as_str) {
                 let want = match screen_rect(label) {
                     Some(r) => !point_in(r, p.x, p.y, 2),
                     None => false,
@@ -123,7 +125,7 @@ pub fn start(app: AppHandle) {
                 }
                 if let Some(flag) = ignore_update(visible, ignoring.get(label).copied(), want) {
                     if win.set_ignore_cursor_events(flag).is_ok() {
-                        ignoring.insert(label, flag);
+                        ignoring.insert(label.to_string(), flag);
                     }
                 }
             }
@@ -176,6 +178,7 @@ mod tests {
     #[test]
     fn only_the_two_bars_can_be_shaped() {
         assert!(is_bar("notch") && is_bar("dock"));
+        assert!(is_bar("notch-2") && is_bar("dock-3"), "the bars of another monitor");
         assert!(!is_bar("settings") && !is_bar("tray") && !is_bar("preview"));
     }
 

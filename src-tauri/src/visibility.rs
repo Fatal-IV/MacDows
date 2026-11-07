@@ -1,7 +1,9 @@
+use crate::bar::{self, BarKind};
 use crate::fullscreen::{self, should_hide, Rect};
 use crate::island_settings::FullscreenMode;
 use crate::settings::Visibility;
 use crate::{windows_list, AppSettings};
+use std::collections::HashMap;
 use std::time::Duration;
 use tauri::{AppHandle, Manager};
 use windows::Win32::Foundation::{CloseHandle, HWND, POINT, RECT};
@@ -52,7 +54,7 @@ pub fn is_visible(i: Inputs) -> bool {
 /// The island stays out of fullscreen apps altogether when the user chose so (no edge reveal, no banner); the dock
 /// always keeps its edge reveal.
 pub fn hidden_in_fullscreen(label: &str, mode: FullscreenMode, fullscreen: Option<bool>) -> bool {
-    label == "notch" && mode == FullscreenMode::Hidden && fullscreen == Some(true)
+    bar::kind_of(label) == Some(BarKind::Notch) && mode == FullscreenMode::Hidden && fullscreen == Some(true)
 }
 
 /// The programs behind Windows's own Start, Search and quick settings.
@@ -127,7 +129,7 @@ fn cursor() -> Option<(i32, i32)> {
 /// The part of the screen another window must cover to count as "overlapping" the bar.
 fn overlap_probe(label: &str, w: Rect) -> Rect {
     let cx = (w.left + w.right) / 2;
-    if label == "notch" {
+    if bar::kind_of(label) == Some(BarKind::Notch) {
         Rect { left: cx - 85, top: w.top, right: cx + 85, bottom: w.top + 32 }
     } else {
         Rect { left: cx - 250, top: w.bottom - 80, right: cx + 250, bottom: w.bottom }
@@ -136,18 +138,19 @@ fn overlap_probe(label: &str, w: Rect) -> Rect {
 
 /// Thin band where the cursor reveals a hidden bar.
 fn reveal_band(label: &str, w: Rect) -> Rect {
-    if label == "notch" {
+    if bar::kind_of(label) == Some(BarKind::Notch) {
         Rect { left: w.left, top: w.top, right: w.right, bottom: w.top + 3 }
     } else {
         Rect { left: w.left, top: w.bottom - 4, right: w.right, bottom: w.bottom + 4 }
     }
 }
 
-/// Applies visibility modes to the `notch` and `dock` windows. Cursor and window geometry are
+/// Applies visibility modes to every bar window (`notch`, `dock`, and those of other monitors). Cursor and window geometry are
 /// sampled every 100 ms, and every 250 ms when both bars are Fixed.
 pub fn start(app: AppHandle) {
     std::thread::spawn(move || {
-        let mut shown: [Option<bool>; 2] = [None, None];
+        // What each bar window was last told (absent: not yet).
+        let mut shown: HashMap<String, bool> = HashMap::new();
         let started = std::time::Instant::now();
         loop {
             let s = app.state::<AppSettings>().0.lock().unwrap().clone();
@@ -162,30 +165,39 @@ pub fn start(app: AppHandle) {
             if shell_menu_open {
                 LAST_SHELL_MENU_MS.store(now_ms(), std::sync::atomic::Ordering::Relaxed);
             }
-            for (i, (label, vis)) in [("notch", s.island.visibility), ("dock", s.dock_visibility)].into_iter().enumerate() {
+            let labels = bar::bar_labels(&app);
+            shown.retain(|l, _| labels.contains(l));
+            for label in &labels {
+                let label = label.as_str();
+                let Some(kind) = bar::kind_of(label) else { continue };
+                let vis = match kind {
+                    BarKind::Notch => s.island.visibility,
+                    BarKind::Dock => s.dock_visibility,
+                };
+                let prev = shown.get(label).copied();
                 let Some(win) = app.get_webview_window(label) else { continue };
                 let Ok(hwnd) = win.hwnd() else { continue };
                 let hwnd = HWND(hwnd.0);
                 let Some(r) = rect_of(hwnd) else { continue };
                 // Shown: the bar's own visible shape when the front end has reported it, not its whole (mostly empty) window.
-                let zone = if shown[i].unwrap_or(true) { crate::hit_region::screen_rect(label).unwrap_or(r) } else { reveal_band(label, r) };
-                let near = cur.map(|(x, y)| point_in_rect(x, y, zone)).unwrap_or(false) || (label == "dock" && (shell_menu_open || crate::preview::is_open()));
+                let zone = if prev.unwrap_or(true) { crate::hit_region::screen_rect(label).unwrap_or(r) } else { reveal_band(label, r) };
+                let near = cur.map(|(x, y)| point_in_rect(x, y, zone)).unwrap_or(false) || (kind == BarKind::Dock && (shell_menu_open || crate::preview::is_open()));
                 let probe = overlap_probe(label, r);
                 let overlapped = others.iter().any(|o| rect_intersects(*o, probe));
                 // Show the bars for a few seconds after launch so the user sees the app started.
                 let grace = started.elapsed() < launch_grace(crate::settings::first_run()) && fs != Some(true);
-                let held = label == "notch"
+                let held = kind == BarKind::Notch
                     && notch_held(now_ms(), NOTCH_HOLD_UNTIL_MS.load(std::sync::atomic::Ordering::Relaxed), NOTCH_FOCUS_UNTIL_MS.load(std::sync::atomic::Ordering::Relaxed));
                 let want = !hidden_in_fullscreen(label, s.island.fullscreen, fs) && (grace || held || is_visible(Inputs { vis, fullscreen: fs, overlapped, cursor_near: near }));
                 // Also compares with what the window really is: something else (the window toolkit re-applying the window's
                 // state) can show a bar behind this loop's back, and a bar that stays up while it should be hidden
                 // swallows the clicks meant for the program underneath.
                 let actual = unsafe { IsWindowVisible(hwnd).as_bool() };
-                if shown[i] != Some(want) || actual != want {
+                if prev != Some(want) || actual != want {
                     unsafe {
                         let _ = ShowWindow(hwnd, if want { SW_SHOWNOACTIVATE } else { SW_HIDE });
                     }
-                    shown[i] = Some(want);
+                    shown.insert(label.to_string(), want);
                 }
             }
         }
@@ -250,6 +262,10 @@ mod tests {
         use FullscreenMode::{Edge, Hidden};
         assert!(hidden_in_fullscreen("notch", Hidden, Some(true)));
         assert!(!hidden_in_fullscreen("dock", Hidden, Some(true)), "the dock keeps its edge reveal");
+        assert!(hidden_in_fullscreen("notch-2", Hidden, Some(true)), "an island on another monitor too");
+        assert!(!hidden_in_fullscreen("dock-2", Hidden, Some(true)));
+        assert_eq!(overlap_probe("notch-2", Rect { left: 0, top: 0, right: 580, bottom: 340 }).bottom, 32, "the island probe, not the dock one");
+        assert_eq!(reveal_band("dock-2", Rect { left: 0, top: 0, right: 900, bottom: 120 }).top, 116, "the dock band, not the island one");
         assert!(!hidden_in_fullscreen("notch", Edge, Some(true)), "edge is how it always worked");
         assert!(!hidden_in_fullscreen("notch", Hidden, Some(false)), "only in fullscreen");
         assert!(!hidden_in_fullscreen("notch", Hidden, None), "unknown counts as not fullscreen");

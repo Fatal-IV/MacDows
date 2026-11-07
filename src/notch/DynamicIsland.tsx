@@ -731,7 +731,7 @@ export default function Notch() {
 
   // Only the island's own shape takes clicks; the rest of its (much larger) transparent window belongs to the programs below.
   // (The gap above a floating island counts as part of its shape, so the pointer at the very top still reaches it.)
-  useHitRegion("notch", islandBox(window.innerWidth, width * scale, (height + gap) * scale, 12), 12);
+  useHitRegion(islandBox(window.innerWidth, width * scale, (height + gap) * scale, 12), 12);
 
   return (
     <div className="screen" style={{ zoom: scale }}>

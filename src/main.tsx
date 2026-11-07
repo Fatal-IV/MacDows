@@ -1,6 +1,7 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
 import { getCurrentWindow } from "@tauri-apps/api/window";
+import { barKind } from "./bar";
 import Notch from "./notch/DynamicIsland";
 import Dock from "./dock/Dock";
 import Settings from "./settings/Settings";
@@ -18,7 +19,8 @@ const views: Record<string, () => React.ReactElement> = {
 };
 
 const label = getCurrentWindow().label;
-const View = views[label] ?? views.notch;
+const bar = barKind(label);
+const View = (bar ? views[bar] : views[label]) ?? views.notch;
 
 ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
   <React.StrictMode>
