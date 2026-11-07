@@ -162,30 +162,78 @@ fn device_id(adapter: &str) -> Option<String> {
     (!id.is_empty()).then_some(id)
 }
 
-/// The monitors that are plugged in, in the order Windows reports them.
-pub fn list(app: &AppHandle) -> Vec<MonitorInfo> {
-    let primary = app.primary_monitor().ok().flatten().map(|m| *m.position());
-    let Ok(monitors) = app.available_monitors() else { return Vec::new() };
-    monitors
-        .iter()
-        .enumerate()
-        .map(|(i, m)| {
-            let name = m.name().cloned().unwrap_or_default();
-            let mut key = monitor_key(device_id(&name).as_deref(), &name);
-            if key.is_empty() {
-                key = format!("monitor-{i}");
+#[link(name = "user32")]
+unsafe extern "system" {
+    fn SetThreadDpiAwarenessContext(context: isize) -> isize;
+}
+
+/// While alive, the calling thread sees the screen in real pixels (per-monitor DPI awareness). Without it a thread that is not aware gets
+/// the monitors in virtual, scaled coordinates (the second monitor at 1920,0 with scale 1 instead of 2400,0 with scale 1.25), and the bars
+/// land in the wrong places.
+struct PerMonitorDpi(isize);
+
+impl PerMonitorDpi {
+    fn enter() -> Self {
+        const PER_MONITOR_AWARE_V2: isize = -4;
+        PerMonitorDpi(unsafe { SetThreadDpiAwarenessContext(PER_MONITOR_AWARE_V2) })
+    }
+}
+
+impl Drop for PerMonitorDpi {
+    fn drop(&mut self) {
+        if self.0 != 0 {
+            unsafe {
+                SetThreadDpiAwarenessContext(self.0);
             }
-            let (p, s, w) = (m.position(), m.size(), m.work_area());
-            MonitorInfo {
-                key,
-                name,
-                rect: Rect { left: p.x, top: p.y, right: p.x + s.width as i32, bottom: p.y + s.height as i32 },
-                work: Rect { left: w.position.x, top: w.position.y, right: w.position.x + w.size.width as i32, bottom: w.position.y + w.size.height as i32 },
-                scale: m.scale_factor(),
-                primary: primary == Some(*p),
-            }
-        })
-        .collect()
+        }
+    }
+}
+
+#[link(name = "shcore")]
+unsafe extern "system" {
+    fn GetDpiForMonitor(monitor: isize, kind: i32, dpi_x: *mut u32, dpi_y: *mut u32) -> i32;
+}
+
+/// The monitors that are plugged in, in the order Windows reports them, in real pixels. Asked from Windows itself (not from the window
+/// toolkit, which on this PC reported the second monitor in virtual coordinates: 1920,0 and scale 1 instead of 2400,0 and 1.25).
+pub fn list(_app: &AppHandle) -> Vec<MonitorInfo> {
+    use windows::core::BOOL;
+    use windows::Win32::Foundation::{LPARAM, RECT};
+    use windows::Win32::Graphics::Gdi::{EnumDisplayMonitors, GetMonitorInfoW, HDC, HMONITOR, MONITORINFO, MONITORINFOEXW};
+    let _dpi = PerMonitorDpi::enter();
+    unsafe extern "system" fn collect(monitor: HMONITOR, _: HDC, _: *mut RECT, lparam: LPARAM) -> BOOL {
+        (*(lparam.0 as *mut Vec<isize>)).push(monitor.0 as isize);
+        BOOL(1)
+    }
+    let mut handles: Vec<isize> = Vec::new();
+    unsafe {
+        let _ = EnumDisplayMonitors(None, None, Some(collect), LPARAM(&mut handles as *mut _ as isize));
+    }
+    let mut out = Vec::new();
+    for (i, h) in handles.into_iter().enumerate() {
+        let mut info = MONITORINFOEXW { monitorInfo: MONITORINFO { cbSize: std::mem::size_of::<MONITORINFOEXW>() as u32, ..Default::default() }, ..Default::default() };
+        if !unsafe { GetMonitorInfoW(HMONITOR(h as *mut _), &mut info as *mut MONITORINFOEXW as *mut MONITORINFO) }.as_bool() {
+            continue;
+        }
+        let end = info.szDevice.iter().position(|c| *c == 0).unwrap_or(info.szDevice.len());
+        let name = String::from_utf16_lossy(&info.szDevice[..end]);
+        let (mut dx, mut dy) = (96u32, 96u32);
+        let _ = unsafe { GetDpiForMonitor(h, 0, &mut dx, &mut dy) };
+        let mut key = monitor_key(device_id(&name).as_deref(), &name);
+        if key.is_empty() {
+            key = format!("monitor-{i}");
+        }
+        let (m, w) = (info.monitorInfo.rcMonitor, info.monitorInfo.rcWork);
+        out.push(MonitorInfo {
+            key,
+            name,
+            rect: Rect { left: m.left, top: m.top, right: m.right, bottom: m.bottom },
+            work: Rect { left: w.left, top: w.top, right: w.right, bottom: w.bottom },
+            scale: if dx == 0 { 1.0 } else { dx as f64 / 96.0 },
+            primary: info.monitorInfo.dwFlags & 1 != 0,
+        });
+    }
+    out
 }
 
 /// Whether the settings want this bar window on its monitor. A window that is not a bar, or whose monitor is not known yet, counts as wanted.
@@ -203,13 +251,26 @@ fn place_with(app: &AppHandle, monitors: &[MonitorInfo], label: &str) {
     let Some(win) = app.get_webview_window(label) else { return };
     let Some(monitor) = monitor_of(label).and_then(|key| monitors.iter().find(|m| m.key == key)) else { return };
     let before = win.outer_position().ok();
-    if number.is_some() {
+    let (width, height) = if number.is_some() {
+        // A window of another monitor: its size is worked out here, not read back (right after a move to a monitor with another scale
+        // Windows resizes it once more, and a read in between gives a size that is soon gone). The size is set, checked after a moment
+        // and set again when Windows changed it.
+        let (lw, lh) = logical_size(kind);
+        let (w, h) = ((lw * monitor.scale).round() as i32, (lh * monitor.scale).round() as i32);
         let _ = win.set_position(PhysicalPosition::new(monitor.rect.left, monitor.rect.top));
-        let (w, h) = logical_size(kind);
-        let _ = win.set_size(PhysicalSize::new((w * monitor.scale).round() as u32, (h * monitor.scale).round() as u32));
-    }
-    let Ok(size) = win.outer_size() else { return };
-    let (width, height) = (size.width as i32, size.height as i32);
+        for _ in 0..4 {
+            let _ = win.set_size(PhysicalSize::new(w as u32, h as u32));
+            std::thread::sleep(Duration::from_millis(60));
+            match win.outer_size() {
+                Ok(s) if s.width as i32 == w && s.height as i32 == h => break,
+                _ => {}
+            }
+        }
+        (w, h)
+    } else {
+        let Ok(size) = win.outer_size() else { return };
+        (size.width as i32, size.height as i32)
+    };
     let (x, y) = match kind {
         BarKind::Notch => (monitor.rect.left + (monitor.rect.right - monitor.rect.left - width) / 2, monitor.rect.top),
         BarKind::Dock => (monitor.work.left + (monitor.work.right - monitor.work.left - width) / 2, monitor.work.bottom - height),
@@ -296,6 +357,7 @@ fn destroy(app: &AppHandle, label: &str) {
 pub fn reconcile(app: &AppHandle) {
     let _guard = lock(&RECONCILE);
     let monitors = list(app);
+    log_monitors("reconcile", &monitors);
     let Some(primary) = monitors.iter().find(|m| m.primary).or(monitors.first()) else { return };
     let primary_key = primary.key.clone();
     let cfg = app.state::<AppSettings>().0.lock().unwrap().monitors.clone();
@@ -366,6 +428,18 @@ pub fn sync_secondary_taskbars(app: &AppHandle) {
     crate::taskbar::set_secondary(if replace { dock_rects(app) } else { Vec::new() });
 }
 
+/// One line per look at the monitors in `%APPDATA%\MacDows\logs\monitors.log` (what the app saw), for finding out why a bar landed where it did.
+fn log_monitors(what: &str, monitors: &[MonitorInfo]) {
+    use std::io::Write;
+    let dir = std::env::var_os("APPDATA").map(std::path::PathBuf::from).unwrap_or_else(std::env::temp_dir).join("MacDows").join("logs");
+    let _ = std::fs::create_dir_all(&dir);
+    if let Ok(mut f) = std::fs::OpenOptions::new().create(true).append(true).open(dir.join("monitors.log")) {
+        let ms = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map(|d| d.as_millis() % 1_000_000).unwrap_or(0);
+        let line: Vec<String> = monitors.iter().map(|m| format!("{} rect={},{},{},{} scale={} primary={}", m.name, m.rect.left, m.rect.top, m.rect.right, m.rect.bottom, m.scale, m.primary)).collect();
+        let _ = writeln!(f, "[{ms}] {what}: {}", line.join(" | "));
+    }
+}
+
 /// Reconciles on a worker thread (for the settings command, which may run on the main thread).
 pub fn reconcile_in_background(app: &AppHandle) {
     let app = app.clone();
@@ -379,9 +453,11 @@ pub fn start(app: AppHandle) {
         reconcile(&app);
         loop {
             std::thread::sleep(Duration::from_secs(2));
-            let now = signature(&list(&app));
+            let seen = list(&app);
+            let now = signature(&seen);
             let changed = *lock(&LAST_SIGNATURE) != now;
             if changed {
+                log_monitors("changed", &seen);
                 reconcile(&app);
             }
         }
