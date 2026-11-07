@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { getMonitors, onMonitorsChanged, setSetting, type MonitorView, type Settings as AppSettings } from "../bridge";
 import { monitorCards, setFlag, showSection, type MonitorCard } from "../monitors";
 import { Toggle } from "../ui/controls";
+import { FoldCard } from "./FoldCard";
 
 /** One card per monitor with an Island and a Dock switch. Not shown with a single monitor. */
 export function MonitorsSection({ s, t }: { s: AppSettings; t: (key: string) => string }) {
@@ -22,8 +23,7 @@ export function MonitorsSection({ s, t }: { s: AppSettings; t: (key: string) => 
   const change = (card: MonitorCard, flag: "island" | "dock", on: boolean) => setSetting("monitors", setFlag(s.monitors, card, flag, on)).catch(() => {});
 
   return (
-    <>
-      <h2 className="section-title">{t("monitors.title")}</h2>
+    <FoldCard title={t("monitors.title")} defaultOpen>
       <div className="island-style">
         <div className="ui-row-text">
           <div className="ui-row-desc">{t("monitors.help")}</div>
@@ -56,6 +56,6 @@ export function MonitorsSection({ s, t }: { s: AppSettings; t: (key: string) => 
           ))}
         </div>
       </div>
-    </>
+    </FoldCard>
   );
 }
