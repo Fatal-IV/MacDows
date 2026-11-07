@@ -323,11 +323,19 @@ pub struct SystemStatus {
     pub taskbar_hidden: bool,
 }
 
+/// MacDows is about to hide the Windows taskbar (set at start while the takeover is on, cleared when the hiding is done or has failed).
+static TAKEOVER_EXPECTED: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
+
+pub fn set_takeover_expected(on: bool) {
+    TAKEOVER_EXPECTED.store(on, Ordering::SeqCst);
+}
+
 fn current_status() -> SystemStatus {
     let mut power = SYSTEM_POWER_STATUS::default();
     let battery_percent = unsafe { GetSystemPowerStatus(&mut power) }.ok().and_then(|_| battery_percent_from(power.BatteryLifePercent));
     let taskbar_hidden = WinBackend.window_hidden();
     let available = FileStore::default().load().map_or(false, |s| hidden_icons_available(&s, taskbar_hidden));
+    let taskbar_hidden = crate::taskbar_plan::status_taskbar_hidden(taskbar_hidden, TAKEOVER_EXPECTED.load(Ordering::SeqCst));
     SystemStatus { battery_percent, battery_charging: power.ACLineStatus == 1, hidden_icons_available: available, taskbar_hidden }
 }
 

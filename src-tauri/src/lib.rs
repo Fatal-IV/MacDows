@@ -76,7 +76,9 @@ fn apply_replace_taskbar(app: &AppHandle, enabled: bool) {
     let app = app.clone();
     std::thread::spawn(move || {
         if enabled {
-            if taskbar::hide_now() {
+            let hidden = taskbar::hide_now();
+            taskbar::set_takeover_expected(false);
+            if hidden {
                 // Tell the dock right away (it shows its Start and Search buttons once the taskbar is hidden); the theme work below is slow.
                 let _ = app.emit("taskbar-changed", ());
                 taskbar::start_guard();
@@ -131,6 +133,8 @@ fn start_taskbar_takeover(app: &AppHandle) {
     if !taskbar_plan::should_replace_now(replace, cfg!(debug_assertions), std::env::var_os("MACDOWS_REPLACE_TASKBAR").is_some()) {
         return;
     }
+    // The dock shows its own Start and Search buttons from the first moment, not when the hiding is done.
+    taskbar::set_takeover_expected(true);
     let handle = app.clone();
     std::thread::spawn(move || {
         if !notice_shown {

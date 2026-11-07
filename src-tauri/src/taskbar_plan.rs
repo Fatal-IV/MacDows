@@ -186,16 +186,27 @@ pub enum HideError {
     StateNotSaved,
 }
 
-/// Saves the state first; if that fails nothing is touched. Order: auto-hide, then the window.
+/// Whether the dock should treat the Windows taskbar as hidden: it is, or MacDows is about to hide it (the dock then shows its own Start
+/// and Search buttons at once instead of waiting for the hiding to finish).
+pub fn status_taskbar_hidden(window_hidden: bool, takeover_expected: bool) -> bool {
+    window_hidden || takeover_expected
+}
+
+/// Saves the state first; if that fails nothing is touched. Order: the window, then auto-hide. The window goes first so that the taskbar
+/// is gone at once; the auto-hide change makes Explorer lay the taskbar out again (it waits for that to settle), which can show the window
+/// again, so the window is hidden once more when that happened.
 pub fn hide(backend: &impl Backend, store: &impl Store, pid: u32) -> Result<(), HideError> {
     let existing = store.load();
     let plan = plan_hide(existing.as_ref(), backend.autohide(), backend.chevron_present(), pid);
     store.save(&plan.state_to_save).map_err(|_| HideError::StateNotSaved)?;
-    if plan.set_autohide {
-        backend.set_autohide(true);
-    }
     if plan.hide_window {
         backend.hide_window();
+    }
+    if plan.set_autohide {
+        backend.set_autohide(true);
+        if plan.hide_window && !backend.window_hidden() {
+            backend.hide_window();
+        }
     }
     Ok(())
 }
@@ -513,11 +524,56 @@ mod orchestration_tests {
         (backend, store, log)
     }
 
+    /// Explorer lays the taskbar out again after the auto-hide change and can show its window.
+    struct ExplorerShowsItAgain {
+        hidden: Cell<bool>,
+        log: Log,
+    }
+
+    impl Backend for ExplorerShowsItAgain {
+        fn autohide(&self) -> bool {
+            false
+        }
+        fn set_autohide(&self, _on: bool) {
+            self.log.borrow_mut().push("set_autohide".into());
+            self.hidden.set(false);
+        }
+        fn hide_window(&self) {
+            self.log.borrow_mut().push("hide_window".into());
+            self.hidden.set(true);
+        }
+        fn show_window(&self) {}
+        fn window_hidden(&self) -> bool {
+            self.hidden.get()
+        }
+        fn chevron_present(&self) -> bool {
+            false
+        }
+    }
+
+    #[test]
+    fn a_taskbar_that_explorer_shows_again_after_the_auto_hide_change_is_hidden_once_more() {
+        let log: Log = Rc::new(RefCell::new(Vec::new()));
+        let backend = ExplorerShowsItAgain { hidden: Cell::new(false), log: log.clone() };
+        let store = FakeStore { state: RefCell::new(None), fail_save: false, log: log.clone() };
+        hide(&backend, &store, 7).unwrap();
+        let calls: Vec<String> = log.borrow().iter().filter(|l| l.as_str() != "save").cloned().collect();
+        assert_eq!(calls, vec!["hide_window".to_string(), "set_autohide".to_string(), "hide_window".to_string()]);
+        assert!(backend.hidden.get());
+    }
+
+    #[test]
+    fn the_dock_counts_the_taskbar_as_hidden_while_the_takeover_is_on_its_way() {
+        assert!(status_taskbar_hidden(true, false));
+        assert!(status_taskbar_hidden(false, true), "Start and Search buttons appear at once at start");
+        assert!(!status_taskbar_hidden(false, false));
+    }
+
     #[test]
     fn the_state_is_saved_before_anything_is_hidden() {
         let (b, s, log) = rig(false, false, None);
         hide(&b, &s, 7).unwrap();
-        assert_eq!(*log.borrow(), vec!["save", "set_autohide(true)", "hide_window"]);
+        assert_eq!(*log.borrow(), vec!["save", "hide_window", "set_autohide(true)"], "the window goes first, then the auto-hide setting that makes Explorer lay the taskbar out again");
     }
 
     #[test]
