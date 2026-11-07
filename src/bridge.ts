@@ -125,6 +125,14 @@ export interface Island {
   screens: Screens;
 }
 
+/** What the user chose for one monitor: whether it has an island and a dock (`name` is the last display name seen). */
+export interface MonitorCfg {
+  key: string;
+  name: string;
+  island: boolean;
+  dock: boolean;
+}
+
 export interface Settings {
   language: string;
   dock_visibility: Visibility;

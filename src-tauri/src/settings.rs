@@ -43,6 +43,16 @@ impl Default for Dock {
     }
 }
 
+/// What the user chose for one monitor (found by `key`, see `monitors::monitor_key`): whether it has an island and a dock.
+/// `name` is only the last display name seen, so a monitor that is not plugged in can still be shown in Settings.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct MonitorCfg {
+    pub key: String,
+    pub name: String,
+    pub island: bool,
+    pub dock: bool,
+}
+
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(default)]
 pub struct Settings {
@@ -69,6 +79,8 @@ pub struct Settings {
     pub island: crate::island_settings::Island,
     /// The version that ran last; tells the next start whether an update happened.
     pub last_run_version: Option<String>,
+    /// Which monitors have an island and a dock. Empty: only the primary monitor has both.
+    pub monitors: Vec<MonitorCfg>,
 }
 
 impl Default for Settings {
@@ -87,6 +99,7 @@ impl Default for Settings {
             dock: Dock::default(),
             island: crate::island_settings::Island::default(),
             last_run_version: None,
+            monitors: Vec::new(),
         }
     }
 }
@@ -107,7 +120,14 @@ impl Settings {
             }
         };
         settings.island.normalize();
+        settings.normalize_monitors();
         settings
+    }
+
+    /// A monitor appears once in the list; when it was saved twice the first entry stays.
+    pub fn normalize_monitors(&mut self) {
+        let mut seen = std::collections::HashSet::new();
+        self.monitors.retain(|m| seen.insert(m.key.clone()));
     }
 }
 
@@ -204,6 +224,31 @@ mod tests {
         assert_eq!(s.language, "tr");
     }
 
+    fn cfg(key: &str, island: bool, dock: bool) -> MonitorCfg {
+        MonitorCfg { key: key.into(), name: format!("name of {key}"), island, dock }
+    }
+
+    #[test]
+    fn an_old_settings_file_has_no_monitors() {
+        assert!(Settings::from_json(r#"{"language":"tr"}"#).monitors.is_empty());
+        assert!(Settings::default().monitors.is_empty());
+    }
+
+    #[test]
+    fn the_same_monitor_is_kept_once() {
+        let mut s = Settings::default();
+        s.monitors = vec![cfg("a", true, true), cfg("a", false, false), cfg("b", false, true)];
+        s.normalize_monitors();
+        assert_eq!(s.monitors, vec![cfg("a", true, true), cfg("b", false, true)]);
+    }
+
+    #[test]
+    fn a_saved_monitor_list_is_cleaned_when_loaded() {
+        let s = Settings::from_json(r#"{"monitors":[{"key":"a","name":"A","island":true,"dock":true},{"key":"a","name":"A2","island":false,"dock":false}]}"#);
+        assert_eq!(s.monitors.len(), 1);
+        assert_eq!(s.monitors[0].name, "A");
+    }
+
     #[test]
     fn roundtrip_keeps_values() {
         let s = Settings {
@@ -220,6 +265,7 @@ mod tests {
             hidden_pinned: vec!["a".into()],
             dock: Dock { win_number: false, ..Dock::default() },
             last_run_version: Some("0.2.2".into()),
+            monitors: vec![cfg("monitor\\del4012", true, false)],
         };
         let json = serde_json::to_string(&s).unwrap();
         assert_eq!(Settings::from_json(&json), s);

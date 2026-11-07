@@ -55,6 +55,7 @@ fn set_setting(app: AppHandle, state: State<AppSettings>, key: String, value: se
     json.as_object_mut().ok_or("settings not an object")?.insert(key.clone(), value);
     let mut updated: settings::Settings = serde_json::from_value(json).map_err(|e| e.to_string())?;
     updated.island.normalize();
+    updated.normalize_monitors();
     settings::save(&updated).map_err(|e| e.to_string())?;
     *guard = updated.clone();
     drop(guard);
