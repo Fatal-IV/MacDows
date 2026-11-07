@@ -90,6 +90,275 @@ pub fn plan(monitors: &[MonitorInfo], want: &[Want], existing: &[BarWin]) -> Vec
     actions
 }
 
+/// Changes whenever the layout does (monitors, positions, sizes, work areas, scales); the poller reconciles when it changes.
+pub fn signature(monitors: &[MonitorInfo]) -> String {
+    monitors
+        .iter()
+        .map(|m| {
+            let (r, w) = (m.rect, m.work);
+            format!("{}:{},{},{},{}:{},{},{},{}:{}:{}", m.key, r.left, r.top, r.right, r.bottom, w.left, w.top, w.right, w.bottom, m.scale, m.primary)
+        })
+        .collect::<Vec<_>>()
+        .join("|")
+}
+
+// ---------------------------------------------------------------------------------------------
+// Windows side: listing the monitors, creating, destroying and placing the bar windows.
+// ---------------------------------------------------------------------------------------------
+use crate::{windows_list, AppSettings};
+use serde::Serialize;
+use std::collections::HashMap;
+use std::sync::atomic::{AtomicU32, Ordering};
+use std::sync::Mutex;
+use std::time::Duration;
+use tauri::{AppHandle, Emitter, Manager, PhysicalPosition, PhysicalSize, WebviewUrl, WebviewWindowBuilder};
+
+/// The logical size of a bar window, as in `tauri.conf.json`.
+pub fn logical_size(kind: BarKind) -> (f64, f64) {
+    match kind {
+        BarKind::Notch => (580.0, 340.0),
+        BarKind::Dock => (900.0, 120.0),
+    }
+}
+
+/// Which monitor (key) each bar window is on. The plain `notch` and `dock` are on the primary monitor.
+static BAR_MONITOR: Mutex<Option<HashMap<String, String>>> = Mutex::new(None);
+/// What the settings wanted at the last reconcile.
+static WANT: Mutex<Vec<Want>> = Mutex::new(Vec::new());
+static LAST_SIGNATURE: Mutex<String> = Mutex::new(String::new());
+static NEXT_N: AtomicU32 = AtomicU32::new(2);
+static RECONCILE: Mutex<()> = Mutex::new(());
+
+fn lock<T>(m: &Mutex<T>) -> std::sync::MutexGuard<'_, T> {
+    m.lock().unwrap_or_else(|e| e.into_inner())
+}
+
+fn monitor_of(label: &str) -> Option<String> {
+    lock(&BAR_MONITOR).as_ref()?.get(label).cloned()
+}
+
+fn remember(label: &str, key: &str) {
+    lock(&BAR_MONITOR).get_or_insert_with(HashMap::new).insert(label.to_string(), key.to_string());
+}
+
+fn forget(label: &str) {
+    if let Some(map) = lock(&BAR_MONITOR).as_mut() {
+        map.remove(label);
+    }
+}
+
+/// The interface name of the monitor behind a display adapter (`\\.\DISPLAY1`): it stays the same when Windows renumbers the displays.
+fn device_id(adapter: &str) -> Option<String> {
+    use windows::core::PCWSTR;
+    use windows::Win32::Graphics::Gdi::{EnumDisplayDevicesW, DISPLAY_DEVICEW};
+    let wide: Vec<u16> = adapter.encode_utf16().chain(std::iter::once(0)).collect();
+    let mut device = DISPLAY_DEVICEW { cb: std::mem::size_of::<DISPLAY_DEVICEW>() as u32, ..Default::default() };
+    const EDD_GET_DEVICE_INTERFACE_NAME: u32 = 1;
+    if !unsafe { EnumDisplayDevicesW(PCWSTR(wide.as_ptr()), 0, &mut device, EDD_GET_DEVICE_INTERFACE_NAME) }.as_bool() {
+        return None;
+    }
+    let end = device.DeviceID.iter().position(|c| *c == 0).unwrap_or(device.DeviceID.len());
+    let id = String::from_utf16_lossy(&device.DeviceID[..end]);
+    (!id.is_empty()).then_some(id)
+}
+
+/// The monitors that are plugged in, in the order Windows reports them.
+pub fn list(app: &AppHandle) -> Vec<MonitorInfo> {
+    let primary = app.primary_monitor().ok().flatten().map(|m| *m.position());
+    let Ok(monitors) = app.available_monitors() else { return Vec::new() };
+    monitors
+        .iter()
+        .enumerate()
+        .map(|(i, m)| {
+            let name = m.name().cloned().unwrap_or_default();
+            let mut key = monitor_key(device_id(&name).as_deref(), &name);
+            if key.is_empty() {
+                key = format!("monitor-{i}");
+            }
+            let (p, s, w) = (m.position(), m.size(), m.work_area());
+            MonitorInfo {
+                key,
+                name,
+                rect: Rect { left: p.x, top: p.y, right: p.x + s.width as i32, bottom: p.y + s.height as i32 },
+                work: Rect { left: w.position.x, top: w.position.y, right: w.position.x + w.size.width as i32, bottom: w.position.y + w.size.height as i32 },
+                scale: m.scale_factor(),
+                primary: primary == Some(*p),
+            }
+        })
+        .collect()
+}
+
+/// Whether the settings want this bar window on its monitor. A window that is not a bar, or whose monitor is not known yet, counts as wanted.
+pub fn is_enabled(label: &str) -> bool {
+    let Some(kind) = bar::kind_of(label) else { return true };
+    let Some(key) = monitor_of(label) else { return true };
+    let want = lock(&WANT);
+    want.is_empty() || is_wanted(&want, &key, kind)
+}
+
+/// Puts a bar window where it belongs on its monitor: the island centered on the top edge, the dock on the bottom of the work area.
+/// A window of another monitor is sized for that monitor's scale first (its position first, so that it lands on that monitor).
+fn place_with(app: &AppHandle, monitors: &[MonitorInfo], label: &str) {
+    let Some((kind, number)) = bar::parse(label) else { return };
+    let Some(win) = app.get_webview_window(label) else { return };
+    let Some(monitor) = monitor_of(label).and_then(|key| monitors.iter().find(|m| m.key == key)) else { return };
+    if number.is_some() {
+        let _ = win.set_position(PhysicalPosition::new(monitor.rect.left, monitor.rect.top));
+        let (w, h) = logical_size(kind);
+        let _ = win.set_size(PhysicalSize::new((w * monitor.scale).round() as u32, (h * monitor.scale).round() as u32));
+    }
+    let Ok(size) = win.outer_size() else { return };
+    let (width, height) = (size.width as i32, size.height as i32);
+    let (x, y) = match kind {
+        BarKind::Notch => (monitor.rect.left + (monitor.rect.right - monitor.rect.left - width) / 2, monitor.rect.top),
+        BarKind::Dock => (monitor.work.left + (monitor.work.right - monitor.work.left - width) / 2, monitor.work.bottom - height),
+    };
+    let _ = win.set_position(PhysicalPosition::new(x, y));
+}
+
+/// Places every bar window (after the work area changed, for example).
+pub fn place_all(app: &AppHandle) {
+    let monitors = list(app);
+    for label in bar::bar_labels(app) {
+        place_with(app, &monitors, &label);
+    }
+}
+
+fn create(app: &AppHandle, kind: BarKind, key: &str) {
+    let label = bar::label(kind, Some(NEXT_N.fetch_add(1, Ordering::SeqCst)));
+    let (tx, rx) = std::sync::mpsc::channel();
+    let handle = app.clone();
+    let (l, k) = (label.clone(), key.to_string());
+    let _ = app.run_on_main_thread(move || {
+        let (w, h) = logical_size(kind);
+        let title = if kind == BarKind::Notch { "MacDows Dynamic Island" } else { "MacDows Dock" };
+        let built = WebviewWindowBuilder::new(&handle, &l, WebviewUrl::App("index.html".into()))
+            .title(title)
+            .inner_size(w, h)
+            .decorations(false)
+            .transparent(true)
+            .always_on_top(true)
+            .skip_taskbar(true)
+            .resizable(false)
+            .shadow(false)
+            .focused(false)
+            .visible(false)
+            .build();
+        if let Ok(win) = built {
+            if let Ok(hwnd) = win.hwnd() {
+                windows_list::register_bar(hwnd.0 as isize);
+            }
+            remember(&l, &k);
+        }
+        let _ = tx.send(());
+    });
+    // Built on the main thread; wait for it (this runs on a worker thread) so that the next step finds the window.
+    let _ = rx.recv_timeout(Duration::from_secs(5));
+}
+
+fn destroy(app: &AppHandle, label: &str) {
+    let (tx, rx) = std::sync::mpsc::channel();
+    let handle = app.clone();
+    let l = label.to_string();
+    let _ = app.run_on_main_thread(move || {
+        if let Some(win) = handle.get_webview_window(&l) {
+            let _ = win.destroy();
+        }
+        let _ = tx.send(());
+    });
+    let _ = rx.recv_timeout(Duration::from_secs(5));
+    forget(label);
+    crate::hit_region::forget(label);
+}
+
+/// Makes the bar windows match the monitors and the settings: creates and destroys the numbered ones, places all of them.
+/// Runs on a worker thread (never the main one: it waits for the main thread).
+pub fn reconcile(app: &AppHandle) {
+    let _guard = lock(&RECONCILE);
+    let monitors = list(app);
+    let Some(primary) = monitors.iter().find(|m| m.primary).or(monitors.first()) else { return };
+    let primary_key = primary.key.clone();
+    let cfg = app.state::<AppSettings>().0.lock().unwrap().monitors.clone();
+    let want = desired(&monitors, &cfg);
+    *lock(&WANT) = want.clone();
+    remember("notch", &primary_key);
+    remember("dock", &primary_key);
+    let existing: Vec<BarWin> = bar::bar_labels(app)
+        .into_iter()
+        .filter_map(|label| {
+            let (kind, _) = bar::parse(&label)?;
+            Some(BarWin { kind, key: monitor_of(&label)?, label })
+        })
+        .collect();
+    for action in plan(&monitors, &want, &existing) {
+        match action {
+            Action::Create { kind, key } => create(app, kind, &key),
+            Action::Destroy { label } => destroy(app, &label),
+        }
+    }
+    place_all(app);
+    *lock(&LAST_SIGNATURE) = signature(&monitors);
+    let _ = app.emit("monitors-changed", ());
+}
+
+/// Reconciles on a worker thread (for the settings command, which may run on the main thread).
+pub fn reconcile_in_background(app: &AppHandle) {
+    let app = app.clone();
+    std::thread::spawn(move || reconcile(&app));
+}
+
+/// Places the first bars and then every two seconds looks whether monitors were plugged, unplugged, moved, rescaled or lost
+/// or gained a taskbar; any change reconciles again.
+pub fn start(app: AppHandle) {
+    std::thread::spawn(move || {
+        reconcile(&app);
+        loop {
+            std::thread::sleep(Duration::from_secs(2));
+            let now = signature(&list(&app));
+            let changed = *lock(&LAST_SIGNATURE) != now;
+            if changed {
+                reconcile(&app);
+            }
+        }
+    });
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct MonitorView {
+    pub key: String,
+    pub name: String,
+    pub width: i32,
+    pub height: i32,
+    pub x: i32,
+    pub y: i32,
+    pub primary: bool,
+    pub island: bool,
+    pub dock: bool,
+}
+
+/// The monitors that are plugged in with what the settings say about each (for the Monitors section of Settings).
+#[tauri::command]
+pub async fn get_monitors(app: AppHandle) -> Vec<MonitorView> {
+    let monitors = list(&app);
+    let cfg = app.state::<AppSettings>().0.lock().unwrap().monitors.clone();
+    let want = desired(&monitors, &cfg);
+    monitors
+        .iter()
+        .zip(want)
+        .map(|(m, w)| MonitorView {
+            key: m.key.clone(),
+            name: m.name.clone(),
+            width: m.rect.right - m.rect.left,
+            height: m.rect.bottom - m.rect.top,
+            x: m.rect.left,
+            y: m.rect.top,
+            primary: m.primary,
+            island: w.island,
+            dock: w.dock,
+        })
+        .collect()
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -208,5 +477,22 @@ mod tests {
         assert!(is_wanted(&w, "a", BarKind::Notch));
         assert!(!is_wanted(&w, "a", BarKind::Dock));
         assert!(!is_wanted(&w, "missing", BarKind::Notch));
+    }
+
+    #[test]
+    fn the_signature_changes_with_the_layout_only() {
+        let a = [mon("a", true, 0), mon("b", false, 1920)];
+        let same = [mon("a", true, 0), mon("b", false, 1920)];
+        assert_eq!(signature(&a), signature(&same));
+        let mut moved = same.clone();
+        moved[1].rect = r(2400, 4320);
+        assert_ne!(signature(&a), signature(&moved), "a monitor moved");
+        let mut taskbar = same.clone();
+        taskbar[0].work.bottom = 1040;
+        assert_ne!(signature(&a), signature(&taskbar), "the work area changed");
+        let mut scaled = same.clone();
+        scaled[1].scale = 1.5;
+        assert_ne!(signature(&a), signature(&scaled), "the scale changed");
+        assert_ne!(signature(&a), signature(&a[..1]), "a monitor was unplugged");
     }
 }

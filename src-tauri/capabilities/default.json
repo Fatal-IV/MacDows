@@ -5,6 +5,8 @@
   "windows": [
     "notch",
     "dock",
+    "notch-*",
+    "dock-*",
     "settings",
     "tray"
   ],

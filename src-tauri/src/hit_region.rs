@@ -37,6 +37,11 @@ pub fn screen_rect(label: &str) -> Option<Rect> {
     SCREEN_RECTS.lock().unwrap_or_else(|e| e.into_inner()).as_ref()?.get(label).copied()
 }
 
+/// Drops what is remembered about a bar window that was closed.
+pub fn forget(label: &str) {
+    remember(label, None);
+}
+
 fn remember(label: &str, rect: Option<Rect>) {
     let mut guard = SCREEN_RECTS.lock().unwrap_or_else(|e| e.into_inner());
     let map = guard.get_or_insert_with(HashMap::new);
