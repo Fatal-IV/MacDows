@@ -202,6 +202,7 @@ fn place_with(app: &AppHandle, monitors: &[MonitorInfo], label: &str) {
     let Some((kind, number)) = bar::parse(label) else { return };
     let Some(win) = app.get_webview_window(label) else { return };
     let Some(monitor) = monitor_of(label).and_then(|key| monitors.iter().find(|m| m.key == key)) else { return };
+    let before = win.outer_position().ok();
     if number.is_some() {
         let _ = win.set_position(PhysicalPosition::new(monitor.rect.left, monitor.rect.top));
         let (w, h) = logical_size(kind);
@@ -214,6 +215,12 @@ fn place_with(app: &AppHandle, monitors: &[MonitorInfo], label: &str) {
         BarKind::Dock => (monitor.work.left + (monitor.work.right - monitor.work.left - width) / 2, monitor.work.bottom - height),
     };
     let _ = win.set_position(PhysicalPosition::new(x, y));
+    // The shape the front end reported is in screen coordinates: it moves along with the window.
+    if let (Some(from), Ok(to)) = (before, win.outer_position()) {
+        if from != to {
+            crate::hit_region::shift(label, to.x - from.x, to.y - from.y);
+        }
+    }
 }
 
 /// Places every bar window (after the work area changed, for example).

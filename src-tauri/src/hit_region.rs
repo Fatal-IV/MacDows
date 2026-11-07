@@ -37,6 +37,19 @@ pub fn screen_rect(label: &str) -> Option<Rect> {
     SCREEN_RECTS.lock().unwrap_or_else(|e| e.into_inner()).as_ref()?.get(label).copied()
 }
 
+/// `r` moved by (dx, dy).
+pub fn shifted(r: Rect, dx: i32, dy: i32) -> Rect {
+    Rect { left: r.left + dx, top: r.top + dy, right: r.right + dx, bottom: r.bottom + dy }
+}
+
+/// The window was moved on the screen: its remembered shape (in screen coordinates) moves along. Without this the shape stays where the
+/// window used to be and the pointer is never "inside" it, so the bar ignores every click.
+pub fn shift(label: &str, dx: i32, dy: i32) {
+    if let Some(r) = screen_rect(label) {
+        remember(label, Some(shifted(r, dx, dy)));
+    }
+}
+
 /// Drops what is remembered about a bar window that was closed.
 pub fn forget(label: &str) {
     remember(label, None);
@@ -193,5 +206,17 @@ mod tests {
         assert_eq!(screen_rect("test-bar").map(|r| (r.left, r.top, r.right, r.bottom)), Some((1, 2, 3, 4)));
         remember("test-bar", None);
         assert!(screen_rect("test-bar").is_none());
+    }
+
+    #[test]
+    fn a_remembered_shape_moves_with_its_window() {
+        let r = Rect { left: 100, top: 0, right: 300, bottom: 40 };
+        let moved = shifted(r, 40, 0);
+        assert_eq!((moved.left, moved.top, moved.right, moved.bottom), (140, 0, 340, 40));
+        remember("move-bar", Some(r));
+        shift("move-bar", -20, 5);
+        assert_eq!(screen_rect("move-bar").map(|r| (r.left, r.top, r.right, r.bottom)), Some((80, 5, 280, 45)));
+        shift("never-reported", 1, 1);
+        remember("move-bar", None);
     }
 }
