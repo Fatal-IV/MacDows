@@ -138,8 +138,7 @@ export default function IslandSettings({ s, t }: { s: AppSettings; t: T }) {
 
   return (
     <>
-      <h2 className="section-title">{t("island.sectionLayout")}</h2>
-      <Group>
+      <FoldCard title={t("island.sectionLayout")}>
         <IslandStylePicker value={s.island.style} onChange={(v) => updateIsland(s, (i) => (i.style = v))} t={t} />
         <VisibilityPicker value={s.island.visibility} onChange={(v) => updateIsland(s, (i) => (i.visibility = v))} t={t} islandStyle={s.island.style} />
         <Row title={t("island.fullscreen")} description={t("island.fullscreenHelp")}>
@@ -152,12 +151,13 @@ export default function IslandSettings({ s, t }: { s: AppSettings; t: T }) {
         <div className="ui-row actions">
           <Button onClick={resetLayout}>{t("island.reset")}</Button>
         </div>
-      </Group>
+      </FoldCard>
 
       <MonitorsSection s={s} t={t} />
 
-      <h2 className="section-title">{t("island.sectionTheme")}</h2>
-      <Appearance />
+      <FoldCard title={t("island.sectionTheme")}>
+        <Appearance />
+      </FoldCard>
 
       <h2 className="section-title">{t("island.sectionScreens")}</h2>
       {SCREEN_IDS.map((id) => (

@@ -1,6 +1,6 @@
 import { STYLE_OPACITY, THEME_STYLES } from "../appearance/theme";
 import { useT } from "../i18n";
-import { Group, Row, Select, Slider, Toggle } from "../ui/controls";
+import { Row, Select, Slider, Toggle } from "../ui/controls";
 import { useStored } from "./useStored";
 
 const MODES = ["auto", "light", "dark", "adaptive"] as const;
@@ -19,7 +19,6 @@ export default function Appearance() {
 
   return (
     <>
-      <Group>
         <Row title={t("appearance.mode")}>
           <Select label={t("appearance.mode")} value={mode} onChange={setMode} options={MODES.map((m) => ({ value: m, label: t(`appearance.mode.${m}`) }))} />
         </Row>
@@ -38,23 +37,16 @@ export default function Appearance() {
         <Row title={t("appearance.accent")}>
           <Select label={t("appearance.accent")} value={accent} onChange={setAccent} options={ACCENTS.map((a) => ({ value: a, label: t(`appearance.accent.${a}`) }))} />
         </Row>
-      </Group>
-      <Group>
         <Row title={t("appearance.opacity")}>
           <Slider label={t("appearance.opacity")} value={parseFloat(opacity)} min={0.3} max={1} step={0.01} onChange={(v) => setOpacity(String(v))} />
           <span className="ui-value">{Math.round(parseFloat(opacity) * 100)}%</span>
         </Row>
-      </Group>
-      <Group>
         <Row title={t("appearance.lightContrast")} description={t("appearance.lightContrastHelp")}>
           <Select label={t("appearance.lightContrast")} value={lightVariant} onChange={setLightVariant} options={LIGHT_CONTRASTS.map((c) => ({ value: c, label: t(`appearance.lightContrast.${c}`) }))} />
         </Row>
-      </Group>
-      <Group>
         <Row title={t("appearance.startTint")} description={t("appearance.startTintHelp")}>
           <Toggle label={t("appearance.startTint")} checked={startTint === "true"} onChange={(v) => setStartTint(String(v))} />
         </Row>
-      </Group>
     </>
   );
 }

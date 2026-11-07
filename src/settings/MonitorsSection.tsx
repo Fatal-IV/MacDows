@@ -23,7 +23,7 @@ export function MonitorsSection({ s, t }: { s: AppSettings; t: (key: string) => 
   const change = (card: MonitorCard, flag: "island" | "dock", on: boolean) => setSetting("monitors", setFlag(s.monitors, card, flag, on)).catch(() => {});
 
   return (
-    <FoldCard title={t("monitors.title")} defaultOpen>
+    <FoldCard title={t("monitors.title")}>
       <div className="island-style">
         <div className="ui-row-text">
           <div className="ui-row-desc">{t("monitors.help")}</div>

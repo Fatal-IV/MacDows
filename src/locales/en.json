@@ -135,6 +135,7 @@
   "island.music.sourcesHelp": "When two or more programs play or hold media (Spotify, a browser...), the player shows a button for each to switch between them.",
   "island.music.gradient": "Gradient effect",
   "island.music.gradientHelp": "The colors of the cover move behind the player and the small island while music plays. It stands still when Windows is set to reduce motion.",
+  "island.music.gradientOn": "Show the gradient",
   "island.music.watch": "Watching a video",
   "island.music.watchHelp": "What the robot does while a video plays (Netflix, YouTube, a film): music keeps the head shake.",
   "island.music.watch.popcorn": "Eats popcorn",
