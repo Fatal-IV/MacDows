@@ -82,9 +82,10 @@ img { -webkit-user-drag: none; user-select: none; }
 }
 .side.left { justify-content: flex-start; }
 .side.right { justify-content: flex-end; }
-/* Playing music: the visualizer sits next to the clock and the spare room goes to the eyes and the cover on the right. */
-.side.left.snug { flex: none; }
-.side.left.snug .visualizer { transform: translateX(-4px); }
+/* Playing music: the cover and the song name are on the left, the clock in the middle, the robot on the right. */
+.music-title { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 12px; font-weight: 500; opacity: 0.9; }
+.side.right.music { gap: 4px; }
+.side.right.music .eyes { margin-right: 4px; }
 
 .time-flip {
   position: relative;
@@ -352,7 +353,32 @@ img { -webkit-user-drag: none; user-select: none; }
 .volume-row input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 0; height: 0; }
 
 /* Media panel gradient from the artwork's own color */
-.music-gradient { position: absolute; inset: 0; z-index: 0; pointer-events: none; border-radius: 0 0 18px 18px; }
+/* The color of the cover flows across the player from left to right: framer-motion moves the position of the pattern (the sweep is in DynamicIsland.tsx). */
+.music-gradient {
+  position: absolute; inset: 0; z-index: 0; pointer-events: none; border-radius: 0 0 18px 18px;
+}
+/* 0: left to right. A pattern twice as wide as the panel that starts and ends on the same color, so it repeats without a seam. */
+.music-gradient.fx0 {
+  background: linear-gradient(90deg, rgba(var(--art), 0.8) 0%, rgba(var(--art2), 0.6) 25%, rgba(var(--art), 0.12) 50%, rgba(var(--art2), 0.55) 75%, rgba(var(--art), 0.8) 100%);
+  background-size: 200% 100%; background-repeat: repeat-x;
+}
+/* 1: top to bottom, the same pattern turned. */
+.music-gradient.fx1 {
+  background: linear-gradient(180deg, rgba(var(--art), 0.8) 0%, rgba(var(--art2), 0.6) 25%, rgba(var(--art), 0.12) 50%, rgba(var(--art2), 0.55) 75%, rgba(var(--art), 0.8) 100%);
+  background-size: 100% 200%; background-repeat: repeat-y;
+}
+/* 2: aurora, two soft spots that drift. */
+.music-gradient.fx2 {
+  background:
+    radial-gradient(circle at 25% 30%, rgba(var(--art), 0.85) 0%, rgba(var(--art), 0) 45%),
+    radial-gradient(circle at 75% 70%, rgba(var(--art2), 0.8) 0%, rgba(var(--art2), 0) 45%);
+  background-size: 170% 170%; background-repeat: no-repeat;
+}
+/* 3: a light that breathes from the middle. */
+.music-gradient.fx3 {
+  background: radial-gradient(ellipse at center, rgba(var(--art2), 0.85) 0%, rgba(var(--art), 0.5) 40%, rgba(var(--art), 0) 72%);
+  background-position: center; background-repeat: no-repeat;
+}
 
 /* Arrow in the panel's top-right corner */
 .corner-arrow {
@@ -475,6 +501,10 @@ img { -webkit-user-drag: none; user-select: none; }
 .glass-tile.busy { opacity: 0.7; }
 /* On: one flat white, like the selected segment and today in the calendar. */
 .glass-tile.on { background: #fff; color: #000; }
+/* Light theme: the island is almost white, so the tiles and sliders are a light gray and an "on" tile is dark. */
+.light-mode .glass-tile, .light-mode .glass-slider { background: rgba(0, 0, 0, 0.08); }
+.light-mode .glass-tile:hover { background: rgba(0, 0, 0, 0.12); }
+.light-mode .glass-tile.on { background: var(--nectar-text, #1c1c1e); color: #fff; }
 .glass-icon { display: flex; flex: none; }
 .glass-text { display: flex; flex-direction: column; min-width: 0; }
 .glass-name { font-size: 12px; font-weight: 600; line-height: 1.15; }
@@ -597,13 +627,15 @@ img { -webkit-user-drag: none; user-select: none; }
 .quick-tiles.has-vpn .glass-tile:nth-child(3) { grid-column: auto; }
 
 /* The island's character: arch eyes that blink; now and then a tiny robot takes their place, waves, and goes again */
-.eyes { position: relative; width: 30px; height: 22px; margin-right: 10px; color: #39ff14; }
+.eyes { --eye: #39ff14; --eye-rgb: 57 255 20; position: relative; width: 30px; height: 22px; margin-right: 10px; color: var(--eye); }
 .eyes-pair, .eyes-robot {
   position: absolute;
   left: 50%;
   top: 50%;
   transition: opacity 0.3s ease, transform 0.35s cubic-bezier(0.34, 1.4, 0.64, 1);
 }
+/* On the light theme the eyes, the robot and the camera are red: green hardly shows on a white island. */
+.light-mode .eyes { --eye: #ff2d2d; --eye-rgb: 255 45 45; }
 .eyes-pair { display: flex; align-items: center; gap: 6px; transform: translate(-50%, -50%) scale(1); }
 .eyes-pair i {
   display: block;
@@ -611,10 +643,10 @@ img { -webkit-user-drag: none; user-select: none; }
   height: 10px;
   box-sizing: border-box;
   /* An upside-down U: an arch with short legs, open at the bottom. */
-  border: 2.5px solid #39ff14;
+  border: 2.5px solid var(--eye);
   border-bottom: 0;
   border-radius: 6px 6px 0 0;
-  filter: drop-shadow(0 0 3px #39ff14) drop-shadow(0 0 7px rgba(57, 255, 20, 0.5));
+  filter: drop-shadow(0 0 3px var(--eye)) drop-shadow(0 0 7px rgb(var(--eye-rgb) / 0.5));
   transform-origin: center bottom;
   animation: eye-blink 5s infinite;
 }
@@ -623,10 +655,10 @@ img { -webkit-user-drag: none; user-select: none; }
   93% { transform: scaleY(0.2); }
   96% { transform: scaleY(1); }
 }
-.eyes-robot { width: 22px; height: 22px; overflow: visible; opacity: 0; transform: translate(-50%, -50%) scale(0.4); filter: drop-shadow(0 0 3px #39ff14); }
+.eyes-robot { width: 22px; height: 22px; overflow: visible; opacity: 0; transform: translate(-50%, -50%) scale(0.4); filter: drop-shadow(0 0 3px var(--eye)); }
 .eyes.waving .eyes-pair { opacity: 0; transform: translate(-50%, -50%) scale(0.4); }
 .eyes.waving .eyes-robot { opacity: 1; transform: translate(-50%, -50%) scale(1); animation: robot-bob 0.8s ease-in-out 0.35s infinite; }
-.eyes-camera { position: absolute; left: 50%; top: 50%; overflow: visible; opacity: 0; transform: translate(-50%, -50%) scale(0.4); transition: opacity 0.2s ease, transform 0.35s cubic-bezier(0.34, 1.4, 0.64, 1); filter: drop-shadow(0 0 3px #39ff14); }
+.eyes-camera { position: absolute; left: 50%; top: 50%; overflow: visible; opacity: 0; transform: translate(-50%, -50%) scale(0.4); transition: opacity 0.2s ease, transform 0.35s cubic-bezier(0.34, 1.4, 0.64, 1); filter: drop-shadow(0 0 3px var(--eye)); }
 .cam-flash { opacity: 0; transform-origin: 12px 12px; }
 .eyes.shot .eyes-pair, .eyes.shot .eyes-robot { opacity: 0; transform: translate(-50%, -50%) scale(0.4); animation: none; }
 .eyes.shot .eyes-camera { opacity: 1; transform: translate(-50%, -50%) scale(1); }
@@ -638,21 +670,26 @@ img { -webkit-user-drag: none; user-select: none; }
 }
 @keyframes cam-flash {
   0% { opacity: 0; transform: scale(1); }
-  30% { opacity: 1; transform: scale(2.4); filter: drop-shadow(0 0 8px #39ff14); }
+  30% { opacity: 1; transform: scale(2.4); filter: drop-shadow(0 0 8px var(--eye)); }
   100% { opacity: 0; transform: scale(3.2); }
 }
-.robot-arm { transform-origin: 16px 16.6px; }
-.eyes.waving .robot-arm { animation: robot-wave 0.38s ease-in-out infinite alternate; }
-@keyframes robot-wave {
-  from { transform: rotate(-30deg); }
-  to { transform: rotate(35deg); }
+.robot-head { transform-box: view-box; transform-origin: 12px 13.5px; }
+.eyes.waving .robot-head { animation: robot-shake 0.9s ease-in-out 0.35s infinite; }
+/* Music: the robot is always there and only the head moves (no bobbing of the whole robot); paused music: head still. */
+.eyes.robot-only .eyes-robot { animation: none; }
+.eyes.robot-only.still .robot-head { animation: none; }
+@keyframes robot-shake {
+  0%, 100% { transform: rotate(0deg); }
+  20% { transform: rotate(-14deg); }
+  50% { transform: rotate(14deg); }
+  80% { transform: rotate(-8deg); }
 }
 @keyframes robot-bob {
   0%, 100% { transform: translate(-50%, -50%) scale(1); }
   50% { transform: translate(-50%, calc(-50% - 1.5px)) scale(1); }
 }
 @media (prefers-reduced-motion: reduce) {
-  .eyes-pair i, .eyes.waving .eyes-robot, .eyes.waving .robot-arm, .eyes.shot .cam-lens, .eyes.shot .cam-flash { animation: none; }
+  .eyes-pair i, .eyes.waving .eyes-robot, .eyes.waving .robot-head, .eyes.shot .cam-lens, .eyes.shot .cam-flash { animation: none; }
   .eyes-pair, .eyes-robot { transition: opacity 0.2s ease; }
 }
 

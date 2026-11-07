@@ -43,39 +43,80 @@ const MARQUEE_SPEED = 30; // px/s
 const MARQUEE_MIN_SECONDS = 5;
 
 /** The strongest color of the artwork (saturated pixels count more), for the soft gradient behind the player. */
-function useArtColor(url: string | null): string | null {
-  const [color, setColor] = useState<string | null>(null);
+/** The moving gradients of the player (the look of each is in DynamicIsland.css as `.music-gradient.fx0` .. `fx3`); a track keeps the one its title picks. */
+const GRADIENT_FX = [
+  // 0: the colors flow from left to right
+  { from: { backgroundPosition: "0% 0%" }, to: { backgroundPosition: "-200% 0%" }, move: { duration: 6, ease: "linear", repeat: Infinity } },
+  // 1: the colors flow from top to bottom
+  { from: { backgroundPosition: "0% 0%" }, to: { backgroundPosition: "0% -200%" }, move: { duration: 7, ease: "linear", repeat: Infinity } },
+  // 2: two soft spots of color drift around like an aurora
+  { from: { backgroundPosition: "0% 0%" }, to: { backgroundPosition: "100% 100%" }, move: { duration: 7, ease: "easeInOut", repeat: Infinity, repeatType: "reverse" as const } },
+  // 3: a light that breathes from the middle
+  { from: { backgroundSize: "90% 90%" }, to: { backgroundSize: "240% 240%" }, move: { duration: 4, ease: "easeInOut", repeat: Infinity, repeatType: "reverse" as const } },
+] as const;
+
+/** Used while a source gives no cover (a video, a Short): a soft blue and violet. */
+const FALLBACK_PALETTE: [string, string] = ["110, 125, 200", "150, 110, 190"];
+
+/**
+ * The two dominant colors of the cover (as "r, g, b"), for the moving gradient. The pixels are put into coarse color buckets, grays
+ * and near black or white count for little, the heaviest bucket is the first color and the heaviest one that looks different from
+ * it is the second. Both are only brightened a little so they show on the island; their hues are the cover's own.
+ */
+function paletteOf(data: Uint8ClampedArray): [string, string] | null {
+  const buckets = new Map<number, { r: number; g: number; b: number; w: number }>();
+  for (let i = 0; i < data.length; i += 4) {
+    const r = data[i], g = data[i + 1], b = data[i + 2];
+    const max = Math.max(r, g, b), min = Math.min(r, g, b);
+    const sat = max - min;
+    // Near black, near white and gray pixels say little about the color of the cover.
+    const weight = max < 40 || min > 225 ? 0.05 : 0.3 + sat / 24;
+    const key = (r >> 5) * 64 + (g >> 5) * 8 + (b >> 5);
+    const cur = buckets.get(key) ?? { r: 0, g: 0, b: 0, w: 0 };
+    cur.r += r * weight; cur.g += g * weight; cur.b += b * weight; cur.w += weight;
+    buckets.set(key, cur);
+  }
+  const ranked = [...buckets.values()].filter((c) => c.w > 0).sort((a, b) => b.w - a.w).map((c) => [c.r / c.w, c.g / c.w, c.b / c.w] as const);
+  if (ranked.length === 0) return null;
+  const far = (a: readonly number[], b: readonly number[]) => Math.hypot(a[0] - b[0], a[1] - b[1], a[2] - b[2]) > 90;
+  const first = ranked[0];
+  const second = ranked.find((c) => far(c, first)) ?? first;
+  // Brighten a dark color and give a dull one some saturation, keeping its hue.
+  const lift = (c: readonly number[]) => {
+    const avg = (c[0] + c[1] + c[2]) / 3;
+    const k = 1.35;
+    const sat = c.map((v) => Math.max(0, Math.min(255, avg + (v - avg) * k)));
+    const peak = Math.max(...sat);
+    const f = peak > 0 && peak < 170 ? 170 / peak : 1;
+    return sat.map((v) => Math.min(255, Math.round(v * f))).join(", ");
+  };
+  return [lift(first), lift(second)];
+}
+
+function useArtPalette(url: string | null): [string, string] | null {
+  const [palette, setPalette] = useState<[string, string] | null>(null);
   useEffect(() => {
     if (!url) {
-      setColor(null);
+      setPalette(null);
       return;
     }
     let dead = false;
     const img = new Image();
     img.onload = () => {
       const c = document.createElement("canvas");
-      c.width = c.height = 16;
+      c.width = c.height = 24;
       const g = c.getContext("2d", { willReadFrequently: true });
       if (!g) return;
-      g.drawImage(img, 0, 0, 16, 16);
-      const d = g.getImageData(0, 0, 16, 16).data;
-      let r = 0, gr = 0, b = 0, w = 0;
-      for (let i = 0; i < d.length; i += 4) {
-        const sat = Math.max(d[i], d[i + 1], d[i + 2]) - Math.min(d[i], d[i + 1], d[i + 2]);
-        const weight = 1 + sat / 16;
-        r += d[i] * weight;
-        gr += d[i + 1] * weight;
-        b += d[i + 2] * weight;
-        w += weight;
-      }
-      if (!dead && w > 0) setColor(`${Math.round(r / w)}, ${Math.round(gr / w)}, ${Math.round(b / w)}`);
+      g.drawImage(img, 0, 0, 24, 24);
+      const found = paletteOf(g.getImageData(0, 0, 24, 24).data);
+      if (!dead && found) setPalette(found);
     };
     img.src = url;
     return () => {
       dead = true;
     };
   }, [url]);
-  return color;
+  return palette;
 }
 
 const artUrl = (m: MediaInfo | null) => (m?.artwork_png_base64 ? `data:${m.artwork_mime};base64,${m.artwork_png_base64}` : null);
@@ -245,22 +286,26 @@ function Art({ url, className }: { url: string | null; className?: string }) {
 }
 
 /** The island's character: two neon green arch eyes that blink; now and then the robot swaps places with them (animated), waves, and leaves again. */
-function Eyes({ waving, shot }: { waving: boolean; shot: boolean }) {
+function Eyes({ waving, shot, music = false, still = false }: { waving: boolean; shot: boolean; music?: boolean; still?: boolean }) {
+  // While music plays the robot stays in the eyes' place and only shakes its head (still: music is paused).
   return (
-    <div className={`eyes${waving ? " waving" : ""}${shot ? " shot" : ""}`} aria-hidden>
+    <div className={`eyes${waving || music ? " waving" : ""}${music ? " robot-only" : ""}${still ? " still" : ""}${shot ? " shot" : ""}`} aria-hidden>
       <div className="eyes-pair">
         <i />
         <i />
       </div>
       <svg className="eyes-robot" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M12 5V2.6" />
-        <circle cx="12" cy="2" r="1" fill="currentColor" stroke="none" />
-        <rect x="6" y="5" width="12" height="8.5" rx="2.6" />
-        <circle cx="9.6" cy="9.2" r="1.1" fill="currentColor" stroke="none" />
-        <circle cx="14.4" cy="9.2" r="1.1" fill="currentColor" stroke="none" />
+        {/* The head turns from side to side (its own group, around the neck); the body and the arms stay still. */}
+        <g className="robot-head">
+          <path d="M12 5V2.6" />
+          <circle cx="12" cy="2" r="1" fill="currentColor" stroke="none" />
+          <rect x="6" y="5" width="12" height="8.5" rx="2.6" />
+          <circle cx="9.6" cy="9.2" r="1.1" fill="currentColor" stroke="none" />
+          <circle cx="14.4" cy="9.2" r="1.1" fill="currentColor" stroke="none" />
+        </g>
         <rect x="8" y="15" width="8" height="5.5" rx="2" />
         <path d="M8 16.6 5 19" />
-        <path className="robot-arm" d="M16 16.6 19.4 12.4" />
+        <path d="M16 16.6 19 19" />
         <path d="M10.4 20.6v1.8M13.6 20.6v1.8" />
       </svg>
       <svg className="eyes-camera" width="24" height="22" viewBox="0 0 24 22" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
@@ -400,7 +445,8 @@ export default function Notch() {
   const hasMedia = media !== null;
   const playing = media?.playing ?? false;
   const art = useMemo(() => artUrl(media), [media]);
-  const artColor = useArtColor(art);
+  const artPalette = useArtPalette(art);
+  const gradientFx = [...`${media?.title ?? ""}${media?.artist ?? ""}`].reduce((h, ch) => (h * 31 + ch.charCodeAt(0)) >>> 0, 7) % GRADIENT_FX.length;
 
   // Manual choice sticks: the auto-return to status only applies to music that opened itself.
   const manualMusic = useRef(false);
@@ -654,7 +700,7 @@ export default function Notch() {
   forcedLinkRef.current = linkOpen && link?.forced === true;
   eyesShowingRef.current = ready && !hovered && !tools && !quick && !shelfOpen && !historyOpen && !dropping && !bannerOpen && !linkOpen;
 
-  const width = !ready ? 34 : linkOpen ? 280 : tools || quick || shelfOpen || historyOpen ? 520 : dropping ? 380 : bannerOpen ? 380 : musicOpen ? 340 : isMusic ? 198 : hovered ? 170 + widgetsW : hasMedia ? 150 : 140;
+  const width = !ready ? 34 : linkOpen ? 280 : tools || quick || shelfOpen || historyOpen ? 520 : dropping ? 380 : bannerOpen ? 380 : musicOpen ? 340 : isMusic ? (hovered ? 276 : 260) : hovered ? 170 + widgetsW : hasMedia ? 150 : 140;
   const height = !ready ? 34 : linkOpen ? 46 : tools ? 280 : quick ? 312 : shelfOpen || historyOpen ? 312 : dropping ? 110 : bannerOpen ? 76 : musicOpen ? (media!.duration_ms > 0 ? 126 : 108) + (showSources ? 36 : 0) : 36;
 
   // Only the island's own shape takes clicks; the rest of its (much larger) transparent window belongs to the programs below.
@@ -710,14 +756,16 @@ export default function Notch() {
         </AnimatePresence>
 
         <AnimatePresence>
-          {musicOpen && artColor && (
+          {musicOpen && (
             <motion.div
-              className="music-gradient"
-              style={{ background: `linear-gradient(135deg, rgba(${artColor}, 0.55) 0%, rgba(${artColor}, 0.18) 55%, transparent 100%)` }}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
+              key={gradientFx}
+              className={`music-gradient fx${gradientFx}`}
+              // No cover (a video, a Short): a soft blue and violet instead, so the player still has its moving gradient.
+              style={{ "--art": (artPalette ?? FALLBACK_PALETTE)[0], "--art2": (artPalette ?? FALLBACK_PALETTE)[1] } as React.CSSProperties}
+              initial={{ opacity: 0, ...GRADIENT_FX[gradientFx].from }}
+              animate={{ opacity: 1, ...GRADIENT_FX[gradientFx].to }}
               exit={{ opacity: 0 }}
-              transition={{ duration: 0.3 }}
+              transition={{ duration: 0.3, backgroundPosition: GRADIENT_FX[gradientFx].move, backgroundSize: GRADIENT_FX[gradientFx].move }}
             />
           )}
         </AnimatePresence>
@@ -877,8 +925,30 @@ export default function Notch() {
               exit={{ opacity: 0, y: 5, transition: { duration: 0.1 } }}
               transition={{ duration: 0.2 }}
             >
-              <div className={`side left${isMusic && !showWidgets ? " snug" : ""}`}>
-                {hasMedia && <Visualizer playing={playing} />}
+              <div className="side left">
+                {isMusic ? (
+                  <>
+                  <button
+                    className={`art-small${hovered ? " large" : ""}${playing ? "" : " paused"}`}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      mediaToggle();
+                    }}
+                    onDoubleClick={mediaNext}
+                    onContextMenu={(e) => {
+                      e.preventDefault();
+                      mediaPrev();
+                    }}
+                    aria-label={t("media.playPause")}
+                  >
+                    <Art url={art} />
+                    <span className="art-overlay">{playing ? <PauseIcon /> : <PlayIcon />}</span>
+                  </button>
+                    <span className="music-title">{media?.title}</span>
+                  </>
+                ) : (
+                  hasMedia && <Visualizer playing={playing} />
+                )}
                 {showWidgets && <StatusWidgets ids={placed.left} cfg={statusCfg} stats={stats} weather={weather} status={system} />}
               </div>
 
@@ -897,26 +967,10 @@ export default function Notch() {
                 </AnimatePresence>
               </button>
 
-              <div className="side right">
+              <div className={`side right${isMusic ? " music" : ""}`}>
                 {isMusic ? (
                   <>
-                  {!showWidgets && <Eyes waving={greeting} shot={shot} />}
-                  <button
-                    className={`art-small${hovered ? " large" : ""}${playing ? "" : " paused"}`}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      mediaToggle();
-                    }}
-                    onDoubleClick={mediaNext}
-                    onContextMenu={(e) => {
-                      e.preventDefault();
-                      mediaPrev();
-                    }}
-                    aria-label={t("media.playPause")}
-                  >
-                    <Art url={art} />
-                    <span className="art-overlay">{playing ? <PauseIcon /> : <PlayIcon />}</span>
-                  </button>
+                    {!showWidgets && <Eyes waving={greeting} shot={shot} music still={!playing} />}
                   </>
                 ) : (
                   <>
