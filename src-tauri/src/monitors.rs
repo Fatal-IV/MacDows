@@ -170,10 +170,10 @@ unsafe extern "system" {
 /// While alive, the calling thread sees the screen in real pixels (per-monitor DPI awareness). Without it a thread that is not aware gets
 /// the monitors in virtual, scaled coordinates (the second monitor at 1920,0 with scale 1 instead of 2400,0 with scale 1.25), and the bars
 /// land in the wrong places.
-struct PerMonitorDpi(isize);
+pub(crate) struct PerMonitorDpi(isize);
 
 impl PerMonitorDpi {
-    fn enter() -> Self {
+    pub(crate) fn enter() -> Self {
         const PER_MONITOR_AWARE_V2: isize = -4;
         PerMonitorDpi(unsafe { SetThreadDpiAwarenessContext(PER_MONITOR_AWARE_V2) })
     }

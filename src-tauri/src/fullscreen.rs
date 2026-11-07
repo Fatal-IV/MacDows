@@ -33,11 +33,11 @@ pub fn should_hide(vis: Visibility, fullscreen: Option<bool>) -> bool {
 static APP: OnceLock<AppHandle> = OnceLock::new();
 static LAST: std::sync::atomic::AtomicI8 = std::sync::atomic::AtomicI8::new(-1);
 /// The monitor of the window in front and whether that window covers it; what `state_for_window` answers from.
-static FG: std::sync::Mutex<Option<(Rect, bool)>> = std::sync::Mutex::new(None);
+static FG: std::sync::Mutex<Option<(isize, bool)>> = std::sync::Mutex::new(None);
 
 /// Whether a fullscreen app is on `monitor`: only the monitor the window in front is on can be fullscreen, every other monitor is not
 /// (`None` while nothing is known).
-pub fn covers_for(fg: Option<(Rect, bool)>, monitor: Rect) -> Option<bool> {
+pub fn covers_for(fg: Option<(isize, bool)>, monitor: isize) -> Option<bool> {
     let (fg_monitor, covers) = fg?;
     Some(fg_monitor == monitor && covers)
 }
@@ -49,14 +49,14 @@ fn class_of(hwnd: HWND) -> String {
 }
 
 /// The monitor of the window in front and whether the window covers it. A desktop or taskbar window in front covers nothing.
-fn probe() -> Option<(Rect, bool)> {
+fn probe() -> Option<(isize, bool)> {
     unsafe {
         let fg = GetForegroundWindow();
         if fg.0.is_null() {
             return None;
         }
         if matches!(class_of(fg).as_str(), "Progman" | "WorkerW" | "Shell_TrayWnd" | "Shell_SecondaryTrayWnd") {
-            return Some((Rect { left: 0, top: 0, right: 0, bottom: 0 }, false));
+            return Some((0, false));
         }
         let mut wr = RECT::default();
         GetWindowRect(fg, &mut wr).ok()?;
@@ -66,20 +66,13 @@ fn probe() -> Option<(Rect, bool)> {
             return None;
         }
         let m = Rect { left: mi.rcMonitor.left, top: mi.rcMonitor.top, right: mi.rcMonitor.right, bottom: mi.rcMonitor.bottom };
-        Some((m, covers_monitor(Rect { left: wr.left, top: wr.top, right: wr.right, bottom: wr.bottom }, m)))
+        Some((mon.0 as isize, covers_monitor(Rect { left: wr.left, top: wr.top, right: wr.right, bottom: wr.bottom }, m)))
     }
 }
 
 /// Whether a fullscreen app is on the monitor of this window (a bar): `None` while nothing is known.
 pub fn state_for_window(hwnd: HWND) -> Option<bool> {
-    let monitor = unsafe {
-        let mon = MonitorFromWindow(hwnd, MONITOR_DEFAULTTONEAREST);
-        let mut mi = MONITORINFO { cbSize: std::mem::size_of::<MONITORINFO>() as u32, ..Default::default() };
-        if !GetMonitorInfoW(mon, &mut mi).as_bool() {
-            return None;
-        }
-        Rect { left: mi.rcMonitor.left, top: mi.rcMonitor.top, right: mi.rcMonitor.right, bottom: mi.rcMonitor.bottom }
-    };
+    let monitor = unsafe { MonitorFromWindow(hwnd, MONITOR_DEFAULTTONEAREST) }.0 as isize;
     covers_for(*FG.lock().unwrap_or_else(|e| e.into_inner()), monitor)
 }
 
@@ -158,11 +151,13 @@ mod tests {
 
     #[test]
     fn a_fullscreen_app_covers_only_its_own_monitor() {
-        let b = Rect { left: 1920, top: 0, right: 4320, bottom: 1350 };
-        assert_eq!(covers_for(Some((MON, true)), MON), Some(true));
-        assert_eq!(covers_for(Some((MON, true)), b), Some(false), "the other monitor is not affected");
-        assert_eq!(covers_for(Some((MON, false)), MON), Some(false));
-        assert_eq!(covers_for(Some((b, true)), MON), Some(false));
-        assert_eq!(covers_for(None, MON), None, "unknown stays unknown");
+        // Monitors are told apart by their handle: comparing rectangles breaks when two threads see the screen in different DPI contexts.
+        let (m1, m2) = (1001isize, 1002isize);
+        assert_eq!(covers_for(Some((m1, true)), m1), Some(true));
+        assert_eq!(covers_for(Some((m1, true)), m2), Some(false), "the other monitor is not affected");
+        assert_eq!(covers_for(Some((m1, false)), m1), Some(false));
+        assert_eq!(covers_for(Some((m2, true)), m1), Some(false));
+        assert_eq!(covers_for(Some((0, false)), m1), Some(false), "a desktop or taskbar window in front covers nothing");
+        assert_eq!(covers_for(None, m1), None, "unknown stays unknown");
     }
 }

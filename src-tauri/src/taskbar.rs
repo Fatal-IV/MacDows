@@ -210,6 +210,8 @@ fn secondary_windows() -> Vec<HWND> {
 /// The monitor a window is on (the nearest one: an auto-hidden taskbar is parked half outside its monitor), as the rectangle
 /// Windows reports for it; the same numbers as `monitors::MonitorInfo::rect`.
 fn monitor_rect_of(hwnd: HWND) -> Option<Rect> {
+    // In real pixels, like the monitor list it is compared with.
+    let _dpi = crate::monitors::PerMonitorDpi::enter();
     unsafe {
         let monitor = MonitorFromWindow(hwnd, MONITOR_DEFAULTTONEAREST);
         let mut info = MONITORINFO { cbSize: std::mem::size_of::<MONITORINFO>() as u32, ..Default::default() };
