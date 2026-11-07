@@ -440,7 +440,7 @@ mod tests {
     }
 
     fn state(pid: u32) -> TaskbarState {
-        TaskbarState { version: 1, hidden_by_macdows: true, was_autohide: false, chevron_present: true, app_pid: pid }
+        TaskbarState { version: 1, hidden_by_macdows: true, was_autohide: false, chevron_present: true, app_pid: pid, hidden_secondary: false }
     }
 
     #[test]

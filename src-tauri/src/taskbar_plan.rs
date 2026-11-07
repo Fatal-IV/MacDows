@@ -1,4 +1,5 @@
 //! Taskbar takeover decisions. Pure functions (unit tested); the Windows calls live in `taskbar.rs`.
+use crate::fullscreen::Rect;
 use serde::{Deserialize, Serialize};
 
 pub const STATE_VERSION: u32 = 1;
@@ -12,6 +13,9 @@ pub struct TaskbarState {
     /// Whether the "show hidden icons" chevron existed while the taskbar was still visible.
     pub chevron_present: bool,
     pub app_pid: u32,
+    /// Whether MacDows also hid the taskbars of other monitors (those with a dock).
+    #[serde(default)]
+    pub hidden_secondary: bool,
 }
 
 /// None for empty, corrupt or unknown-version input.
@@ -39,7 +43,7 @@ pub fn plan_hide(existing: Option<&TaskbarState>, current_autohide: bool, chevro
         _ => (current_autohide, chevron_present),
     };
     HidePlan {
-        state_to_save: TaskbarState { version: STATE_VERSION, hidden_by_macdows: true, was_autohide, chevron_present: chevron, app_pid: pid },
+        state_to_save: TaskbarState { version: STATE_VERSION, hidden_by_macdows: true, was_autohide, chevron_present: chevron, app_pid: pid, hidden_secondary: existing.map_or(false, |s| s.hidden_secondary) },
         set_autohide: true,
         hide_window: true,
     }
@@ -50,14 +54,16 @@ pub struct RestorePlan {
     pub show_window: bool,
     pub set_autohide: Option<bool>,
     pub clear_state: bool,
+    /// The taskbars of other monitors that MacDows hid are shown again.
+    pub show_secondary: bool,
 }
 
 /// Without a state the auto-hide value is never guessed; the window is only shown when it is hidden.
 pub fn plan_restore(state: Option<&TaskbarState>, window_hidden_now: bool) -> RestorePlan {
     match state {
-        Some(s) if s.hidden_by_macdows => RestorePlan { show_window: true, set_autohide: Some(s.was_autohide), clear_state: true },
-        Some(_) => RestorePlan { show_window: false, set_autohide: None, clear_state: false },
-        None => RestorePlan { show_window: window_hidden_now, set_autohide: None, clear_state: false },
+        Some(s) if s.hidden_by_macdows => RestorePlan { show_window: true, set_autohide: Some(s.was_autohide), clear_state: true, show_secondary: s.hidden_secondary },
+        Some(_) => RestorePlan { show_window: false, set_autohide: None, clear_state: false, show_secondary: false },
+        None => RestorePlan { show_window: window_hidden_now, set_autohide: None, clear_state: false, show_secondary: false },
     }
 }
 
@@ -159,6 +165,13 @@ pub trait Backend {
     fn window_hidden(&self) -> bool;
     /// Must be read while the taskbar is still visible.
     fn chevron_present(&self) -> bool;
+    /// Hides the taskbars of other monitors that sit on one of these monitors (the default does nothing: only the real backend has them).
+    fn hide_secondary(&self, _monitors: &[Rect]) {}
+    /// Shows every taskbar of another monitor that is hidden.
+    fn show_secondary(&self) {}
+    fn secondary_hidden(&self) -> bool {
+        false
+    }
 }
 
 /// Where the state lives. The real implementation is `taskbar::FileStore`.
@@ -187,12 +200,34 @@ pub fn hide(backend: &impl Backend, store: &impl Store, pid: u32) -> Result<(), 
     Ok(())
 }
 
+/// While MacDows has hidden the taskbar, hides the taskbars of the other monitors that have a dock (`monitors`) and shows the others
+/// again; remembered in the state so that every restore path gives them back. The state is saved first: if that fails nothing is hidden.
+pub fn apply_secondary(backend: &impl Backend, store: &impl Store, monitors: &[Rect]) {
+    let Some(mut state) = store.load().filter(|s| s.hidden_by_macdows) else { return };
+    state.hidden_secondary = !monitors.is_empty();
+    if store.save(&state).is_err() {
+        return;
+    }
+    backend.show_secondary();
+    if !monitors.is_empty() {
+        backend.hide_secondary(monitors);
+    }
+}
+
+/// A taskbar of another monitor that is hidden while nobody owns the takeover any more is a bug: show it.
+pub fn needs_final_show_secondary(state: Option<&TaskbarState>, secondary_hidden: bool) -> bool {
+    state.is_none() && secondary_hidden
+}
+
 /// Order: show the window, then put the stored auto-hide value back.
 pub fn restore(backend: &impl Backend, store: &impl Store) {
     let state = store.load();
     let plan = plan_restore(state.as_ref(), backend.window_hidden());
     if plan.show_window {
         backend.show_window();
+    }
+    if plan.show_secondary {
+        backend.show_secondary();
     }
     if let Some(on) = plan.set_autohide {
         backend.set_autohide(on);
@@ -211,7 +246,7 @@ mod tests {
     use super::*;
 
     fn hidden(was_autohide: bool) -> TaskbarState {
-        TaskbarState { version: 1, hidden_by_macdows: true, was_autohide, chevron_present: true, app_pid: 7 }
+        TaskbarState { version: 1, hidden_by_macdows: true, was_autohide, chevron_present: true, app_pid: 7, hidden_secondary: false }
     }
 
     #[test]
@@ -244,18 +279,18 @@ mod tests {
     #[test]
     fn restore_puts_back_each_original() {
         let off = plan_restore(Some(&hidden(false)), true);
-        assert_eq!(off, RestorePlan { show_window: true, set_autohide: Some(false), clear_state: true });
+        assert_eq!(off, RestorePlan { show_window: true, set_autohide: Some(false), clear_state: true, show_secondary: false });
         let on = plan_restore(Some(&hidden(true)), true);
-        assert_eq!(on, RestorePlan { show_window: true, set_autohide: Some(true), clear_state: true });
+        assert_eq!(on, RestorePlan { show_window: true, set_autohide: Some(true), clear_state: true, show_secondary: false });
     }
 
     #[test]
     fn restore_without_state_never_guesses_auto_hide() {
-        assert_eq!(plan_restore(None, true), RestorePlan { show_window: true, set_autohide: None, clear_state: false });
-        assert_eq!(plan_restore(None, false), RestorePlan { show_window: false, set_autohide: None, clear_state: false });
+        assert_eq!(plan_restore(None, true), RestorePlan { show_window: true, set_autohide: None, clear_state: false, show_secondary: false });
+        assert_eq!(plan_restore(None, false), RestorePlan { show_window: false, set_autohide: None, clear_state: false, show_secondary: false });
         let mut not_ours = hidden(false);
         not_ours.hidden_by_macdows = false;
-        assert_eq!(plan_restore(Some(&not_ours), true), RestorePlan { show_window: false, set_autohide: None, clear_state: false });
+        assert_eq!(plan_restore(Some(&not_ours), true), RestorePlan { show_window: false, set_autohide: None, clear_state: false, show_secondary: false });
     }
 
     #[test]
@@ -352,6 +387,100 @@ mod orchestration_tests {
         }
     }
 
+    struct SecBackend {
+        log: Log,
+    }
+
+    impl Backend for SecBackend {
+        fn autohide(&self) -> bool {
+            false
+        }
+        fn set_autohide(&self, _on: bool) {}
+        fn hide_window(&self) {}
+        fn show_window(&self) {}
+        fn window_hidden(&self) -> bool {
+            false
+        }
+        fn chevron_present(&self) -> bool {
+            false
+        }
+        fn hide_secondary(&self, monitors: &[Rect]) {
+            self.log.borrow_mut().push(format!("hide_secondary({})", monitors.len()));
+        }
+        fn show_secondary(&self) {
+            self.log.borrow_mut().push("show_secondary".into());
+        }
+    }
+
+    fn sec_state(hidden_by_macdows: bool, hidden_secondary: bool) -> TaskbarState {
+        TaskbarState { version: 1, hidden_by_macdows, was_autohide: false, chevron_present: true, app_pid: 7, hidden_secondary }
+    }
+
+    fn monitor() -> Rect {
+        Rect { left: 1920, top: 0, right: 4320, bottom: 1350 }
+    }
+
+    #[test]
+    fn an_old_state_file_has_no_hidden_secondary() {
+        let state = state_from_json(r#"{"version":1,"hidden_by_macdows":true,"was_autohide":false,"chevron_present":true,"app_pid":7}"#).unwrap();
+        assert!(!state.hidden_secondary);
+    }
+
+    #[test]
+    fn secondary_taskbars_are_hidden_for_the_monitors_with_a_dock_and_remembered() {
+        let log: Log = Rc::new(RefCell::new(Vec::new()));
+        let store = FakeStore { state: RefCell::new(Some(sec_state(true, false))), fail_save: false, log: log.clone() };
+        apply_secondary(&SecBackend { log: log.clone() }, &store, &[monitor()]);
+        assert!(store.state.borrow().as_ref().unwrap().hidden_secondary);
+        let calls: Vec<String> = log.borrow().iter().filter(|l| l.contains("secondary")).cloned().collect();
+        assert_eq!(calls, vec!["show_secondary".to_string(), "hide_secondary(1)".to_string()], "all shown first, then only the wanted monitors hidden");
+    }
+
+    #[test]
+    fn no_monitor_with_a_dock_gives_the_secondary_taskbars_back() {
+        let log: Log = Rc::new(RefCell::new(Vec::new()));
+        let store = FakeStore { state: RefCell::new(Some(sec_state(true, true))), fail_save: false, log: log.clone() };
+        apply_secondary(&SecBackend { log: log.clone() }, &store, &[]);
+        assert!(!store.state.borrow().as_ref().unwrap().hidden_secondary);
+        let calls: Vec<String> = log.borrow().iter().filter(|l| l.contains("secondary")).cloned().collect();
+        assert_eq!(calls, vec!["show_secondary".to_string()]);
+    }
+
+    #[test]
+    fn secondary_taskbars_are_left_alone_when_macdows_did_not_hide_the_taskbar() {
+        for state in [None, Some(sec_state(false, false))] {
+            let log: Log = Rc::new(RefCell::new(Vec::new()));
+            let store = FakeStore { state: RefCell::new(state), fail_save: false, log: log.clone() };
+            apply_secondary(&SecBackend { log: log.clone() }, &store, &[monitor()]);
+            assert!(log.borrow().iter().all(|l| !l.contains("secondary")));
+        }
+    }
+
+    #[test]
+    fn nothing_is_hidden_when_the_state_cannot_be_saved() {
+        let log: Log = Rc::new(RefCell::new(Vec::new()));
+        let store = FakeStore { state: RefCell::new(Some(sec_state(true, false))), fail_save: true, log: log.clone() };
+        apply_secondary(&SecBackend { log: log.clone() }, &store, &[monitor()]);
+        assert!(log.borrow().iter().all(|l| !l.contains("secondary")), "a hidden taskbar without a record would never come back");
+    }
+
+    #[test]
+    fn a_crash_with_secondary_taskbars_hidden_is_repaired_by_the_restore() {
+        let log: Log = Rc::new(RefCell::new(Vec::new()));
+        let store = FakeStore { state: RefCell::new(Some(sec_state(true, true))), fail_save: false, log: log.clone() };
+        assert!(needs_stale_restore(store.state.borrow().as_ref(), false));
+        restore(&SecBackend { log: log.clone() }, &store);
+        assert!(log.borrow().iter().any(|l| l == "show_secondary"));
+        assert!(store.state.borrow().is_none(), "the record is cleared");
+    }
+
+    #[test]
+    fn a_secondary_taskbar_left_hidden_without_an_owner_is_shown() {
+        assert!(needs_final_show_secondary(None, true));
+        assert!(!needs_final_show_secondary(None, false));
+        assert!(!needs_final_show_secondary(Some(&sec_state(true, true)), true), "an owner exists");
+    }
+
     struct FakeStore {
         state: RefCell<Option<TaskbarState>>,
         fail_save: bool,
@@ -392,7 +521,7 @@ mod orchestration_tests {
     }
 
     #[test]
-    fn nothing_is_hidden_when_the_state_cannot_be_saved() {
+    fn secondary_taskbars_are_not_hidden_when_the_state_cannot_be_saved() {
         let (b, s, log) = rig(false, true, None);
         assert_eq!(hide(&b, &s, 7), Err(HideError::StateNotSaved));
         assert_eq!(*log.borrow(), vec!["save-failed"]);
@@ -447,7 +576,7 @@ mod guard_owner_tests {
 
     #[test]
     fn a_guard_only_restores_the_state_its_own_app_wrote() {
-        let state = TaskbarState { version: 1, hidden_by_macdows: true, was_autohide: false, chevron_present: true, app_pid: 8 };
+        let state = TaskbarState { version: 1, hidden_by_macdows: true, was_autohide: false, chevron_present: true, app_pid: 8, hidden_secondary: false };
         assert!(state_belongs_to(&state, 8));
         assert!(!state_belongs_to(&state, 7), "an old guard must not undo a newer instance");
     }
@@ -465,7 +594,7 @@ mod wiring_tests {
     use super::*;
 
     fn hidden(pid: u32) -> TaskbarState {
-        TaskbarState { version: 1, hidden_by_macdows: true, was_autohide: false, chevron_present: true, app_pid: pid }
+        TaskbarState { version: 1, hidden_by_macdows: true, was_autohide: false, chevron_present: true, app_pid: pid, hidden_secondary: false }
     }
 
     #[test]
@@ -490,7 +619,7 @@ mod watchdog_tests {
     use super::*;
 
     fn hidden() -> TaskbarState {
-        TaskbarState { version: 1, hidden_by_macdows: true, was_autohide: false, chevron_present: true, app_pid: 7 }
+        TaskbarState { version: 1, hidden_by_macdows: true, was_autohide: false, chevron_present: true, app_pid: 7, hidden_secondary: false }
     }
 
     #[test]
@@ -556,7 +685,7 @@ mod final_visibility_tests {
     #[test]
     fn restore_ends_with_a_visible_taskbar_even_if_explorer_hides_it_again() {
         let backend = MovesTheWindowAway { hidden: Cell::new(true), autohide: Cell::new(true), shows: Cell::new(0) };
-        let store = MemStore(std::cell::RefCell::new(Some(TaskbarState { version: 1, hidden_by_macdows: true, was_autohide: false, chevron_present: true, app_pid: 7 })));
+        let store = MemStore(std::cell::RefCell::new(Some(TaskbarState { version: 1, hidden_by_macdows: true, was_autohide: false, chevron_present: true, app_pid: 7, hidden_secondary: false })));
         restore(&backend, &store);
         assert!(!backend.hidden.get(), "the taskbar must be visible after a restore");
         assert!(!backend.autohide.get());
@@ -567,7 +696,7 @@ mod final_visibility_tests {
     fn an_ownerless_hidden_taskbar_must_be_shown() {
         assert!(needs_final_show(None, true));
         assert!(!needs_final_show(None, false));
-        let state = TaskbarState { version: 1, hidden_by_macdows: true, was_autohide: false, chevron_present: true, app_pid: 9 };
+        let state = TaskbarState { version: 1, hidden_by_macdows: true, was_autohide: false, chevron_present: true, app_pid: 9, hidden_secondary: false };
         assert!(!needs_final_show(Some(&state), true), "a newer MacDows instance owns it");
     }
 }
