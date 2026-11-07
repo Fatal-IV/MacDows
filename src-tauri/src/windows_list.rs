@@ -1,6 +1,6 @@
 use base64::Engine;
 use serde::Serialize;
-use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::atomic::{AtomicBool, AtomicIsize, Ordering};
 use std::sync::OnceLock;
 use tauri::{AppHandle, Emitter};
 use windows::core::{PCWSTR, PWSTR};
@@ -83,6 +83,12 @@ pub fn register_bar(hwnd: isize) {
 /// instead of failing, so the window's own icon is the better source.
 pub fn prefer_window_icon(exe: &str) -> bool {
     exe.to_ascii_lowercase().contains(r"\windowsapps\")
+}
+
+/// Windows Settings, Calculator and other Store apps show up as a window of `ApplicationFrameHost.exe`: its exe icon is a generic
+/// one (and the window has none), so the app's icon comes from its AppUserModelID instead.
+pub fn is_frame_host(exe: &str) -> bool {
+    exe.to_ascii_lowercase().ends_with("applicationframehost.exe")
 }
 
 pub fn icon_png_base64(exe: &str) -> Option<String> {
@@ -248,12 +254,14 @@ unsafe extern "system" fn collect(hwnd: HWND, lparam: LPARAM) -> BOOL {
     if is_bar_window(hwnd.0 as isize, &BARS.lock().unwrap()) {
         return BOOL(1);
     }
-    let icon = if prefer_window_icon(&exe) {
+    let aumid = aumid_of(hwnd);
+    let icon = if is_frame_host(&exe) && !aumid.is_empty() {
+        crate::pinned_apps::store_info(&aumid).and_then(|(_, icon)| icon).or_else(|| window_icon_png_base64(hwnd)).or_else(|| icon_png_base64(&exe))
+    } else if prefer_window_icon(&exe) {
         window_icon_png_base64(hwnd).or_else(|| icon_png_base64(&exe))
     } else {
         icon_png_base64(&exe).or_else(|| window_icon_png_base64(hwnd))
     };
-    let aumid = aumid_of(hwnd);
     out.push(AppWindow { id: hwnd.0 as isize, title, exe, aumid, icon_png_base64: icon });
     BOOL(1)
 }
@@ -320,10 +328,35 @@ pub fn list_windows() -> Vec<AppWindow> {
     order_stable(&mut ORDER.lock().unwrap(), enumerate())
 }
 
+/// The program window that was in front last (never the notch or the dock: a click on the dock takes the focus away from the
+/// program, so "is it in front" has to be asked about the window before the click).
+static LAST_APP_FG: AtomicIsize = AtomicIsize::new(0);
+
+/// A click on the dock icon of the window that is already in front minimizes it (like the Windows taskbar); otherwise it is brought forward.
+pub fn should_minimize(id: isize, last_app_fg: isize, fg: isize, minimized: bool) -> bool {
+    !minimized && id != 0 && (id == last_app_fg || id == fg)
+}
+
+unsafe extern "system" fn on_foreground(_: HWINEVENTHOOK, _: u32, hwnd: HWND, id_object: i32, _: i32, _: u32, _: u32) {
+    if id_object != OBJID_WINDOW.0 {
+        return;
+    }
+    let root = GetAncestor(hwnd, GA_ROOT);
+    let id = if root.0.is_null() { hwnd.0 as isize } else { root.0 as isize };
+    if !is_bar_window(id, &BARS.lock().unwrap()) {
+        LAST_APP_FG.store(id, Ordering::SeqCst);
+    }
+}
+
 #[tauri::command]
 pub fn focus_window(id: isize) {
     unsafe {
         let hwnd = HWND(id as *mut _);
+        let fg = GetForegroundWindow().0 as isize;
+        if should_minimize(id, LAST_APP_FG.load(Ordering::SeqCst), fg, IsIconic(hwnd).as_bool()) {
+            let _ = ShowWindow(hwnd, SW_MINIMIZE);
+            return;
+        }
         if IsIconic(hwnd).as_bool() {
             let _ = ShowWindow(hwnd, SW_RESTORE);
         }
@@ -355,6 +388,7 @@ const EVENT_OBJECT_UNCLOAKED: u32 = 0x8018;
 pub fn start(app: AppHandle) {
     let _ = APP.set(app);
     std::thread::spawn(|| unsafe {
+        let _ = SetWinEventHook(EVENT_SYSTEM_FOREGROUND, EVENT_SYSTEM_FOREGROUND, None, Some(on_foreground), 0, 0, WINEVENT_OUTOFCONTEXT);
         for (lo, hi) in [
             (EVENT_OBJECT_CREATE, EVENT_OBJECT_HIDE),
             (EVENT_OBJECT_NAMECHANGE, EVENT_OBJECT_NAMECHANGE),
@@ -416,6 +450,27 @@ mod tests {
     fn store_apps_prefer_the_window_icon() {
         assert!(prefer_window_icon(r"C:\Program Files\WindowsApps\5319275A.WhatsAppDesktop_x64\WhatsApp.Root.exe"));
         assert!(prefer_window_icon(r"c:\program files\windowsapps\Foo\foo.exe"));
+    }
+
+    #[test]
+    fn store_apps_hosted_by_the_frame_host_are_recognised() {
+        assert!(is_frame_host(r"C:\Windows\System32\ApplicationFrameHost.exe"));
+        assert!(is_frame_host(r"c:\windows\system32\applicationframehost.exe"));
+        assert!(!is_frame_host(r"C:\Program Files\Mozilla Firefox\firefox.exe"));
+        assert!(!is_frame_host(""));
+    }
+
+    #[test]
+    fn a_second_click_on_the_window_in_front_minimizes_it() {
+        assert!(should_minimize(7, 7, 99, false), "it was the program window in front before the click on the dock");
+        assert!(should_minimize(7, 3, 7, false), "it is in front right now");
+    }
+
+    #[test]
+    fn a_click_on_another_or_a_minimized_window_brings_it_forward() {
+        assert!(!should_minimize(7, 3, 99, false), "another window was in front");
+        assert!(!should_minimize(7, 7, 7, true), "a minimized window is restored, not minimized again");
+        assert!(!should_minimize(0, 0, 0, false), "nothing known");
     }
 
     #[test]
