@@ -758,3 +758,19 @@ img { -webkit-user-drag: none; user-select: none; }
 .wifi-scan.spinning svg { animation: wifi-scan-spin 0.9s linear infinite; }
 @keyframes wifi-scan-spin { to { transform: rotate(360deg); } }
 @media (prefers-reduced-motion: reduce) { .wifi-scan.spinning svg { animation: none; opacity: 0.5; } }
+
+/* Video: the robot sits in an armchair in front of a screen (the screen flickers, the head leans forward now and then). */
+.eyes-watcher { position: absolute; left: 50%; top: 50%; width: 28px; height: 22px; overflow: visible; opacity: 0; transform: translate(-50%, -50%) scale(0.4); filter: drop-shadow(0 0 3px var(--eye)); transition: opacity 0.25s ease, transform 0.35s cubic-bezier(0.34, 1.4, 0.64, 1); }
+.eyes.watching .eyes-pair, .eyes.watching .eyes-robot { opacity: 0; transform: translate(-50%, -50%) scale(0.4); }
+.eyes.watching .eyes-watcher { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+.eyes.shot .eyes-watcher { opacity: 0; transform: translate(-50%, -50%) scale(0.4); }
+.watcher-head { transform-box: view-box; transform-origin: 8px 13px; }
+.eyes.watching .watcher-head { animation: watcher-lean 4.5s ease-in-out infinite; }
+.eyes.watching .watcher-screen { animation: watcher-flicker 1.3s steps(1, end) infinite; }
+.eyes.watching.still .watcher-head, .eyes.watching.still .watcher-screen { animation: none; }
+.eyes.watching.still .watcher-screen { opacity: 0.15; }
+@keyframes watcher-lean { 0%, 100% { transform: rotate(0deg); } 50% { transform: rotate(6deg); } }
+@keyframes watcher-flicker { 0% { opacity: 0.9; } 25% { opacity: 0.35; } 50% { opacity: 0.75; } 75% { opacity: 0.25; } 100% { opacity: 0.9; } }
+@media (prefers-reduced-motion: reduce) {
+  .eyes.watching .watcher-head, .eyes.watching .watcher-screen { animation: none; }
+}

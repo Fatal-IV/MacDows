@@ -281,6 +281,10 @@ export interface MediaInfo {
   duration_ms: number;
   updated_at_ms: number;
   seek_enabled: boolean;
+  /** The program that plays it (AppUserModelID). */
+  source_app: string;
+  /** "video", "music" or "" when the player does not say. */
+  playback_type: string;
 }
 
 export interface Volume {

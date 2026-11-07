@@ -29,6 +29,22 @@ pub struct MediaInfo {
     pub updated_at_ms: u64,
     /// Whether the player accepts a seek.
     pub seek_enabled: bool,
+    /// The program that plays it (AppUserModelID, e.g. `MSEdge` or `SpotifyAB.SpotifyMusic_...!Spotify`).
+    pub source_app: String,
+    /// What the player says it plays: "video", "music", or "" (most do not say: Netflix in Edge and Spotify do not).
+    pub playback_type: String,
+}
+
+/// The `MediaPlaybackType` of Windows as the word the front end uses ("" for unknown and images).
+pub fn playback_type_word(kind: windows::Media::MediaPlaybackType) -> &'static str {
+    use windows::Media::MediaPlaybackType;
+    if kind == MediaPlaybackType::Video {
+        "video"
+    } else if kind == MediaPlaybackType::Music {
+        "music"
+    } else {
+        ""
+    }
 }
 
 const TICKS_PER_MS: i64 = 10_000;
@@ -229,7 +245,9 @@ fn read_info(session: &Session) -> Option<MediaInfo> {
         .and_then(|i| i.Controls().ok())
         .and_then(|c| c.IsPlaybackPositionEnabled().ok())
         .unwrap_or(false);
-    Some(MediaInfo { title, artist, playing, artwork_png_base64: b64, artwork_mime: mime.into(), position_ms, duration_ms, updated_at_ms, seek_enabled })
+    let source_app = session.SourceAppUserModelId().map(|s| s.to_string()).unwrap_or_default();
+    let playback_type = props.PlaybackType().ok().and_then(|r| r.Value().ok()).map(playback_type_word).unwrap_or("").to_string();
+    Some(MediaInfo { title, artist, playing, artwork_png_base64: b64, artwork_mime: mime.into(), position_ms, duration_ms, updated_at_ms, seek_enabled, source_app, playback_type })
 }
 
 fn refresh() {

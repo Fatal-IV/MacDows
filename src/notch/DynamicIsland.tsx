@@ -19,6 +19,7 @@ import { needsStats, visibleWidgets, widgetsWidth } from "./widgetLogic";
 import { initTheme } from "../appearance/theme";
 import { SurfaceShape } from "../appearance/SurfaceShape";
 import { FALLBACK_PALETTE, GRADIENT_FX } from "./gradientFx";
+import { mediaActivity } from "./mediaActivity";
 import "../appearance/surfaces.css";
 import { MusicNoteIcon, PauseIcon, PlayIcon, SkipBackIcon, SkipForwardIcon } from "./icons";
 import { ToolsPanel, useTimer } from "./Tools";
@@ -81,6 +82,23 @@ function paletteOf(data: Uint8ClampedArray): [string, string] | null {
     return sat.map((v) => Math.min(255, Math.round(v * f))).join(", ");
   };
   return [lift(first), lift(second)];
+}
+
+/** Width over height of the cover, or null while there is none (or it is not loaded yet). */
+function useArtAspect(url: string | null): number | null {
+  const [aspect, setAspect] = useState<number | null>(null);
+  useEffect(() => {
+    setAspect(null);
+    if (!url) return;
+    let dead = false;
+    const img = new Image();
+    img.onload = () => !dead && img.naturalHeight > 0 && setAspect(img.naturalWidth / img.naturalHeight);
+    img.src = url;
+    return () => {
+      dead = true;
+    };
+  }, [url]);
+  return aspect;
 }
 
 function useArtPalette(url: string | null): [string, string] | null {
@@ -276,10 +294,10 @@ function Art({ url, className }: { url: string | null; className?: string }) {
 }
 
 /** The island's character: two neon green arch eyes that blink; now and then the robot swaps places with them (animated), waves, and leaves again. */
-function Eyes({ waving, shot, music = false, still = false }: { waving: boolean; shot: boolean; music?: boolean; still?: boolean }) {
+function Eyes({ waving, shot, music = false, still = false, watch = false }: { waving: boolean; shot: boolean; music?: boolean; still?: boolean; watch?: boolean }) {
   // While music plays the robot stays in the eyes' place and only shakes its head (still: music is paused).
   return (
-    <div className={`eyes${waving || music ? " waving" : ""}${music ? " robot-only" : ""}${still ? " still" : ""}${shot ? " shot" : ""}`} aria-hidden>
+    <div className={`eyes${waving || (music && !watch) ? " waving" : ""}${music && !watch ? " robot-only" : ""}${music && watch ? " watching" : ""}${still ? " still" : ""}${shot ? " shot" : ""}`} aria-hidden>
       <div className="eyes-pair">
         <i />
         <i />
@@ -298,6 +316,21 @@ function Eyes({ waving, shot, music = false, still = false }: { waving: boolean;
         {/* The greeting waves with the raised right arm; the music robot keeps both arms down. */}
         <path className="robot-arm" d={music ? "M16 16.6 19 19" : "M16 16.6 19.4 12.4"} />
         <path d="M10.4 20.6v1.8M13.6 20.6v1.8" />
+      </svg>
+      {/* Video: the robot sits in an armchair and watches a screen. */}
+      <svg className="eyes-watcher" width="28" height="22" viewBox="0 0 28 22" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M3 6.5v10.5M3 14.5h10M13 14.5V17M3 17v2.5M13 17v2.5" />
+        <g className="watcher-head">
+          <path d="M8.4 5V3.4" />
+          <circle cx="8.4" cy="2.7" r="0.9" fill="currentColor" stroke="none" />
+          <rect x="5.2" y="5" width="6.4" height="5.4" rx="1.8" />
+          <circle cx="8.6" cy="7.7" r="0.8" fill="currentColor" stroke="none" />
+          <circle cx="10.4" cy="7.7" r="0.8" fill="currentColor" stroke="none" />
+        </g>
+        <rect x="5.6" y="11.6" width="5.6" height="3" rx="1.2" />
+        <rect x="17" y="4.5" width="9.5" height="7" rx="1.4" />
+        <rect className="watcher-screen" x="18.4" y="5.9" width="6.7" height="4.2" rx="0.6" fill="currentColor" stroke="none" />
+        <path d="M21.7 11.5V14M19.2 14h5" />
       </svg>
       <svg className="eyes-camera" width="24" height="22" viewBox="0 0 24 22" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
         <path d="M3 7.5a2 2 0 0 1 2-2h2.4l1.3-2h6.6l1.3 2H19a2 2 0 0 1 2 2V17a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z" />
@@ -437,6 +470,9 @@ export default function Notch() {
   const playing = media?.playing ?? false;
   const art = useMemo(() => artUrl(media), [media]);
   const artPalette = useArtPalette(art);
+  // Video (Netflix, YouTube, a film) or music: the robot watches or shakes its head. The cover tells too (wide thumbnail or square cover).
+  const artAspect = useArtAspect(art);
+  const activity = media ? mediaActivity(media, artAspect) : "music";
   // 0 in Settings is off; 1 to 8 are the effects in `GRADIENT_FX`.
   const gradientFx = Math.min(GRADIENT_FX.length, Math.max(0, island.screens.music.gradient)) - 1;
   // The moving gradient follows the "reduce motion" choice of Windows (the page media query is not enough: framer-motion moves it from JS).
@@ -973,7 +1009,7 @@ export default function Notch() {
                 {isMusic ? (
                   <>
                     {island.screens.music.visualizer && <Visualizer playing={playing} bars={4} height={16} />}
-                    {!showWidgets && <Eyes waving={greeting} shot={shot} music still={!playing} />}
+                    {!showWidgets && <Eyes waving={greeting} shot={shot} music still={!playing} watch={activity === "video"} />}
                   </>
                 ) : (
                   <>
