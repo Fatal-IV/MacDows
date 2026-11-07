@@ -24,9 +24,13 @@ test("a browser tab with an artist and no cover is music", () => {
   assert.equal(mediaActivity(m("MSEdge", "A song", "An artist"), null), "music");
 });
 
-test("what Windows reports about the kind wins", () => {
+test("a player that says it plays video is believed", () => {
   assert.equal(mediaActivity(m("somewhere.exe", "x", "y", "video"), 1), "video");
-  assert.equal(mediaActivity(m("MSEdge", "x", "y", "music"), 16 / 9), "music");
+});
+
+test("Edge says music for everything, Netflix included: the kind a browser reports is ignored", () => {
+  assert.equal(mediaActivity(m("MSEdge", "Netflix", "", "music"), null), "video");
+  assert.equal(mediaActivity(m("MSEdge", "A song", "An artist", "music"), 1), "music");
 });
 
 test("known video players are video", () => {

@@ -250,8 +250,31 @@ fn read_info(session: &Session) -> Option<MediaInfo> {
     Some(MediaInfo { title, artist, playing, artwork_png_base64: b64, artwork_mime: mime.into(), position_ms, duration_ms, updated_at_ms, seek_enabled, source_app, playback_type })
 }
 
+/// One line in `%APPDATA%\MacDows\logs\media.log` whenever what is playing changes: which program, what kind it says, the title and the cover.
+/// The robot tells video from music with these (see `mediaActivity.ts`), and what a player reports is not always what one would expect.
+fn log_media(info: &Option<MediaInfo>) {
+    use std::io::Write;
+    static LAST_LINE: Mutex<String> = Mutex::new(String::new());
+    let line = match info {
+        Some(i) => format!("source={} type={:?} playing={} title={:?} artist={:?} cover={}", i.source_app, i.playback_type, i.playing, i.title, i.artist, i.artwork_png_base64.as_ref().map_or(0, |b| b.len())),
+        None => "nothing playing".to_string(),
+    };
+    let mut last = LAST_LINE.lock().unwrap_or_else(|e| e.into_inner());
+    if *last == line {
+        return;
+    }
+    *last = line.clone();
+    let dir = std::env::var_os("APPDATA").map(std::path::PathBuf::from).unwrap_or_else(std::env::temp_dir).join("MacDows").join("logs");
+    let _ = std::fs::create_dir_all(&dir);
+    if let Ok(mut f) = std::fs::OpenOptions::new().create(true).append(true).open(dir.join("media.log")) {
+        let secs = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map(|d| d.as_secs()).unwrap_or(0);
+        let _ = writeln!(f, "[{secs}] {line}");
+    }
+}
+
 fn refresh() {
     let info = chosen_session().and_then(|s| read_info(&s));
+    log_media(&info);
     *LAST.lock().unwrap() = info.clone();
     if let Some(app) = APP.get() {
         let _ = app.emit("media-changed", info);
