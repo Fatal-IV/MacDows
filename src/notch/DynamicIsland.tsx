@@ -322,7 +322,8 @@ function Eyes({ waving, shot, music = false, still = false }: { waving: boolean;
         </g>
         <rect x="8" y="15" width="8" height="5.5" rx="2" />
         <path d="M8 16.6 5 19" />
-        <path d="M16 16.6 19 19" />
+        {/* The greeting waves with the raised right arm; the music robot keeps both arms down. */}
+        <path className="robot-arm" d={music ? "M16 16.6 19 19" : "M16 16.6 19.4 12.4"} />
         <path d="M10.4 20.6v1.8M13.6 20.6v1.8" />
       </svg>
       <svg className="eyes-camera" width="24" height="22" viewBox="0 0 24 22" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">

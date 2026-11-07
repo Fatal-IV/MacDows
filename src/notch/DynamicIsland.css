@@ -690,9 +690,16 @@ img { -webkit-user-drag: none; user-select: none; }
   100% { opacity: 0; transform: scale(3.2); }
 }
 .robot-head { transform-box: view-box; transform-origin: 12px 13.5px; }
-.eyes.waving .robot-head { animation: robot-shake 0.9s ease-in-out 0.35s infinite; }
-/* Music: the robot is always there and only the head moves (no bobbing of the whole robot); paused music: head still. */
-.eyes.robot-only .eyes-robot { animation: none; }
+/* The greeting (now and then, at random times): the robot bobs a little and waves with its right arm. */
+.robot-arm { transform-origin: 16px 16.6px; }
+.eyes.waving .robot-arm { animation: robot-wave 0.38s ease-in-out infinite alternate; }
+@keyframes robot-wave {
+  from { transform: rotate(-30deg); }
+  to { transform: rotate(35deg); }
+}
+/* Music: the robot is always there and only shakes its head (no waving, no bobbing); paused music: head still. */
+.eyes.robot-only .robot-head { animation: robot-shake 0.9s ease-in-out 0.35s infinite; }
+.eyes.robot-only .eyes-robot, .eyes.robot-only .robot-arm { animation: none; }
 .eyes.robot-only.still .robot-head { animation: none; }
 @keyframes robot-shake {
   0%, 100% { transform: rotate(0deg); }
@@ -705,7 +712,7 @@ img { -webkit-user-drag: none; user-select: none; }
   50% { transform: translate(-50%, calc(-50% - 1.5px)) scale(1); }
 }
 @media (prefers-reduced-motion: reduce) {
-  .eyes-pair i, .eyes.waving .eyes-robot, .eyes.waving .robot-head, .eyes.shot .cam-lens, .eyes.shot .cam-flash { animation: none; }
+  .eyes-pair i, .eyes.waving .eyes-robot, .eyes.waving .robot-arm, .eyes.robot-only .robot-head, .eyes.shot .cam-lens, .eyes.shot .cam-flash { animation: none; }
   .eyes-pair, .eyes-robot { transition: opacity 0.2s ease; }
 }
 
