@@ -298,7 +298,20 @@ pub fn reconcile(app: &AppHandle) {
     }
     place_all(app);
     *lock(&LAST_SIGNATURE) = signature(&monitors);
+    sync_secondary_taskbars(app);
     let _ = app.emit("monitors-changed", ());
+}
+
+/// The monitors that have a dock: their Windows taskbar is hidden while MacDows replaces it.
+pub fn dock_rects(app: &AppHandle) -> Vec<Rect> {
+    let want = lock(&WANT).clone();
+    list(app).into_iter().filter(|m| is_wanted(&want, &m.key, BarKind::Dock)).map(|m| m.rect).collect()
+}
+
+/// Tells the taskbar code which monitors have a dock (nothing when MacDows does not replace the taskbar).
+pub fn sync_secondary_taskbars(app: &AppHandle) {
+    let replace = app.state::<AppSettings>().0.lock().unwrap().replace_taskbar;
+    crate::taskbar::set_secondary(if replace { dock_rects(app) } else { Vec::new() });
 }
 
 /// Reconciles on a worker thread (for the settings command, which may run on the main thread).

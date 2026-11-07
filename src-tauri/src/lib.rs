@@ -80,6 +80,7 @@ fn apply_replace_taskbar(app: &AppHandle, enabled: bool) {
                 // Tell the dock right away (it shows its Start and Search buttons once the taskbar is hidden); the theme work below is slow.
                 let _ = app.emit("taskbar-changed", ());
                 taskbar::start_guard();
+                monitors::sync_secondary_taskbars(&app);
                 // Windows's Start and Search stay, in the colors of the MacDows theme while it runs.
                 system_theme::set_enabled(true);
             }
@@ -143,6 +144,7 @@ fn start_taskbar_takeover(app: &AppHandle) {
         let still_on = handle.state::<AppSettings>().0.lock().unwrap().replace_taskbar;
         if still_on {
             taskbar::hide_now();
+            monitors::sync_secondary_taskbars(&handle);
             std::thread::sleep(std::time::Duration::from_millis(1500));
             monitors::place_all(&handle);
             let _ = handle.emit("taskbar-changed", ());

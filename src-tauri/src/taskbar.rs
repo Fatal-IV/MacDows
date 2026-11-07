@@ -1,5 +1,6 @@
 //! The real Windows side of the taskbar takeover: appbar state, window visibility, the state file, the
 //! shell shortcuts, the Explorer-restart watcher. Decisions live in `taskbar_plan.rs`.
+use crate::fullscreen::Rect;
 use crate::taskbar_plan::{hidden_icons_available, key_steps, state_from_json, state_to_json, Backend, KeyStep, ShellAction, Store, TaskbarState};
 use serde::Serialize;
 use std::path::PathBuf;
@@ -7,7 +8,9 @@ use std::sync::atomic::{AtomicU32, Ordering};
 use std::sync::OnceLock;
 use std::time::Duration;
 use windows::core::{w, PCWSTR};
+use windows::core::BOOL;
 use windows::Win32::Foundation::{HWND, LPARAM, LRESULT, WPARAM};
+use windows::Win32::Graphics::Gdi::{GetMonitorInfoW, MonitorFromWindow, MONITORINFO, MONITOR_DEFAULTTONEAREST};
 use windows::Win32::System::Com::{CoCreateInstance, CoInitializeEx, CLSCTX_INPROC_SERVER, COINIT_MULTITHREADED};
 use windows::Win32::System::Power::{GetSystemPowerStatus, SYSTEM_POWER_STATUS};
 use windows::Win32::UI::Accessibility::{CUIAutomation, IUIAutomation, TreeScope_Descendants};
@@ -16,7 +19,7 @@ use windows::Win32::UI::Input::KeyboardAndMouse::{
 };
 use windows::Win32::UI::Shell::{SHAppBarMessage, ABM_GETSTATE, ABM_SETSTATE, APPBARDATA};
 use windows::Win32::UI::WindowsAndMessaging::{
-    CreateWindowExW, DefWindowProcW, DispatchMessageW, FindWindowW, GetMessageW, IsWindowVisible, RegisterClassW,
+    CreateWindowExW, DefWindowProcW, DispatchMessageW, EnumWindows, FindWindowW, GetClassNameW, GetMessageW, IsWindowVisible, RegisterClassW,
     RegisterWindowMessageW, ShowWindow, TranslateMessage, MSG, SW_HIDE, SW_SHOW, WINDOW_EX_STYLE, WNDCLASSW, WS_POPUP,
 };
 
@@ -161,6 +164,70 @@ impl Backend for WinBackend {
     fn chevron_present(&self) -> bool {
         tray_window().map_or(false, chevron_present_uia)
     }
+
+    fn hide_secondary(&self, monitors: &[Rect]) {
+        for hwnd in secondary_windows() {
+            if monitor_rect_of(hwnd).is_some_and(|r| monitors.contains(&r)) {
+                unsafe {
+                    let _ = ShowWindow(hwnd, SW_HIDE);
+                }
+            }
+        }
+    }
+
+    fn show_secondary(&self) {
+        for hwnd in secondary_windows() {
+            if !unsafe { IsWindowVisible(hwnd) }.as_bool() {
+                unsafe {
+                    let _ = ShowWindow(hwnd, SW_SHOW);
+                }
+            }
+        }
+    }
+
+    fn secondary_hidden(&self) -> bool {
+        secondary_windows().into_iter().any(|hwnd| !unsafe { IsWindowVisible(hwnd) }.as_bool())
+    }
+}
+
+/// The taskbars of the monitors other than the one with the main taskbar (class `Shell_SecondaryTrayWnd`).
+fn secondary_windows() -> Vec<HWND> {
+    unsafe extern "system" fn collect(hwnd: HWND, lparam: LPARAM) -> BOOL {
+        let mut buf = [0u16; 64];
+        let n = GetClassNameW(hwnd, &mut buf) as usize;
+        if String::from_utf16_lossy(&buf[..n]) == "Shell_SecondaryTrayWnd" {
+            (*(lparam.0 as *mut Vec<HWND>)).push(hwnd);
+        }
+        BOOL(1)
+    }
+    let mut found: Vec<HWND> = Vec::new();
+    unsafe {
+        let _ = EnumWindows(Some(collect), LPARAM(&mut found as *mut _ as isize));
+    }
+    found
+}
+
+/// The monitor a window is on (the nearest one: an auto-hidden taskbar is parked half outside its monitor), as the rectangle
+/// Windows reports for it; the same numbers as `monitors::MonitorInfo::rect`.
+fn monitor_rect_of(hwnd: HWND) -> Option<Rect> {
+    unsafe {
+        let monitor = MonitorFromWindow(hwnd, MONITOR_DEFAULTTONEAREST);
+        let mut info = MONITORINFO { cbSize: std::mem::size_of::<MONITORINFO>() as u32, ..Default::default() };
+        if !GetMonitorInfoW(monitor, &mut info).as_bool() {
+            return None;
+        }
+        let r = info.rcMonitor;
+        Some(Rect { left: r.left, top: r.top, right: r.right, bottom: r.bottom })
+    }
+}
+
+/// The monitors whose Windows taskbar MacDows keeps hidden (those with a dock); kept for the watchdog.
+static SECONDARY_MONITORS: std::sync::Mutex<Vec<Rect>> = std::sync::Mutex::new(Vec::new());
+
+/// Hides the taskbars of other monitors on these monitors (and shows the others again), while MacDows has the taskbar hidden.
+pub fn set_secondary(monitors: Vec<Rect>) {
+    *SECONDARY_MONITORS.lock().unwrap_or_else(|e| e.into_inner()) = monitors.clone();
+    crate::taskbar_plan::apply_secondary(&WinBackend, &FileStore::default(), &monitors);
 }
 
 /// While the setting is on, hides the taskbar again whenever Explorer shows it. Checks every 2 seconds.
@@ -171,11 +238,17 @@ pub fn start_watchdog(setting_on: impl Fn() -> bool + Send + 'static) {
         if visible && !crate::tray_panel::is_busy() && crate::taskbar_plan::watchdog_should_rehide(setting_on(), FileStore::default().load().as_ref(), visible) {
             WinBackend.hide_window();
         }
+        // Explorer can bring a secondary taskbar back too (display changes, restarts).
+        if setting_on() && FileStore::default().load().is_some_and(|s| s.hidden_by_macdows && s.hidden_secondary) {
+            let monitors = SECONDARY_MONITORS.lock().unwrap_or_else(|e| e.into_inner()).clone();
+            WinBackend.hide_secondary(&monitors);
+        }
     });
 }
 
 /// Puts the taskbar back to the state recorded before MacDows touched it (used by the exit hook, the CLI flag and the guard).
 pub fn restore_now() {
+    SECONDARY_MONITORS.lock().unwrap_or_else(|e| e.into_inner()).clear();
     // The personalization colors MacDows set for the Windows menus go back first, on every path that ends the takeover.
     crate::system_theme::restore();
     crate::taskbar_plan::restore(&WinBackend, &FileStore::default());
@@ -186,8 +259,12 @@ pub fn restore_now() {
 /// Explorer may undo one of them. With no owner left, a hidden taskbar is shown again.
 fn settle_visible() {
     std::thread::sleep(Duration::from_millis(1500));
-    if crate::taskbar_plan::needs_final_show(FileStore::default().load().as_ref(), WinBackend.window_hidden()) {
+    let state = FileStore::default().load();
+    if crate::taskbar_plan::needs_final_show(state.as_ref(), WinBackend.window_hidden()) {
         WinBackend.show_window();
+    }
+    if crate::taskbar_plan::needs_final_show_secondary(state.as_ref(), WinBackend.secondary_hidden()) {
+        WinBackend.show_secondary();
     }
 }
 
