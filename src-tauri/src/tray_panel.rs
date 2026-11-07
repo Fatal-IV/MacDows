@@ -34,6 +34,40 @@ pub struct TrayItem {
 }
 
 static ITEMS: Mutex<Vec<TrayItem>> = Mutex::new(Vec::new());
+/// When the list above was read last.
+static COLLECTED_AT: Mutex<Option<Instant>> = Mutex::new(None);
+
+/// A list read this recently is used as it is when the panel is opened.
+const FRESH: Duration = Duration::from_secs(60);
+/// Hovering the chevron reads the list again unless it was read this recently.
+const PREFETCH_AFTER: Duration = Duration::from_secs(5);
+
+/// Where the items of a click on the chevron come from. Reading them takes about 0.7 s (the system's own flyout has to be opened out of
+/// sight, read and closed), so it is done when the pointer reaches the chevron, and the click normally finds the result waiting.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum ClickSource {
+    /// Open the panel with what was read before.
+    Cache,
+    /// A look is running and there is nothing to show yet: wait for it.
+    Wait,
+    /// Read the list now.
+    Collect,
+}
+
+pub fn click_source(cache_empty: bool, age: Option<Duration>, look_running: bool) -> ClickSource {
+    let fresh = age.is_some_and(|a| a < FRESH);
+    if !cache_empty && (fresh || look_running) {
+        ClickSource::Cache
+    } else if cache_empty && look_running {
+        ClickSource::Wait
+    } else {
+        ClickSource::Collect
+    }
+}
+
+pub fn should_prefetch(look_running: bool, age: Option<Duration>) -> bool {
+    !look_running && age.map_or(true, |a| a >= PREFETCH_AFTER)
+}
 static BUSY: AtomicBool = AtomicBool::new(false);
 
 /// True while the flyout is being read, so the taskbar watchdog does not hide the taskbar underneath it.
@@ -455,6 +489,7 @@ pub fn collect() -> Option<Vec<TrayItem>> {
         .map(|(index, r)| TrayItem { index, name: r.name.clone(), icon_png_base64: frame.as_ref().and_then(|f| icon_png(f, r.icon)) })
         .collect();
     *ITEMS.lock().unwrap() = items.clone();
+    *COLLECTED_AT.lock().unwrap() = Some(Instant::now());
     trace(&format!("{} hidden icons read in {} ms", items.len(), started.elapsed().as_millis()));
     Some(items)
 }
@@ -500,6 +535,33 @@ pub fn activate(index: usize, expected_name: &str) -> bool {
 
 pub fn last_items() -> Vec<TrayItem> {
     ITEMS.lock().unwrap().clone()
+}
+
+fn cache_age() -> Option<Duration> {
+    COLLECTED_AT.lock().unwrap().map(|at| at.elapsed())
+}
+
+/// The items for a click on the chevron: the stored list at once when there is a usable one, else (after a running look) a new reading.
+pub fn items_for_click() -> Option<Vec<TrayItem>> {
+    let cached = last_items();
+    match click_source(cached.is_empty(), cache_age(), is_busy()) {
+        ClickSource::Cache => Some(cached),
+        ClickSource::Wait => {
+            let started = Instant::now();
+            while is_busy() && started.elapsed() < Duration::from_secs(3) {
+                std::thread::sleep(Duration::from_millis(20));
+            }
+            Some(last_items()).filter(|i| !i.is_empty()).or_else(collect)
+        }
+        ClickSource::Collect => collect(),
+    }
+}
+
+/// Reads the hidden icons ahead of the click (called when the pointer reaches the chevron, and once after start).
+pub fn prefetch() {
+    if should_prefetch(is_busy(), cache_age()) {
+        let _ = collect();
+    }
 }
 
 #[cfg(test)]
@@ -573,5 +635,37 @@ mod tests {
         assert!(is_chevron_item("", "Gizli simgeleri göster"));
         assert!(!is_chevron_item("", "çalışan uygulamalar"));
         assert!(!is_chevron_item("Start", "start"));
+    }
+
+    #[test]
+    fn a_fresh_cache_opens_the_panel_at_once() {
+        assert_eq!(click_source(false, Some(Duration::from_secs(10)), false), ClickSource::Cache);
+        assert_eq!(click_source(false, Some(Duration::from_secs(59)), false), ClickSource::Cache);
+    }
+
+    #[test]
+    fn a_stale_cache_is_still_used_while_a_look_is_running() {
+        assert_eq!(click_source(false, Some(Duration::from_secs(600)), true), ClickSource::Cache);
+    }
+
+    #[test]
+    fn a_stale_cache_with_no_look_running_is_read_again() {
+        assert_eq!(click_source(false, Some(Duration::from_secs(61)), false), ClickSource::Collect);
+        assert_eq!(click_source(false, None, false), ClickSource::Collect);
+    }
+
+    #[test]
+    fn with_nothing_cached_the_click_waits_for_a_running_look_or_looks_itself() {
+        assert_eq!(click_source(true, None, true), ClickSource::Wait);
+        assert_eq!(click_source(true, None, false), ClickSource::Collect);
+        assert_eq!(click_source(true, Some(Duration::from_secs(1)), false), ClickSource::Collect, "an empty list is no cache");
+    }
+
+    #[test]
+    fn hovering_looks_again_only_when_the_last_look_is_a_few_seconds_old() {
+        assert!(should_prefetch(false, None));
+        assert!(should_prefetch(false, Some(Duration::from_secs(6))));
+        assert!(!should_prefetch(false, Some(Duration::from_secs(2))));
+        assert!(!should_prefetch(true, None), "one look at a time");
     }
 }

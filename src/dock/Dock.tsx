@@ -307,7 +307,7 @@ export default function Dock() {
             <span className="dock-sep" />
             <SystemButton action="notifications" label={t("system.notifications")} icon={BELL} />
             <SystemButton action="quick_settings" label={t("system.quickSettings")} icon={SLIDERS} />
-            <SystemButton action="hidden_icons" label={t("system.hiddenIcons")} icon={CHEVRON} onClick={openTrayPanel} />
+            <SystemButton action="hidden_icons" label={t("system.hiddenIcons")} icon={CHEVRON} onClick={openTrayPanel} onHover={prefetchTrayItems} />
             {settings?.show_desktop_button && (
               <>
                 <span className="dock-sep" />
@@ -349,7 +349,12 @@ function openTrayPanel(button: HTMLElement) {
   invoke("toggle_tray_panel", { centerX: r.left + r.width / 2, dockTop: dock?.top ?? r.top }).catch(() => {});
 }
 
-function SystemButton({ action, label, icon, onClick }: { action: ShellAction; label: string; icon: ReactNode; onClick?: (button: HTMLElement) => void }) {
+/** Reading the hidden icons takes a moment: it starts when the pointer reaches the button, so the click finds them ready. */
+function prefetchTrayItems() {
+  invoke("prefetch_tray_items").catch(() => {});
+}
+
+function SystemButton({ action, label, icon, onClick, onHover }: { action: ShellAction; label: string; icon: ReactNode; onClick?: (button: HTMLElement) => void; onHover?: () => void }) {
   return (
     <motion.button
       className="dock-system"
@@ -358,6 +363,7 @@ function SystemButton({ action, label, icon, onClick }: { action: ShellAction; l
       layout
       whileHover={{ scale: 1.15 }}
       whileTap={{ scale: 0.95 }}
+      onPointerEnter={onHover}
       onClick={(e) => (onClick ? onClick(e.currentTarget) : shellAction(action).catch(() => {}))}
     >
       <svg viewBox="0 0 24 24" width="18" height="18">
