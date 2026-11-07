@@ -1,16 +1,17 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { setSetting, type Settings as AppSettings, type Visibility } from "../bridge";
+import { setSetting, type Settings as AppSettings } from "../bridge";
 import { initTheme } from "../appearance/theme";
 import { useSettings, useT } from "../i18n";
 import { checkForUpdate, installUpdate, useAppVersion, useUpdateStatus, type UpdateStatus } from "../updates";
 import { Button, Group, Row, Select, Toggle } from "../ui/controls";
 import WindowControls from "../ui/WindowControls";
+import { FoldCard } from "./FoldCard";
 import IslandSettings from "./IslandSettings";
+import { VisibilityPicker } from "./VisibilityPicker";
 import WhatsNewDialog from "./WhatsNewDialog";
 import "./Settings.css";
 
-const VISIBILITIES: Visibility[] = ["fixed", "smart", "peek"];
 const LANGUAGES = ["en", "tr"];
 
 function statusLine(t: (key: string) => string, status: UpdateStatus): string {
@@ -107,42 +108,46 @@ const ITEMS: Item[] = [
     id: "dock-taskbar",
     category: "dock",
     render: ({ s, t }) => (
-      <Group>
+      <FoldCard title={t("dock.section.taskbar")}>
         <Row title={t("settings.replaceTaskbar")} description={t("settings.replaceTaskbarHelp")}>
           <Toggle label={t("settings.replaceTaskbar")} checked={s.replace_taskbar} onChange={(v) => setSetting("replace_taskbar", v)} />
         </Row>
-      </Group>
+      </FoldCard>
     ),
   },
   {
     id: "dock",
     category: "dock",
     render: ({ s, t }) => (
-      <Group>
-        <Row title={t("settings.dock")} description={t("settings.visibilityHelp")}>
-          <Select label={t("settings.dock")} value={s.dock_visibility} onChange={(v) => setSetting("dock_visibility", v)} options={VISIBILITIES.map((v) => ({ value: v, label: t(`vis.${v}`) }))} />
-        </Row>
-        <Row title={t("settings.showPinned")} description={t("settings.showPinnedHelp")}>
-          <Toggle label={t("settings.showPinned")} checked={s.show_pinned_apps} onChange={(v) => setSetting("show_pinned_apps", v)} />
-        </Row>
-        {s.hidden_pinned.length > 0 && (
-          <Row title={t("settings.hiddenPinned")} description={t("settings.hiddenPinnedHelp").replace("{n}", String(s.hidden_pinned.length))}>
-            <Button onClick={() => setSetting("hidden_pinned", [])}>{t("settings.hiddenPinnedReset")}</Button>
+      <>
+        <FoldCard title={t("dock.section.visibility")}>
+          <VisibilityPicker value={s.dock_visibility} onChange={(v) => setSetting("dock_visibility", v)} t={t} edge="bottom" />
+        </FoldCard>
+        <FoldCard title={t("dock.section.apps")}>
+          <Row title={t("settings.showPinned")} description={t("settings.showPinnedHelp")}>
+            <Toggle label={t("settings.showPinned")} checked={s.show_pinned_apps} onChange={(v) => setSetting("show_pinned_apps", v)} />
           </Row>
-        )}
-        <Row title={t("settings.showDrives")} description={t("settings.showDrivesHelp")}>
-          <Toggle label={t("settings.showDrives")} checked={s.dock.show_drives} onChange={(v) => setSetting("dock", { ...s.dock, show_drives: v })} />
-        </Row>
-        <Row title={t("settings.winNumber")} description={t("settings.winNumberHelp")}>
-          <Toggle label={t("settings.winNumber")} checked={s.dock.win_number} onChange={(v) => setSetting("dock", { ...s.dock, win_number: v })} />
-        </Row>
-        <Row title={t("settings.previews")} description={t("settings.previewsHelp")}>
-          <Toggle label={t("settings.previews")} checked={s.dock.previews} onChange={(v) => setSetting("dock", { ...s.dock, previews: v })} />
-        </Row>
-        <Row title={t("settings.showDesktop")} description={t("settings.showDesktopHelp")}>
-          <Toggle label={t("settings.showDesktop")} checked={s.show_desktop_button} onChange={(v) => setSetting("show_desktop_button", v)} />
-        </Row>
-      </Group>
+          {s.hidden_pinned.length > 0 && (
+            <Row title={t("settings.hiddenPinned")} description={t("settings.hiddenPinnedHelp").replace("{n}", String(s.hidden_pinned.length))}>
+              <Button onClick={() => setSetting("hidden_pinned", [])}>{t("settings.hiddenPinnedReset")}</Button>
+            </Row>
+          )}
+          <Row title={t("settings.showDrives")} description={t("settings.showDrivesHelp")}>
+            <Toggle label={t("settings.showDrives")} checked={s.dock.show_drives} onChange={(v) => setSetting("dock", { ...s.dock, show_drives: v })} />
+          </Row>
+          <Row title={t("settings.showDesktop")} description={t("settings.showDesktopHelp")}>
+            <Toggle label={t("settings.showDesktop")} checked={s.show_desktop_button} onChange={(v) => setSetting("show_desktop_button", v)} />
+          </Row>
+        </FoldCard>
+        <FoldCard title={t("dock.section.behavior")}>
+          <Row title={t("settings.winNumber")} description={t("settings.winNumberHelp")}>
+            <Toggle label={t("settings.winNumber")} checked={s.dock.win_number} onChange={(v) => setSetting("dock", { ...s.dock, win_number: v })} />
+          </Row>
+          <Row title={t("settings.previews")} description={t("settings.previewsHelp")}>
+            <Toggle label={t("settings.previews")} checked={s.dock.previews} onChange={(v) => setSetting("dock", { ...s.dock, previews: v })} />
+          </Row>
+        </FoldCard>
+      </>
     ),
   },
   {
