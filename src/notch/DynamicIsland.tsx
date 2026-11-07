@@ -334,10 +334,14 @@ function Eyes({ waving, shot, music = false, still = false, watch = false, watch
         <path d="M21.7 11.5V14M19.2 14h5" />
         {/* Popcorn: a bucket in the lap; now and then the hand brings a piece to the mouth. */}
         <g className="watch-popcorn-parts">
-          <path d="M11.6 12.4l.5 2.2h2.4l.5-2.2z" strokeWidth="1.1" />
-          <circle cx="12.3" cy="11.9" r="0.7" fill="currentColor" stroke="none" />
-          <circle cx="13.5" cy="11.8" r="0.7" fill="currentColor" stroke="none" />
-          <path className="popcorn-arm" d="M10.6 12.6L12.4 13.6" strokeWidth="1.3" />
+          <path d="M12 12.8l.5 2.2h2.6l.5-2.2z" strokeWidth="1.1" />
+          <circle className="popcorn-piece p1" cx="12.8" cy="12.2" r="0.75" fill="currentColor" stroke="none" />
+          <circle className="popcorn-piece p2" cx="14.2" cy="12" r="0.75" fill="currentColor" stroke="none" />
+          <circle className="popcorn-piece p3" cx="13.5" cy="11.4" r="0.6" fill="currentColor" stroke="none" />
+          <g className="popcorn-arm">
+            <path d="M10.8 12.4L13.2 13.3" strokeWidth="1.4" />
+            <circle cx="13.5" cy="13.2" r="0.75" fill="currentColor" stroke="none" />
+          </g>
         </g>
         {/* Progress: a play sign and a line on the screen that fills as the video goes on. */}
         <g className="watch-progress-parts">
