@@ -161,7 +161,6 @@ pub fn start(app: AppHandle) {
             let s = app.state::<AppSettings>().0.lock().unwrap().clone();
             let both_fixed = s.island.visibility == Visibility::Fixed && s.dock_visibility == Visibility::Fixed;
             std::thread::sleep(Duration::from_millis(if both_fixed { 250 } else { 100 }));
-            let fs = fullscreen::state();
             let cur = cursor();
             let needs_overlap = s.island.visibility == Visibility::Smart || s.dock_visibility == Visibility::Smart;
             let others = if needs_overlap { windows_list::visible_rects() } else { Vec::new() };
@@ -184,6 +183,8 @@ pub fn start(app: AppHandle) {
                 let Ok(hwnd) = win.hwnd() else { continue };
                 let hwnd = HWND(hwnd.0);
                 let Some(r) = rect_of(hwnd) else { continue };
+                // A fullscreen app counts only on its own monitor.
+                let fs = fullscreen::state_for_window(hwnd);
                 // Shown: the bar's own visible shape when the front end has reported it, not its whole (mostly empty) window.
                 let zone = if prev.unwrap_or(true) { crate::hit_region::screen_rect(label).unwrap_or(r) } else { reveal_band(label, r) };
                 let near = cur.map(|(x, y)| point_in_rect(x, y, zone)).unwrap_or(false) || (kind == BarKind::Dock && (shell_menu_open || crate::preview::is_open()));

@@ -32,6 +32,15 @@ pub fn should_hide(vis: Visibility, fullscreen: Option<bool>) -> bool {
 
 static APP: OnceLock<AppHandle> = OnceLock::new();
 static LAST: std::sync::atomic::AtomicI8 = std::sync::atomic::AtomicI8::new(-1);
+/// The monitor of the window in front and whether that window covers it; what `state_for_window` answers from.
+static FG: std::sync::Mutex<Option<(Rect, bool)>> = std::sync::Mutex::new(None);
+
+/// Whether a fullscreen app is on `monitor`: only the monitor the window in front is on can be fullscreen, every other monitor is not
+/// (`None` while nothing is known).
+pub fn covers_for(fg: Option<(Rect, bool)>, monitor: Rect) -> Option<bool> {
+    let (fg_monitor, covers) = fg?;
+    Some(fg_monitor == monitor && covers)
+}
 
 fn class_of(hwnd: HWND) -> String {
     let mut buf = [0u16; 64];
@@ -39,14 +48,15 @@ fn class_of(hwnd: HWND) -> String {
     String::from_utf16_lossy(&buf[..n])
 }
 
-fn probe() -> Option<bool> {
+/// The monitor of the window in front and whether the window covers it. A desktop or taskbar window in front covers nothing.
+fn probe() -> Option<(Rect, bool)> {
     unsafe {
         let fg = GetForegroundWindow();
         if fg.0.is_null() {
             return None;
         }
         if matches!(class_of(fg).as_str(), "Progman" | "WorkerW" | "Shell_TrayWnd" | "Shell_SecondaryTrayWnd") {
-            return Some(false);
+            return Some((Rect { left: 0, top: 0, right: 0, bottom: 0 }, false));
         }
         let mut wr = RECT::default();
         GetWindowRect(fg, &mut wr).ok()?;
@@ -55,21 +65,22 @@ fn probe() -> Option<bool> {
         if !GetMonitorInfoW(mon, &mut mi).as_bool() {
             return None;
         }
-        let m = mi.rcMonitor;
-        Some(covers_monitor(
-            Rect { left: wr.left, top: wr.top, right: wr.right, bottom: wr.bottom },
-            Rect { left: m.left, top: m.top, right: m.right, bottom: m.bottom },
-        ))
+        let m = Rect { left: mi.rcMonitor.left, top: mi.rcMonitor.top, right: mi.rcMonitor.right, bottom: mi.rcMonitor.bottom };
+        Some((m, covers_monitor(Rect { left: wr.left, top: wr.top, right: wr.right, bottom: wr.bottom }, m)))
     }
 }
 
-/// Current state: Some(true/false) when known, None before the first probe or if probing failed.
-pub fn state() -> Option<bool> {
-    match LAST.load(std::sync::atomic::Ordering::Relaxed) {
-        1 => Some(true),
-        0 => Some(false),
-        _ => None,
-    }
+/// Whether a fullscreen app is on the monitor of this window (a bar): `None` while nothing is known.
+pub fn state_for_window(hwnd: HWND) -> Option<bool> {
+    let monitor = unsafe {
+        let mon = MonitorFromWindow(hwnd, MONITOR_DEFAULTTONEAREST);
+        let mut mi = MONITORINFO { cbSize: std::mem::size_of::<MONITORINFO>() as u32, ..Default::default() };
+        if !GetMonitorInfoW(mon, &mut mi).as_bool() {
+            return None;
+        }
+        Rect { left: mi.rcMonitor.left, top: mi.rcMonitor.top, right: mi.rcMonitor.right, bottom: mi.rcMonitor.bottom }
+    };
+    covers_for(*FG.lock().unwrap_or_else(|e| e.into_inner()), monitor)
 }
 
 unsafe extern "system" fn on_event(_: HWINEVENTHOOK, _: u32, _: HWND, id_object: i32, _: i32, _: u32, _: u32) {
@@ -80,7 +91,10 @@ unsafe extern "system" fn on_event(_: HWINEVENTHOOK, _: u32, _: HWND, id_object:
 }
 
 fn update() {
-    let state = probe();
+    let probed = probe();
+    // Also when the yes/no answer stays the same: the fullscreen app may have moved to another monitor.
+    *FG.lock().unwrap_or_else(|e| e.into_inner()) = probed;
+    let state = probed.map(|(_, covers)| covers);
     let code = match state { Some(true) => 1, Some(false) => 0, None => 2 };
     if LAST.swap(code, std::sync::atomic::Ordering::Relaxed) == code {
         return;
@@ -140,5 +154,15 @@ mod tests {
     fn known_state_decides_in_smart() {
         assert!(should_hide(Visibility::Smart, Some(true)));
         assert!(!should_hide(Visibility::Smart, Some(false)));
+    }
+
+    #[test]
+    fn a_fullscreen_app_covers_only_its_own_monitor() {
+        let b = Rect { left: 1920, top: 0, right: 4320, bottom: 1350 };
+        assert_eq!(covers_for(Some((MON, true)), MON), Some(true));
+        assert_eq!(covers_for(Some((MON, true)), b), Some(false), "the other monitor is not affected");
+        assert_eq!(covers_for(Some((MON, false)), MON), Some(false));
+        assert_eq!(covers_for(Some((b, true)), MON), Some(false));
+        assert_eq!(covers_for(None, MON), None, "unknown stays unknown");
     }
 }
