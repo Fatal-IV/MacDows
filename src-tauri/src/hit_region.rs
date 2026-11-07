@@ -88,6 +88,18 @@ pub fn clear_hit_region(app: AppHandle, label: String) -> Result<(), String> {
     Ok(())
 }
 
+/// What to do with a bar's "ignore the mouse" flag. A hidden window must not be touched at all: changing the flag
+/// makes the window toolkit re-apply the window's state, which showed the dock again behind `visibility.rs`'s back
+/// (it hides with a plain `ShowWindow`) every time the pointer crossed the dock's remembered shape, and then the dock
+/// swallowed the clicks meant for the program underneath (Spotify's player buttons).
+pub fn ignore_update(visible: bool, current: Option<bool>, want: bool) -> Option<bool> {
+    if !visible || current == Some(want) {
+        None
+    } else {
+        Some(want)
+    }
+}
+
 /// Watches the pointer and lets each bar's window ignore the mouse while the pointer is outside its drawn shape.
 pub fn start(app: AppHandle) {
     std::thread::spawn(move || {
@@ -103,11 +115,15 @@ pub fn start(app: AppHandle) {
                     Some(r) => !point_in(r, p.x, p.y, 2),
                     None => false,
                 };
-                if ignoring.get(label).copied() != Some(want) {
-                    if let Some(win) = app.get_webview_window(label) {
-                        if win.set_ignore_cursor_events(want).is_ok() {
-                            ignoring.insert(label, want);
-                        }
+                let Some(win) = app.get_webview_window(label) else { continue };
+                let visible = win.is_visible().unwrap_or(false);
+                if !visible {
+                    // Applied again from scratch as soon as the bar is shown.
+                    ignoring.remove(label);
+                }
+                if let Some(flag) = ignore_update(visible, ignoring.get(label).copied(), want) {
+                    if win.set_ignore_cursor_events(flag).is_ok() {
+                        ignoring.insert(label, flag);
                     }
                 }
             }
@@ -142,6 +158,19 @@ mod tests {
         assert!(point_in(r, 10, 0, 0) && point_in(r, 109, 39, 0));
         assert!(!point_in(r, 110, 20, 0) && !point_in(r, 9, 20, 0));
         assert!(point_in(r, 110, 20, 2) && point_in(r, 8, 20, 2));
+    }
+
+    #[test]
+    fn a_hidden_bar_is_never_touched() {
+        assert_eq!(ignore_update(false, None, true), None);
+        assert_eq!(ignore_update(false, Some(true), false), None);
+    }
+
+    #[test]
+    fn a_shown_bar_only_changes_when_the_flag_differs() {
+        assert_eq!(ignore_update(true, None, false), Some(false));
+        assert_eq!(ignore_update(true, Some(false), false), None);
+        assert_eq!(ignore_update(true, Some(false), true), Some(true));
     }
 
     #[test]

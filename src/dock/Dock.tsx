@@ -104,8 +104,10 @@ export default function Dock() {
       window.removeEventListener("resize", measure);
     };
   }, []);
-  // Side margins hold the flares that blend the dock into the screen edge; room above holds the hover pop-up of the icons.
-  useHitRegion("dock", dockShape ? dockBox(dockShape, window.innerHeight, 20, 44) : null, 0);
+  // Side margins hold the flares that blend the dock into the screen edge. Room above only holds an icon that lifts and
+  // grows under the pointer (6px up, 1.25x); the window preview is a window of its own. Every pixel above the dock that
+  // is kept here steals clicks from the program underneath (the player buttons at the bottom of Spotify).
+  useHitRegion("dock", dockShape ? dockBox(dockShape, window.innerHeight, 20, 12) : null, 0);
   const [order, setOrder] = useState<string[] | null>(null);
   const orderRef = useRef<string[] | null>(null);
   const dragFrom = useRef<string[] | null>(null);

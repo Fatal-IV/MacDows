@@ -7,7 +7,7 @@ use tauri::{AppHandle, Manager};
 use windows::Win32::Foundation::{CloseHandle, HWND, POINT, RECT};
 use windows::Win32::System::Threading::{OpenProcess, QueryFullProcessImageNameW, PROCESS_NAME_WIN32, PROCESS_QUERY_LIMITED_INFORMATION};
 use windows::core::PWSTR;
-use windows::Win32::UI::WindowsAndMessaging::{GetCursorPos, GetForegroundWindow, GetWindowRect, GetWindowThreadProcessId, ShowWindow, SW_HIDE, SW_SHOWNOACTIVATE};
+use windows::Win32::UI::WindowsAndMessaging::{GetCursorPos, GetForegroundWindow, GetWindowRect, GetWindowThreadProcessId, IsWindowVisible, ShowWindow, SW_HIDE, SW_SHOWNOACTIVATE};
 
 #[derive(Debug, Clone, Copy)]
 pub struct Inputs {
@@ -177,7 +177,11 @@ pub fn start(app: AppHandle) {
                 let held = label == "notch"
                     && notch_held(now_ms(), NOTCH_HOLD_UNTIL_MS.load(std::sync::atomic::Ordering::Relaxed), NOTCH_FOCUS_UNTIL_MS.load(std::sync::atomic::Ordering::Relaxed));
                 let want = !hidden_in_fullscreen(label, s.island.fullscreen, fs) && (grace || held || is_visible(Inputs { vis, fullscreen: fs, overlapped, cursor_near: near }));
-                if shown[i] != Some(want) {
+                // Also compares with what the window really is: something else (the window toolkit re-applying the window's
+                // state) can show a bar behind this loop's back, and a bar that stays up while it should be hidden
+                // swallows the clicks meant for the program underneath.
+                let actual = unsafe { IsWindowVisible(hwnd).as_bool() };
+                if shown[i] != Some(want) || actual != want {
                     unsafe {
                         let _ = ShowWindow(hwnd, if want { SW_SHOWNOACTIVATE } else { SW_HIDE });
                     }
