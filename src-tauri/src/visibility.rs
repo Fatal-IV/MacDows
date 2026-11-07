@@ -126,6 +126,11 @@ fn cursor() -> Option<(i32, i32)> {
     Some((p.x, p.y))
 }
 
+/// A bar whose monitor is switched off in the settings is never shown, whatever else would show it (launch grace, hover, ...).
+pub fn final_want(enabled: bool, wanted: bool) -> bool {
+    enabled && wanted
+}
+
 /// The part of the screen another window must cover to count as "overlapping" the bar.
 fn overlap_probe(label: &str, w: Rect) -> Rect {
     let cx = (w.left + w.right) / 2;
@@ -188,7 +193,8 @@ pub fn start(app: AppHandle) {
                 let grace = started.elapsed() < launch_grace(crate::settings::first_run()) && fs != Some(true);
                 let held = kind == BarKind::Notch
                     && notch_held(now_ms(), NOTCH_HOLD_UNTIL_MS.load(std::sync::atomic::Ordering::Relaxed), NOTCH_FOCUS_UNTIL_MS.load(std::sync::atomic::Ordering::Relaxed));
-                let want = !hidden_in_fullscreen(label, s.island.fullscreen, fs) && (grace || held || is_visible(Inputs { vis, fullscreen: fs, overlapped, cursor_near: near }));
+                let wanted = !hidden_in_fullscreen(label, s.island.fullscreen, fs) && (grace || held || is_visible(Inputs { vis, fullscreen: fs, overlapped, cursor_near: near }));
+                let want = final_want(crate::monitors::is_enabled(label), wanted);
                 // Also compares with what the window really is: something else (the window toolkit re-applying the window's
                 // state) can show a bar behind this loop's back, and a bar that stays up while it should be hidden
                 // swallows the clicks meant for the program underneath.
@@ -207,6 +213,14 @@ pub fn start(app: AppHandle) {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn a_switched_off_bar_is_never_shown() {
+        assert!(!final_want(false, true), "grace, hover, anything: a bar of a switched-off monitor stays hidden");
+        assert!(!final_want(false, false));
+        assert!(final_want(true, true));
+        assert!(!final_want(true, false));
+    }
 
     #[test]
     fn the_first_start_keeps_the_bars_up_longer() {
