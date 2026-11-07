@@ -223,6 +223,18 @@ fn place_with(app: &AppHandle, monitors: &[MonitorInfo], label: &str) {
     }
 }
 
+/// Puts the island and the dock of the primary monitor where they belong, at once (called while the app is starting, before anything
+/// else: until then they sit at the default place of a new window and move around as the start goes on).
+pub fn place_primary(app: &AppHandle) {
+    let monitors = list(app);
+    let Some(primary) = monitors.iter().find(|m| m.primary).or(monitors.first()) else { return };
+    let key = primary.key.clone();
+    for label in ["notch", "dock"] {
+        remember(label, &key);
+        place_with(app, &monitors, label);
+    }
+}
+
 /// Places every bar window (after the work area changed, for example).
 pub fn place_all(app: &AppHandle) {
     let monitors = list(app);
@@ -231,7 +243,7 @@ pub fn place_all(app: &AppHandle) {
     }
 }
 
-fn create(app: &AppHandle, kind: BarKind, key: &str) {
+fn create(app: &AppHandle, kind: BarKind, key: &str) -> String {
     let label = bar::label(kind, Some(NEXT_N.fetch_add(1, Ordering::SeqCst)));
     let (tx, rx) = std::sync::mpsc::channel();
     let handle = app.clone();
@@ -261,6 +273,7 @@ fn create(app: &AppHandle, kind: BarKind, key: &str) {
     });
     // Built on the main thread; wait for it (this runs on a worker thread) so that the next step finds the window.
     let _ = rx.recv_timeout(Duration::from_secs(5));
+    label
 }
 
 fn destroy(app: &AppHandle, label: &str) {
@@ -290,6 +303,10 @@ pub fn reconcile(app: &AppHandle) {
     *lock(&WANT) = want.clone();
     remember("notch", &primary_key);
     remember("dock", &primary_key);
+    // The bars of the primary monitor first: they exist from the start and must not wait for other monitors' windows to be built.
+    for label in ["notch", "dock"] {
+        place_with(app, &monitors, label);
+    }
     let existing: Vec<BarWin> = bar::bar_labels(app)
         .into_iter()
         .filter_map(|label| {
@@ -299,7 +316,11 @@ pub fn reconcile(app: &AppHandle) {
         .collect();
     for action in plan(&monitors, &want, &existing) {
         match action {
-            Action::Create { kind, key } => create(app, kind, &key),
+            Action::Create { kind, key } => {
+                // Placed right away: a new window is at a default place until then, and the visibility loop may show it any moment.
+                let label = create(app, kind, &key);
+                place_with(app, &monitors, &label);
+            }
             Action::Destroy { label } => destroy(app, &label),
         }
     }

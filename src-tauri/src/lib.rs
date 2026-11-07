@@ -392,6 +392,7 @@ pub fn run() {
                 }
             }
             build_tray(app.handle())?;
+            monitors::place_primary(app.handle());
             monitors::start(app.handle().clone());
             fullscreen::start(app.handle().clone());
             windows_list::start(app.handle().clone());
