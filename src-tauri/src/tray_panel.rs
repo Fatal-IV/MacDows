@@ -133,28 +133,77 @@ impl Drop for TrayShown {
     }
 }
 
-/// Presses the taskbar's "show hidden icons" chevron through UI Automation. False when there is no chevron
-/// (nothing is hidden) or it could not be pressed.
-fn press_chevron(automation: &IUIAutomation, tray: HWND) -> bool {
+/// Whether a taskbar item (its automation id and its name) is the "show hidden icons" chevron.
+fn is_chevron_item(id: &str, name: &str) -> bool {
+    let name = name.to_lowercase();
+    id == "NotificationChevron" || id == "OverflowButton" || name.contains("hidden icons") || name.contains("gizli simge")
+}
+
+/// One look at the taskbar's UI Automation tree: the chevron was pressed (or could not be), or it is not there (yet); then the number of
+/// elements and the named ones are returned for the log.
+enum Look {
+    Pressed(bool),
+    Missing { count: i32, seen: Vec<String> },
+}
+
+fn look_for_chevron(automation: &IUIAutomation, tray: HWND) -> Option<Look> {
     unsafe {
-        let Ok(root) = automation.ElementFromHandle(tray) else { return false };
-        let Ok(condition) = automation.CreateTrueCondition() else { return false };
-        let Ok(all) = root.FindAll(TreeScope_Descendants, &condition) else { return false };
-        for i in 0..all.Length().unwrap_or(0) {
+        let root = automation.ElementFromHandle(tray).ok()?;
+        let condition = automation.CreateTrueCondition().ok()?;
+        let all = root.FindAll(TreeScope_Descendants, &condition).ok()?;
+        let count = all.Length().unwrap_or(0);
+        let mut seen: Vec<String> = Vec::new();
+        for i in 0..count {
             let Ok(el) = all.GetElement(i) else { continue };
             let id = el.CurrentAutomationId().map(|s| s.to_string()).unwrap_or_default();
-            let name = el.CurrentName().map(|s| s.to_string().to_lowercase()).unwrap_or_default();
-            let is_chevron = id == "NotificationChevron" || id == "OverflowButton" || name.contains("hidden icons") || name.contains("gizli simge");
-            if !is_chevron {
+            let name = el.CurrentName().map(|s| s.to_string()).unwrap_or_default();
+            if seen.len() < 60 && (!id.is_empty() || !name.is_empty()) {
+                let class = el.CurrentClassName().map(|s| s.to_string()).unwrap_or_default();
+                seen.push(format!("{}|{id}|{class}", name.to_lowercase()));
+            }
+            if !is_chevron_item(&id, &name) {
                 continue;
             }
             if let Ok(pattern) = el.GetCurrentPattern(UIA_InvokePatternId)
                 && let Ok(invoke) = pattern.cast::<IUIAutomationInvokePattern>()
             {
-                return invoke.Invoke().is_ok();
+                return Some(Look::Pressed(invoke.Invoke().is_ok()));
             }
         }
-        false
+        Some(Look::Missing { count, seen })
+    }
+}
+
+/// Presses the taskbar's "show hidden icons" chevron through UI Automation, looking again for a short while (the tray may need a moment).
+/// False when the chevron is not in the tree or could not be pressed (newer Windows 11 builds do not offer the tray to UI Automation
+/// at all: only the task list shows up); the log then says what the taskbar did offer.
+/// How long the chevron is looked for through UI Automation before the keyboard is used instead.
+const CHEVRON_WAIT: Duration = Duration::from_millis(600);
+
+fn press_chevron(automation: &IUIAutomation, tray: HWND) -> bool {
+    let started = Instant::now();
+    loop {
+        match look_for_chevron(automation, tray) {
+            Some(Look::Pressed(ok)) => {
+                if started.elapsed() > Duration::from_millis(400) {
+                    trace(&format!("the chevron appeared after {} ms", started.elapsed().as_millis()));
+                }
+                return ok;
+            }
+            Some(Look::Missing { count, seen }) => {
+                if started.elapsed() >= CHEVRON_WAIT {
+                    trace(&format!("{count} elements in the taskbar, named ones: {}", seen.join(" ; ")));
+                    return false;
+                }
+            }
+            None => {
+                if started.elapsed() >= CHEVRON_WAIT {
+                    trace("the taskbar could not be read through UI Automation");
+                    return false;
+                }
+            }
+        }
+        std::thread::sleep(Duration::from_millis(120));
     }
 }
 
@@ -195,8 +244,9 @@ fn open_flyout(automation: &IUIAutomation) -> Option<(HWND, Invisible)> {
             return None;
         };
         if !press_chevron(automation, tray.hwnd) {
-            trace("the hidden-icons chevron was not found or could not be pressed");
-            return None;
+            // Win+B, Home, Enter: the keyboard reaches the chevron even where UI Automation does not show the tray.
+            trace("the chevron is not in the UI Automation tree: opening the hidden icons with the keyboard");
+            crate::taskbar::run_steps(&crate::taskbar_plan::key_steps(crate::taskbar_plan::ShellAction::HiddenIcons));
         }
         let started = Instant::now();
         while started.elapsed() < Duration::from_secs(3) {
@@ -501,5 +551,15 @@ mod tests {
         let centre = at(cw / 2, ch / 2);
         assert_eq!(centre[3], 255, "icon pixel is opaque");
         assert!(centre[0] > 200 && centre[1] < 60, "icon keeps its red color, got {centre:?}");
+    }
+
+    #[test]
+    fn the_chevron_is_recognised_by_id_or_by_name() {
+        assert!(is_chevron_item("NotificationChevron", ""));
+        assert!(is_chevron_item("OverflowButton", ""));
+        assert!(is_chevron_item("", "Show Hidden Icons"));
+        assert!(is_chevron_item("", "Gizli simgeleri göster"));
+        assert!(!is_chevron_item("", "çalışan uygulamalar"));
+        assert!(!is_chevron_item("Start", "start"));
     }
 }
