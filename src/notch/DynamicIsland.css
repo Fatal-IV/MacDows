@@ -37,6 +37,10 @@ img { -webkit-user-drag: none; user-select: none; }
 
 /* Dynamic Island type: floats below the top edge, so it gets a soft shadow. */
 .nectar.floating { box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35); }
+/* The layers inside the island are cut with square top corners to fit the notch at the screen edge; a floating island is round all over. */
+.nectar.floating .ambient-glow,
+.nectar.floating .music-gradient-clip,
+.nectar.floating .tools-wrap { border-radius: 18px; }
 .nectar.expanded { --notch-bg: var(--nectar-bg-expanded, rgba(0, 0, 0, 0.92)); }
 
 /* Concave top corners: the "bridge" that joins the notch to the screen edge */
