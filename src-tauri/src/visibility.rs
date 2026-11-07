@@ -166,6 +166,8 @@ pub fn start(app: AppHandle) {
             let others = if needs_overlap { windows_list::visible_rects() } else { Vec::new() };
             // While one of Windows's own menus is open (Start, Search, quick settings) the dock stays in view under it.
             let shell_menu_open = foreground_exe().is_some_and(|exe| is_shell_menu(&exe));
+            // The hidden-icons panel (or the moment it is being prepared) keeps the docks in view, like the window previews do.
+            let tray_open = app.get_webview_window("tray").is_some() || crate::tray_panel::is_busy();
             if shell_menu_open {
                 LAST_SHELL_MENU_MS.store(now_ms(), std::sync::atomic::Ordering::Relaxed);
             }
@@ -187,7 +189,7 @@ pub fn start(app: AppHandle) {
                 let fs = fullscreen::state_for_window(hwnd);
                 // Shown: the bar's own visible shape when the front end has reported it, not its whole (mostly empty) window.
                 let zone = if prev.unwrap_or(true) { crate::hit_region::screen_rect(label).unwrap_or(r) } else { reveal_band(label, r) };
-                let near = cur.map(|(x, y)| point_in_rect(x, y, zone)).unwrap_or(false) || (kind == BarKind::Dock && (shell_menu_open || crate::preview::is_open()));
+                let near = cur.map(|(x, y)| point_in_rect(x, y, zone)).unwrap_or(false) || (kind == BarKind::Dock && (shell_menu_open || tray_open || crate::preview::is_open()));
                 let probe = overlap_probe(label, r);
                 let overlapped = others.iter().any(|o| rect_intersects(*o, probe));
                 // Show the bars for a few seconds after launch so the user sees the app started.

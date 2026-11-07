@@ -178,7 +178,12 @@ fn look_for_chevron(automation: &IUIAutomation, tray: HWND) -> Option<Look> {
 /// False when the chevron is not in the tree or could not be pressed (newer Windows 11 builds do not offer the tray to UI Automation
 /// at all: only the task list shows up); the log then says what the taskbar did offer.
 /// How long the chevron is looked for through UI Automation before the keyboard is used instead.
-const CHEVRON_WAIT: Duration = Duration::from_millis(600);
+const CHEVRON_WAIT: Duration = Duration::from_millis(300);
+
+/// Set once the chevron had to be pressed with the keyboard: this Windows build does not offer the tray to UI Automation, so the next
+/// time the keyboard is used right away (no time lost looking). Cleared when the keyboard fails, so that a later Windows update that
+/// fixes the tree is noticed.
+static UIA_LACKS_TRAY: AtomicBool = AtomicBool::new(false);
 
 fn press_chevron(automation: &IUIAutomation, tray: HWND) -> bool {
     let started = Instant::now();
@@ -243,14 +248,18 @@ fn open_flyout(automation: &IUIAutomation) -> Option<(HWND, Invisible)> {
             trace("the taskbar window (Shell_TrayWnd) was not found");
             return None;
         };
-        if !press_chevron(automation, tray.hwnd) {
+        let by_uia = !UIA_LACKS_TRAY.load(Ordering::SeqCst) && press_chevron(automation, tray.hwnd);
+        if !by_uia {
             // Win+B, Home, Enter: the keyboard reaches the chevron even where UI Automation does not show the tray.
-            trace("the chevron is not in the UI Automation tree: opening the hidden icons with the keyboard");
+            if !UIA_LACKS_TRAY.load(Ordering::SeqCst) {
+                trace("the chevron is not in the UI Automation tree: opening the hidden icons with the keyboard");
+            }
             crate::taskbar::run_steps(&crate::taskbar_plan::key_steps(crate::taskbar_plan::ShellAction::HiddenIcons));
         }
         let started = Instant::now();
         while started.elapsed() < Duration::from_secs(3) {
             if let Some(hwnd) = find_overflow(true) {
+                UIA_LACKS_TRAY.store(!by_uia, Ordering::SeqCst);
                 let guard = early.take().unwrap_or_else(|| Invisible::apply(hwnd));
                 // The XAML content needs a moment to build after the window appears.
                 std::thread::sleep(Duration::from_millis(350));
@@ -260,6 +269,7 @@ fn open_flyout(automation: &IUIAutomation) -> Option<(HWND, Invisible)> {
         }
     }
     trace("the overflow flyout did not appear within 3 seconds");
+    UIA_LACKS_TRAY.store(false, Ordering::SeqCst);
     None
 }
 
@@ -427,6 +437,7 @@ fn automation() -> Option<IUIAutomation> {
 /// Opens the Windows flyout invisibly, reads every icon, closes it again. `None` when it could not be opened.
 pub fn collect() -> Option<Vec<TrayItem>> {
     let _busy = Busy::try_new()?;
+    let started = Instant::now();
     let automation = automation()?;
     let previous = unsafe { GetForegroundWindow() };
     let (hwnd, guard) = open_flyout(&automation)?;
@@ -444,6 +455,7 @@ pub fn collect() -> Option<Vec<TrayItem>> {
         .map(|(index, r)| TrayItem { index, name: r.name.clone(), icon_png_base64: frame.as_ref().and_then(|f| icon_png(f, r.icon)) })
         .collect();
     *ITEMS.lock().unwrap() = items.clone();
+    trace(&format!("{} hidden icons read in {} ms", items.len(), started.elapsed().as_millis()));
     Some(items)
 }
 
