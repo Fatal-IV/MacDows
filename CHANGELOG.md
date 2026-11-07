@@ -5,14 +5,54 @@ Format: [Keep a Changelog](https://keepachangelog.com/), versioning: [SemVer](ht
 
 ## [Unreleased]
 
+### Added
+- Two island types: **Notch** (stuck to the top edge, as before) and **Dynamic Island**, a pill that floats a little below the top edge with round corners all over. Chosen in Settings > Appearance on two tiles that show a small monitor.
+- Multi-monitor support: every monitor you switch on in Settings > Appearance > Monitors gets its own island and its own dock (only the primary monitor has them by default). Each dock opens its previews, the hidden-icons panel, the app catalog and the right-click menu on its own monitor; Win+number goes to the dock on the monitor under the pointer; a fullscreen app only affects the bars of its own monitor; the Windows taskbar of a monitor with a dock is hidden too and comes back when MacDows exits or crashes.
+- The gradient behind the media widget has eight effects (four directions, two diagonals, an aurora and a breathing light), chosen on animated tiles in Settings (or switched off). It shows on the small island too, only on the media widget, and stands still when Windows is set to reduce motion.
+- While a video plays (Netflix, YouTube, a film) the robot sits in an armchair and watches: eating popcorn, or a screen with a play sign and a line that follows the video (chosen in Settings). Music keeps the head shake.
+- Sound bars next to the clock on the small island while music plays.
+- The island visibility (Fixed, Smart, Peek) is chosen on three tiles with a small animated monitor each.
+- A "Light theme contrast" setting (none, outline and shadow, gray fill) for the island on white windows.
+- The Dynamic Island and Appearance pages are one page called Appearance; the Monitors section is a card that opens and closes.
+
+### Changed
+- With paused media, hovering the island widens it and shows its widgets instead of opening the player (a click still opens it).
+- The dock shows its Start and Search buttons from the first moment of the takeover, and the Windows taskbar is hidden before the slow auto-hide change.
+
 ### Fixed
+- The Peek dock no longer swallows clicks meant for the program underneath (Spotify's player buttons), and it is hidden again when it should be.
+- The hidden-icons panel opens again on Windows builds that hide the tray from UI Automation, opens faster (the icons are read when the pointer reaches the button), and keeps the docks in view while it is open.
+- The dock shows the real icon of Windows Settings and other Store apps; a second click on the icon of the window in front minimizes it.
+- The random greeting waves with the raised arm again; the head shake belongs to the music robot only.
+- The island and the dock are placed at once while MacDows starts instead of wandering through default places for seconds.
+- The island is round at the top too while the player and the other panels are open in the Dynamic Island type.
 - The Start and Search buttons of the dock show up right after MacDows starts instead of up to 20 seconds later.
 - While music plays, the visualizer sits closer to the clock and the island is narrower; the eyes and the cover keep their room.
 - A connect or disconnect notice for something you just did in the Control Center brings you back to the same page afterwards, and clicking a notice opens that page.
 - Disconnecting a Bluetooth device no longer says "could not connect" when Windows is slow to report the new state.
 
 ### Türkçe
+### Eklendi
+- İki ada tipi: **Notch** (eskisi gibi üst kenara yapışık) ve **Dinamik Ada**, üst kenarın biraz altında yüzen, her yanı yuvarlak bir hap. Ayarlar > Görünüm'de küçük bir monitör gösteren iki kutucukla seçilir.
+- Çoklu monitör desteği: Ayarlar > Görünüm > Monitörler'de açtığınız her monitörün kendi adası ve kendi dock'u olur (varsayılan olarak yalnızca ana monitörde vardır). Her dock; önizlemeleri, gizli simgeler panelini, uygulama kataloğunu ve sağ tık menüsünü kendi monitöründe açar; Win+sayı imlecin olduğu monitördeki dock'a gider; tam ekran bir uygulama yalnızca kendi monitörünün ada ve dock'unu etkiler; dock'u olan monitörün Windows görev çubuğu da gizlenir ve MacDows kapanınca ya da çökünce geri gelir.
+- Medya widget'ının arkasındaki gradyanın sekiz efekti var (dört yön, iki çapraz, aurora ve nefes alan ışık); Ayarlar'da hareketli kutucuklarla seçilir (ya da kapatılır). Küçük adada da görünür, yalnızca medya widget'ında çıkar ve Windows'ta hareket azaltma açıksa durur.
+- Bir video oynarken (Netflix, YouTube, film) robot koltuğa oturup izler: mısır yer ya da ekranında oynat işareti ve videoyu izleyen bir çizgi olur (Ayarlar'dan seçilir). Müzikte kafa sallama aynen kalır.
+- Müzik çalarken küçük adada saatin yanında ses çubukları görünür.
+- Ada görünürlüğü (Sabit, Akıllı, Peek) her biri küçük, hareketli bir monitör gösteren üç kutucukla seçilir.
+- Beyaz pencerelerin önünde adanın belli olması için "Açık tema kontrastı" ayarı (yok, kenarlık ve gölge, gri dolgu).
+- Dinamik Ada ve Görünüm sayfaları "Görünüm" adıyla tek sayfa oldu; Monitörler bölümü açılıp kapanan bir kutu.
+
+### Değişti
+- Medya duraklatılmışken adanın üstüne gelince oynatıcı açılmaz, ada yana genişleyip widget'ları gösterir (tıklayınca yine açılır).
+- Dock, Başlat ve Arama düğmelerini devralmanın ilk anından gösterir; Windows görev çubuğu yavaş otomatik gizle değişikliğinden önce gizlenir.
+
 ### Düzeltildi
+- Peek dock artık altındaki programın tıklamalarını yutmuyor (Spotify'ın oynatıcı düğmeleri) ve gizlenmesi gerektiğinde gizleniyor.
+- Gizli simgeler paneli, tepsiyi UI Automation'dan saklayan Windows sürümlerinde yeniden açılıyor, daha hızlı açılıyor (simgeler imleç düğmeye gelince okunuyor) ve açıkken dock'ları görünür tutuyor.
+- Dock, Windows Ayarlar ve diğer Store uygulamalarının gerçek simgesini gösteriyor; öndeki pencerenin simgesine ikinci tıklama pencereyi küçültüyor.
+- Rastgele selamlamada robot yine kaldırdığı koluyla el sallıyor; kafa sallama yalnızca müzik robotuna ait.
+- Ada ve dock, MacDows açılırken saniyelerce varsayılan yerlerde dolaşmak yerine hemen yerine oturuyor.
+- Dinamik Ada tipinde oynatıcı ve diğer paneller açıkken ada üstten de yuvarlak.
 - Dock'taki Başlat ve Arama düğmeleri MacDows açıldıktan sonra 20 saniyeye kadar beklemeden hemen görünüyor.
 - Müzik çalarken ses çubuğu saate daha yakın duruyor ve ada daha dar; göz ile kapak yerlerini koruyor.
 - Kontrol Merkezi'nde yaptığınız bir bağlanma veya kesme için gelen bildirimden sonra aynı sayfaya dönülüyor; bildirime tıklamak da o sayfayı açıyor.
