@@ -1,16 +1,16 @@
 import { Children, useState, type ReactNode } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { SCREEN_IDS, setSetting, type ClickMode, type FullscreenMode, type ScreenId, type Settings as AppSettings, type Visibility } from "../bridge";
+import { SCREEN_IDS, setSetting, type ClickMode, type FullscreenMode, type ScreenId, type Settings as AppSettings } from "../bridge";
 import { DEFAULT_ORDER } from "../notch/islandDefaults";
 import { canDisable } from "../notch/islandLogic";
 import { Button, Group, Row, Select, Slider, Toggle } from "../ui/controls";
 import { useSystemStatus } from "../system";
 import Appearance from "./Appearance";
 import { IslandStylePicker } from "./IslandStylePicker";
+import { VisibilityPicker } from "./VisibilityPicker";
 import { StatusWidgetsEditor } from "./StatusWidgetsEditor";
 import { useStored } from "./useStored";
 
-const VISIBILITIES: Visibility[] = ["fixed", "smart", "peek"];
 const FULLSCREEN_MODES: FullscreenMode[] = ["edge", "hidden"];
 const CLICK_MODES: ClickMode[] = ["smart", "quick", "player"];
 
@@ -164,9 +164,7 @@ export default function IslandSettings({ s, t }: { s: AppSettings; t: T }) {
       <h2 className="section-title">{t("island.sectionLayout")}</h2>
       <Group>
         <IslandStylePicker value={s.island.style} onChange={(v) => updateIsland(s, (i) => (i.style = v))} t={t} />
-        <Row title={t("settings.notch")} description={t("settings.visibilityHelp")}>
-          <Select label={t("settings.notch")} value={s.island.visibility} onChange={(v) => updateIsland(s, (i) => (i.visibility = v as Visibility))} options={VISIBILITIES.map((v) => ({ value: v, label: t(`vis.${v}`) }))} />
-        </Row>
+        <VisibilityPicker value={s.island.visibility} onChange={(v) => updateIsland(s, (i) => (i.visibility = v))} t={t} islandStyle={s.island.style} />
         <Row title={t("island.fullscreen")} description={t("island.fullscreenHelp")}>
           <Select label={t("island.fullscreen")} value={s.island.fullscreen} onChange={(v) => updateIsland(s, (i) => (i.fullscreen = v as FullscreenMode))} options={FULLSCREEN_MODES.map((m) => ({ value: m, label: t(`island.fullscreen.${m}`) }))} />
         </Row>

@@ -135,3 +135,76 @@ html, body, #root { margin: 0; height: 100%; background: transparent; }
 .monitor.dynamic .monitor-island { top: 8%; border-radius: 999px; box-shadow: 0 2px 6px rgba(0, 0, 0, 0.45); }
 .monitor-stand { position: relative; width: 22%; height: 7px; background: #1d1f24; }
 .monitor-stand::after { content: ""; position: absolute; left: -30%; right: -30%; bottom: -3px; height: 3px; border-radius: 2px; background: #1d1f24; }
+
+/* Visibility tiles: three in a row, each monitor plays its mode (only while the tile is chosen or hovered).
+   Fixed: a window grows to fullscreen and the island stays. Smart: the island leaves while a window covers it.
+   Peek: a window is open and the island is hidden until the pointer reaches the top edge. */
+.island-style-tiles.three { grid-template-columns: repeat(3, 1fr); }
+.island-style-caption { font-size: 11.5px; line-height: 1.35; color: var(--s-muted); text-align: center; min-height: 2.7em; }
+.island-style-tile { transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.18s cubic-bezier(0.34, 1.4, 0.64, 1); }
+.island-style-tile:hover { transform: translateY(-2px); }
+.island-style-tile:active { transform: scale(0.98); }
+
+/* A small application window: title bar with the three dots, a few lines of content. */
+.monitor-window {
+  position: absolute; z-index: 1; left: 14%; right: 14%; top: 10%; height: 74%;
+  border-radius: 3px; background: #f4f5f8; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+  transform: translateY(120%);
+}
+.monitor-window::before {
+  content: ""; position: absolute; left: 0; right: 0; top: 0; height: 17%; border-radius: 3px 3px 0 0;
+  background:
+    radial-gradient(circle at 5px 50%, #ff6159 1.7px, transparent 2.2px),
+    radial-gradient(circle at 11px 50%, #ffbd2e 1.7px, transparent 2.2px),
+    radial-gradient(circle at 17px 50%, #28c941 1.7px, transparent 2.2px),
+    #d9dce3;
+}
+.monitor-window::after {
+  content: ""; position: absolute; left: 8%; right: 34%; top: 30%; height: 46%;
+  background: repeating-linear-gradient(#c3c8d2 0 2px, transparent 2px 6px); border-radius: 1px;
+}
+.monitor-island { z-index: 2; width: 38%; height: 12%; }
+/* The edge hint of Peek and the pointer. */
+.monitor-screen::before { content: ""; position: absolute; z-index: 3; left: 38%; right: 38%; top: 0; height: 2px; background: rgba(255, 255, 255, 0.55); border-radius: 0 0 2px 2px; opacity: 0; }
+.monitor-cursor { position: absolute; z-index: 4; left: 56%; top: 60%; width: 8px; height: 11px; background: #fff; opacity: 0; filter: drop-shadow(0 0 1px #000) drop-shadow(0 0 1px #000); clip-path: polygon(0 0, 0 100%, 28% 76%, 52% 100%, 68% 90%, 46% 68%, 82% 68%); }
+
+.monitor[class*="vis-"] .monitor-window,
+.monitor[class*="vis-"] .monitor-island,
+.monitor[class*="vis-"] .monitor-cursor,
+.monitor[class*="vis-"] .monitor-screen::before { animation-duration: 5s; animation-iteration-count: infinite; animation-timing-function: ease-in-out; animation-play-state: paused; }
+.island-style-tile.on .monitor[class*="vis-"] .monitor-window,
+.island-style-tile.on .monitor[class*="vis-"] .monitor-island,
+.island-style-tile.on .monitor[class*="vis-"] .monitor-cursor,
+.island-style-tile.on .monitor[class*="vis-"] .monitor-screen::before,
+.island-style-tile:hover .monitor[class*="vis-"] .monitor-window,
+.island-style-tile:hover .monitor[class*="vis-"] .monitor-island,
+.island-style-tile:hover .monitor[class*="vis-"] .monitor-cursor,
+.island-style-tile:hover .monitor[class*="vis-"] .monitor-screen::before { animation-play-state: running; }
+
+.monitor.vis-fixed .monitor-window { animation-name: vis-fixed-window; }
+.monitor.vis-smart .monitor-window { animation-name: vis-smart-window; }
+.monitor.vis-smart .monitor-island { animation-name: vis-smart-island; }
+.monitor.vis-peek .monitor-window { transform: none; top: 16%; height: 68%; }
+.monitor.vis-peek .monitor-island { animation-name: vis-peek-island; transform: translate(-50%, -320%); }
+.monitor.vis-peek .monitor-cursor { animation-name: vis-peek-cursor; }
+.monitor.vis-peek .monitor-screen::before { animation-name: vis-peek-hint; }
+
+@keyframes vis-fixed-window {
+  0%, 8% { transform: translateY(120%); left: 14%; right: 14%; top: 10%; height: 74%; border-radius: 3px; }
+  28%, 36% { transform: translateY(0); left: 14%; right: 14%; top: 10%; height: 74%; border-radius: 3px; }
+  52%, 72% { transform: translateY(0); left: 0; right: 0; top: 0; height: 100%; border-radius: 0; }
+  90%, 100% { transform: translateY(120%); left: 14%; right: 14%; top: 10%; height: 74%; border-radius: 3px; }
+}
+@keyframes vis-smart-window { 0%, 12% { transform: translateY(120%); } 36%, 66% { transform: translateY(0); top: 0; height: 80%; } 90%, 100% { transform: translateY(120%); top: 0; height: 80%; } }
+@keyframes vis-smart-island { 0%, 30% { opacity: 1; transform: translate(-50%, 0); } 40%, 62% { opacity: 0; transform: translate(-50%, -60%); } 80%, 100% { opacity: 1; transform: translate(-50%, 0); } }
+@keyframes vis-peek-island { 0%, 30% { transform: translate(-50%, -320%); } 42%, 66% { transform: translate(-50%, 0); } 80%, 100% { transform: translate(-50%, -320%); } }
+@keyframes vis-peek-cursor { 0%, 8% { opacity: 0; top: 62%; } 14% { opacity: 1; top: 62%; } 34%, 64% { opacity: 1; top: 2%; } 82% { opacity: 1; top: 62%; } 92%, 100% { opacity: 0; top: 62%; } }
+@keyframes vis-peek-hint { 0%, 12% { opacity: 0.55; } 34%, 64% { opacity: 0; } 82%, 100% { opacity: 0.55; } }
+/* The floating pill bobs a little while its tile plays. */
+.island-style-tile.on .monitor.dynamic:not([class*="vis-"]) .monitor-island,
+.island-style-tile:hover .monitor.dynamic:not([class*="vis-"]) .monitor-island { animation: monitor-float 1.8s ease-in-out infinite; }
+@keyframes monitor-float { 0%, 100% { transform: translate(-50%, 0); } 50% { transform: translate(-50%, 2px); } }
+@media (prefers-reduced-motion: reduce) {
+  .monitor-window, .monitor-island, .monitor-cursor, .monitor-screen::before { animation: none !important; }
+  .island-style-tile, .island-style-tile:hover { transform: none; }
+}
