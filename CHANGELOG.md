@@ -5,6 +5,8 @@ Format: [Keep a Changelog](https://keepachangelog.com/), versioning: [SemVer](ht
 
 ## [Unreleased]
 
+## [0.2.8] - 2026-11-08
+
 ### Added
 - Two island types: **Notch** (stuck to the top edge, as before) and **Dynamic Island**, a pill that floats a little below the top edge with round corners all over. Chosen in Settings > Appearance on two tiles that show a small monitor.
 - Multi-monitor support: every monitor you switch on in Settings > Appearance > Monitors gets its own island and its own dock (only the primary monitor has them by default). Each dock opens its previews, the hidden-icons panel, the app catalog and the right-click menu on its own monitor; Win+number goes to the dock on the monitor under the pointer; a fullscreen app only affects the bars of its own monitor; the Windows taskbar of a monitor with a dock is hidden too and comes back when MacDows exits or crashes.
@@ -13,7 +15,9 @@ Format: [Keep a Changelog](https://keepachangelog.com/), versioning: [SemVer](ht
 - Sound bars next to the clock on the small island while music plays.
 - The island visibility (Fixed, Smart, Peek) is chosen on three tiles with a small animated monitor each.
 - A "Light theme contrast" setting (none, outline and shadow, gray fill) for the island on white windows.
-- The Dynamic Island and Appearance pages are one page called Appearance; the Monitors section is a card that opens and closes.
+- The Dynamic Island and Appearance pages are one page called Appearance; every card of it (Layout, Monitors, Theme, Screens, Navigation) starts folded and opens on a click.
+- The dock visibility is chosen on three tiles with a small animated monitor, and the Dock settings page is split into cards that open and close.
+- The gradient behind the media widget has an on/off switch that remembers the last effect.
 
 ### Changed
 - With paused media, hovering the island widens it and shows its widgets instead of opening the player (a click still opens it).
@@ -40,7 +44,9 @@ Format: [Keep a Changelog](https://keepachangelog.com/), versioning: [SemVer](ht
 - Müzik çalarken küçük adada saatin yanında ses çubukları görünür.
 - Ada görünürlüğü (Sabit, Akıllı, Peek) her biri küçük, hareketli bir monitör gösteren üç kutucukla seçilir.
 - Beyaz pencerelerin önünde adanın belli olması için "Açık tema kontrastı" ayarı (yok, kenarlık ve gölge, gri dolgu).
-- Dinamik Ada ve Görünüm sayfaları "Görünüm" adıyla tek sayfa oldu; Monitörler bölümü açılıp kapanan bir kutu.
+- Dinamik Ada ve Görünüm sayfaları "Görünüm" adıyla tek sayfa oldu; sayfadaki tüm kutular (Yerleşim, Monitörler, Tema, Ekranlar, Gezinme) kapalı gelir ve tıklayınca açılır.
+- Dock görünürlüğü küçük, hareketli bir monitör gösteren üç kutucukla seçilir; Dock ayarlar sayfası açılıp kapanan kutulara bölündü.
+- Medya widget'ının arkasındaki gradyanın, son seçilen efekti hatırlayan bir aç/kapat anahtarı var.
 
 ### Değişti
 - Medya duraklatılmışken adanın üstüne gelince oynatıcı açılmaz, ada yana genişleyip widget'ları gösterir (tıklayınca yine açılır).
