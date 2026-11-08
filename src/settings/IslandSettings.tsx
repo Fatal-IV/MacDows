@@ -155,9 +155,8 @@ export default function IslandSettings({ s, t }: { s: AppSettings; t: T }) {
 
       <MonitorsSection s={s} t={t} />
 
-      <FoldCard title={t("island.sectionTheme")}>
-        <Appearance />
-      </FoldCard>
+      <h2 className="section-title">{t("island.sectionTheme")}</h2>
+      <Appearance />
 
       <h2 className="section-title">{t("island.sectionScreens")}</h2>
       {SCREEN_IDS.map((id) => (
