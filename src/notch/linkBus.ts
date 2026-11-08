@@ -1,8 +1,9 @@
 // What the island shows when something connects, disconnects or fails to connect. The backend reports changes it sees
 // on its own (event "link-changed"); the Control Center pages call `announceLink` for what the user just did, which
 // shows even while the Control Center is open.
-export type LinkKind = "bluetooth" | "wifi" | "vpn";
-export type LinkState = "connected" | "disconnected" | "failed";
+// "power" is the battery: `name` is the percent and the states are the charger being plugged or pulled, full and low.
+export type LinkKind = "bluetooth" | "wifi" | "vpn" | "power";
+export type LinkState = "connected" | "disconnected" | "failed" | "plugged" | "unplugged" | "full" | "low";
 
 export interface Link {
   kind: LinkKind;

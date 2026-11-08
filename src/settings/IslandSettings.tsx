@@ -1,3 +1,4 @@
+import { LightContrastRow } from "./Appearance";
 import { Children, useState, type ReactNode } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { SCREEN_IDS, setSetting, type ClickMode, type FullscreenMode, type ScreenId, type Settings as AppSettings } from "../bridge";
@@ -5,7 +6,6 @@ import { DEFAULT_ORDER } from "../notch/islandDefaults";
 import { canDisable } from "../notch/islandLogic";
 import { Button, Group, Row, Select, Slider, Toggle } from "../ui/controls";
 import { useSystemStatus } from "../system";
-import Appearance from "./Appearance";
 import { FoldCard } from "./FoldCard";
 import { GradientPicker } from "./GradientPicker";
 import { IslandStylePicker } from "./IslandStylePicker";
@@ -148,15 +148,13 @@ export default function IslandSettings({ s, t }: { s: AppSettings; t: T }) {
           <Slider label={t("appearance.scale")} value={parseFloat(scale)} min={0.8} max={1.2} step={0.05} onChange={(v) => setScale(String(v))} />
           <span className="ui-value">{Math.round(parseFloat(scale) * 100)}%</span>
         </Row>
+        <LightContrastRow />
         <div className="ui-row actions">
           <Button onClick={resetLayout}>{t("island.reset")}</Button>
         </div>
       </FoldCard>
 
       <MonitorsSection s={s} t={t} />
-
-      <h2 className="section-title">{t("island.sectionTheme")}</h2>
-      <Appearance />
 
       <h2 className="section-title">{t("island.sectionScreens")}</h2>
       {SCREEN_IDS.map((id) => (

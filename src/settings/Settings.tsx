@@ -7,6 +7,7 @@ import { checkForUpdate, installUpdate, useAppVersion, useUpdateStatus, type Upd
 import { Button, Group, Row, Select, Toggle } from "../ui/controls";
 import WindowControls from "../ui/WindowControls";
 import { FoldCard } from "./FoldCard";
+import Appearance from "./Appearance";
 import IslandSettings from "./IslandSettings";
 import { VisibilityPicker } from "./VisibilityPicker";
 import WhatsNewDialog from "./WhatsNewDialog";
@@ -31,37 +32,81 @@ function statusLine(t: (key: string) => string, status: UpdateStatus): string {
   }
 }
 
+function DockSettings({ s, t }: { s: AppSettings; t: (key: string) => string }) {
+  return (
+    <>
+      <FoldCard title={t("dock.section.taskbar")}>
+        <Row title={t("settings.replaceTaskbar")} description={t("settings.replaceTaskbarHelp")}>
+          <Toggle label={t("settings.replaceTaskbar")} checked={s.replace_taskbar} onChange={(v) => setSetting("replace_taskbar", v)} />
+        </Row>
+      </FoldCard>
+        <FoldCard title={t("dock.section.visibility")}>
+          <VisibilityPicker value={s.dock_visibility} onChange={(v) => setSetting("dock_visibility", v)} t={t} edge="bottom" />
+        </FoldCard>
+        <FoldCard title={t("dock.section.apps")}>
+          <Row title={t("settings.showPinned")} description={t("settings.showPinnedHelp")}>
+            <Toggle label={t("settings.showPinned")} checked={s.show_pinned_apps} onChange={(v) => setSetting("show_pinned_apps", v)} />
+          </Row>
+          {s.hidden_pinned.length > 0 && (
+            <Row title={t("settings.hiddenPinned")} description={t("settings.hiddenPinnedHelp").replace("{n}", String(s.hidden_pinned.length))}>
+              <Button onClick={() => setSetting("hidden_pinned", [])}>{t("settings.hiddenPinnedReset")}</Button>
+            </Row>
+          )}
+          <Row title={t("settings.showDrives")} description={t("settings.showDrivesHelp")}>
+            <Toggle label={t("settings.showDrives")} checked={s.dock.show_drives} onChange={(v) => setSetting("dock", { ...s.dock, show_drives: v })} />
+          </Row>
+          <Row title={t("settings.showDesktop")} description={t("settings.showDesktopHelp")}>
+            <Toggle label={t("settings.showDesktop")} checked={s.show_desktop_button} onChange={(v) => setSetting("show_desktop_button", v)} />
+          </Row>
+        </FoldCard>
+        <FoldCard title={t("dock.section.behavior")}>
+          <Row title={t("settings.winNumber")} description={t("settings.winNumberHelp")}>
+            <Toggle label={t("settings.winNumber")} checked={s.dock.win_number} onChange={(v) => setSetting("dock", { ...s.dock, win_number: v })} />
+          </Row>
+          <Row title={t("settings.previews")} description={t("settings.previewsHelp")}>
+            <Toggle label={t("settings.previews")} checked={s.dock.previews} onChange={(v) => setSetting("dock", { ...s.dock, previews: v })} />
+          </Row>
+        </FoldCard>
+    </>
+  );
+}
+
+/** Appearance: a switch at the top picks the Dynamic Island or the Dock; the theme they share sits under it. */
+function AppearancePage({ s, t }: { s: AppSettings; t: (key: string) => string }) {
+  const [target, setTarget] = useState<"island" | "dock">("island");
+  return (
+    <>
+      <div className="seg-tabs" role="tablist" aria-label={t("settings.cat.appearance")}>
+        {(["island", "dock"] as const).map((id) => (
+          <button key={id} type="button" role="tab" aria-selected={target === id} className={`seg-tab${target === id ? " on" : ""}`} onClick={() => setTarget(id)}>
+            {t(`settings.cat.${id}`)}
+          </button>
+        ))}
+      </div>
+      <h2 className="section-title">{t("appearance.scope.shared")}</h2>
+      <Appearance />
+      <h2 className="section-title">{t(`settings.cat.${target}`)}</h2>
+      {target === "island" ? <IslandSettings s={s} t={t} /> : <DockSettings s={s} t={t} />}
+    </>
+  );
+}
+
 // ---------------------------------------------------------------------------------------------
 // Categories and settings
 //
 // Every setting says which category it belongs to; the left menu and the pages are built from that list. A new
 // setting only needs an entry in ITEMS, and a category with no settings does not show up in the menu.
 // ---------------------------------------------------------------------------------------------
-type Category = "general" | "island" | "dock" | "updates" | "about";
+type Category = "general" | "appearance" | "updates" | "about";
 
 const stroke = (d: string) => <path d={d} fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />;
 
 const CATEGORIES: { id: Category; icon: ReactNode }[] = [
   { id: "general", icon: stroke("M5 7h8m4 0h2M5 17h2m4 0h8M13 4v6m-4 4v6") },
   {
-    id: "island",
-    // A screen with the island at its top edge.
-    icon: (
-      <>
-        <rect x="3" y="4" width="18" height="16" rx="3" fill="none" stroke="currentColor" strokeWidth="1.7" />
-        <rect x="8.5" y="7" width="7" height="2.4" rx="1.2" fill="currentColor" />
-      </>
-    ),
-  },
-  {
-    id: "dock",
-    // The same screen with the dock at its bottom edge.
-    icon: (
-      <>
-        <rect x="3" y="4" width="18" height="16" rx="3" fill="none" stroke="currentColor" strokeWidth="1.7" />
-        <rect x="7.5" y="14.6" width="9" height="2.4" rx="1.2" fill="currentColor" />
-      </>
-    ),
+    id: "appearance",
+    // A brush: the look shared by the island and the dock.
+    icon: stroke("M4 20c3 0 5-1 5-3.5a2.5 2.5 0 0 0-5 0V20zM9 15.5 19 5a1.8 1.8 0 0 1 2.5 2.5L11 17.5"),
   },
   { id: "updates", icon: stroke("M20 7v5h-5M4 17v-5h5M6.3 9A7 7 0 0 1 18 7.5M17.7 15A7 7 0 0 1 6 16.5") },
   {
@@ -103,53 +148,7 @@ const ITEMS: Item[] = [
       </Group>
     ),
   },
-  { id: "island", category: "island", render: ({ s, t }) => <IslandSettings s={s} t={t} /> },
-  {
-    id: "dock-taskbar",
-    category: "dock",
-    render: ({ s, t }) => (
-      <FoldCard title={t("dock.section.taskbar")}>
-        <Row title={t("settings.replaceTaskbar")} description={t("settings.replaceTaskbarHelp")}>
-          <Toggle label={t("settings.replaceTaskbar")} checked={s.replace_taskbar} onChange={(v) => setSetting("replace_taskbar", v)} />
-        </Row>
-      </FoldCard>
-    ),
-  },
-  {
-    id: "dock",
-    category: "dock",
-    render: ({ s, t }) => (
-      <>
-        <FoldCard title={t("dock.section.visibility")}>
-          <VisibilityPicker value={s.dock_visibility} onChange={(v) => setSetting("dock_visibility", v)} t={t} edge="bottom" />
-        </FoldCard>
-        <FoldCard title={t("dock.section.apps")}>
-          <Row title={t("settings.showPinned")} description={t("settings.showPinnedHelp")}>
-            <Toggle label={t("settings.showPinned")} checked={s.show_pinned_apps} onChange={(v) => setSetting("show_pinned_apps", v)} />
-          </Row>
-          {s.hidden_pinned.length > 0 && (
-            <Row title={t("settings.hiddenPinned")} description={t("settings.hiddenPinnedHelp").replace("{n}", String(s.hidden_pinned.length))}>
-              <Button onClick={() => setSetting("hidden_pinned", [])}>{t("settings.hiddenPinnedReset")}</Button>
-            </Row>
-          )}
-          <Row title={t("settings.showDrives")} description={t("settings.showDrivesHelp")}>
-            <Toggle label={t("settings.showDrives")} checked={s.dock.show_drives} onChange={(v) => setSetting("dock", { ...s.dock, show_drives: v })} />
-          </Row>
-          <Row title={t("settings.showDesktop")} description={t("settings.showDesktopHelp")}>
-            <Toggle label={t("settings.showDesktop")} checked={s.show_desktop_button} onChange={(v) => setSetting("show_desktop_button", v)} />
-          </Row>
-        </FoldCard>
-        <FoldCard title={t("dock.section.behavior")}>
-          <Row title={t("settings.winNumber")} description={t("settings.winNumberHelp")}>
-            <Toggle label={t("settings.winNumber")} checked={s.dock.win_number} onChange={(v) => setSetting("dock", { ...s.dock, win_number: v })} />
-          </Row>
-          <Row title={t("settings.previews")} description={t("settings.previewsHelp")}>
-            <Toggle label={t("settings.previews")} checked={s.dock.previews} onChange={(v) => setSetting("dock", { ...s.dock, previews: v })} />
-          </Row>
-        </FoldCard>
-      </>
-    ),
-  },
+  { id: "appearance", category: "appearance", render: ({ s, t }) => <AppearancePage s={s} t={t} /> },
   {
     id: "updates",
     category: "updates",

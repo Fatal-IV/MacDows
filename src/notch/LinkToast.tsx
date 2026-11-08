@@ -23,7 +23,15 @@ export function LinkToast({ link, label, onOpen }: { link: Link; label: string; 
               <path className="vpn-check" pathLength={1} d="m8.8 12 2.2 2.2 4.2-4.4" />
             </>
           )}
-          {link.state !== "connected" && <path className="link-slash" pathLength={1} d="M3.5 3.5 20.5 20.5" />}
+          {link.kind === "power" && (
+            <>
+              <rect className="bat-body" x="2" y="7.5" width="17" height="9" rx="2.2" />
+              <path className="bat-tip" d="M21.5 10.8v2.4" />
+              <rect className="bat-level" x="4" y="9.5" width={Math.max(1, Math.round((Math.min(100, parseInt(link.name, 10) || 0) / 100) * 13))} height="5" rx="1" fill="currentColor" stroke="none" />
+              {(link.state === "plugged" || link.state === "full") && <path className="bat-bolt" d="m11.2 8.6-2.4 3.7h3.4l-2.4 3.4" />}
+            </>
+          )}
+          {["disconnected", "failed", "unplugged"].includes(link.state) && <path className="link-slash" pathLength={1} d="M3.5 3.5 20.5 20.5" />}
         </svg>
       </span>
       <span className="link-text">

@@ -6,10 +6,10 @@ export interface ThemeOption {
   look: string;
 }
 
-export function ThemeTiles({ title, value, options, onChange, columns }: { title: string; value: string; options: ThemeOption[]; onChange: (value: string) => void; columns: 2 | 4 }) {
+export function ThemeTiles({ title, value, options, onChange, columns }: { title: string; value: string; options: ThemeOption[]; onChange: (value: string) => void; columns: 2 | 3 | 4 }) {
   return (
     <div className="island-style">
-      <div className={`island-style-tiles ${columns === 4 ? "four" : ""}`} role="radiogroup" aria-label={title}>
+      <div className={`island-style-tiles ${columns === 4 ? "four" : columns === 3 ? "three" : ""}`} role="radiogroup" aria-label={title}>
         {options.map((o) => (
           <button key={o.value} type="button" role="radio" aria-checked={value === o.value} className={`island-style-tile${value === o.value ? " on" : ""}`} onClick={() => onChange(o.value)}>
             <span className={`theme-sample ts-${o.look}`} aria-hidden>

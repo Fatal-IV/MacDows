@@ -723,7 +723,12 @@ img { -webkit-user-drag: none; user-select: none; }
 .link-ring { position: absolute; inset: 0; border-radius: 50%; border: 1.5px solid currentColor; opacity: 0; animation: link-ring 1.4s ease-out 0.2s 2; }
 .link-ring.late { animation-delay: 0.55s; }
 .link-toast.disconnected .link-icon { color: #ffb020; }
-.link-toast.failed .link-icon { color: #ff453a; }
+.link-toast.failed .link-icon, .link-toast.low .link-icon { color: #ff453a; }
+.link-toast.unplugged .link-icon { color: #ffb020; }
+.link-toast.unplugged .link-ring { animation-name: link-ring-in; }
+.link-toast.low .link-ring { animation-iteration-count: 3; animation-duration: 1s; }
+.bat-bolt { stroke: var(--nectar-bg, #000); stroke-width: 1.8; }
+.link-toast.low .link-icon svg { animation: link-shake 0.5s ease-in-out 0.15s 2; }
 .link-toast.disconnected .link-ring { animation-name: link-ring-in; }
 .link-toast.failed .link-ring { animation-iteration-count: 3; animation-duration: 1s; }
 .link-toast.failed .link-icon svg { animation: link-shake 0.5s ease-in-out 0.15s 2; }

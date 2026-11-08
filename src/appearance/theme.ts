@@ -110,13 +110,11 @@ export const THEME_PRESETS: ThemePreset[] = [
 
 export const DEFAULT_ACCENT_COLOR = "#0a84ff";
 
-export const THEME_STYLES = ["solid", "frosted", "liquid", "material"] as const;
+export const THEME_STYLES = ["solid", "material"] as const;
 
-// Background opacity each style is designed around; picking a style sets it, the slider can still change it.
+// Background opacity of each style: fixed, there is no setting for it.
 export const STYLE_OPACITY: Record<string, number> = {
   solid: 0.8,
-  frosted: 0.6,
-  liquid: 0.45,
   material: 0.96,
 };
 
@@ -217,7 +215,6 @@ let syncSystemTheme = false;
 export async function applyTheme(
   mode: string,
   customColor: string,
-  opacity?: number,
   saturation?: number,
   brightness?: number
 ) {
@@ -228,12 +225,9 @@ export async function applyTheme(
   const legacy = false;
   const style = legacy ? "solid" : localStorage.getItem("nectar-theme-style") || "solid";
   root.classList.remove(...THEME_STYLES.map((s) => `style-${s}`));
-  root.classList.add(`style-${(THEME_STYLES as readonly string[]).includes(style) ? style : "solid"}`);
-
-  if (opacity === undefined || opacity === null) {
-    const cachedOpacity = localStorage.getItem('nectar-theme-opacity');
-    opacity = cachedOpacity !== null ? parseFloat(cachedOpacity) : 0.80;
-  }
+  const knownStyle = (THEME_STYLES as readonly string[]).includes(style) ? style : "solid";
+  root.classList.add(`style-${knownStyle}`);
+  const opacity = STYLE_OPACITY[knownStyle];
 
   if (saturation === undefined || saturation === null) {
     const cachedSaturation = localStorage.getItem('nectar-theme-saturation');
@@ -324,7 +318,7 @@ export async function applyTheme(
       }
     } catch (e) {
       console.error("Failed to apply adaptive theme:", e);
-      return applyTheme('dark', customColor, op, saturation, brightness);
+      return applyTheme('dark', customColor, saturation, brightness);
     }
   } else {
     // default/dark
@@ -365,34 +359,46 @@ function applyLightVariant() {
   for (const name of LIGHT_VARIANTS) document.documentElement.classList.toggle(`light-v-${name}`, v === name);
 }
 
+// Choices that are no longer offered in Settings (the Windows accent color mode, the accent setting and the Start menu
+// tint switch) fall back to the defaults: follow Windows, monochrome, Start menu painted in the theme.
+function migrateRemovedChoices() {
+  try {
+    if (localStorage.getItem('nectar-theme-mode') === 'adaptive') localStorage.setItem('nectar-theme-mode', 'auto');
+    const accent = localStorage.getItem('nectar-theme-accent');
+    if (accent && accent !== 'mono') localStorage.setItem('nectar-theme-accent', 'mono');
+    localStorage.removeItem('nectar-theme-opacity');
+    if (!localStorage.getItem('macdows-start-tint-default-on')) {
+      localStorage.setItem('macdows-start-tint', 'true');
+      localStorage.setItem('macdows-start-tint-default-on', '1');
+    }
+  } catch { /* storage unavailable: the defaults apply anyway */ }
+}
+
 export function initTheme(options: { syncSystem?: boolean } = {}) {
+  migrateRemovedChoices();
   if (options.syncSystem) syncSystemTheme = true;
   const syncMode = localStorage.getItem('nectar-theme-mode') || 'auto';
   const syncColor = localStorage.getItem('nectar-theme-color') || '#007aff';
-  const syncOpacityVal = localStorage.getItem('nectar-theme-opacity');
-  const syncOpacity = syncOpacityVal !== null ? parseFloat(syncOpacityVal) : 0.80;
   const syncSaturationVal = localStorage.getItem('nectar-theme-saturation');
   const syncSaturation = syncSaturationVal !== null ? parseFloat(syncSaturationVal) : 0.50;
   const syncBrightnessVal = localStorage.getItem('nectar-theme-brightness');
   const syncBrightness = syncBrightnessVal !== null ? parseFloat(syncBrightnessVal) : 0.15;
 
   // Fast synchronous draw using cached localStorage
-  applyTheme(syncMode, syncColor, syncOpacity, syncSaturation, syncBrightness);
+  applyTheme(syncMode, syncColor, syncSaturation, syncBrightness);
 
   // Helper: read all theme values from localStorage and apply
   const applyThemeFromStorage = () => {
     const mode = localStorage.getItem('nectar-theme-mode') || 'auto';
     const color = localStorage.getItem('nectar-theme-color') || '#007aff';
-    const opacity = parseFloat(localStorage.getItem('nectar-theme-opacity') || '0.80');
     const saturation = parseFloat(localStorage.getItem('nectar-theme-saturation') || '0.50');
     const brightness = parseFloat(localStorage.getItem('nectar-theme-brightness') || '0.15');
-    applyTheme(mode, color, opacity, saturation, brightness);
+    applyTheme(mode, color, saturation, brightness);
   };
 
   const nectarThemeKeys = [
     'nectar-theme-mode',
     'nectar-theme-color',
-    'nectar-theme-opacity',
     'nectar-theme-saturation',
     'nectar-theme-brightness',
     'nectar-theme-accent',

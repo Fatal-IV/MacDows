@@ -845,13 +845,13 @@ export default function Notch() {
           {linkOpen ? (
             <motion.div key="link" className="tools-wrap" initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.98, transition: { duration: 0.1 } }} transition={{ type: "spring", stiffness: 500, damping: 30 }}>
               <LinkToast
-                link={link!}
+                link={link!.kind === "power" ? { ...link!, name: t("link.power.percent").replace("{n}", link!.name) } : link!}
                 label={t(`link.${link!.kind}.${link!.state}`)}
                 onOpen={
-                  buildStops(island, hasMedia).includes("quick")
+                  buildStops(island, hasMedia).includes("quick") && link!.kind !== "power"
                     ? () => {
                         // Clicking the notice opens that connection's page in the Control Center.
-                        const kind = link!.kind;
+                        const kind = link!.kind as "wifi" | "bluetooth" | "vpn";
                         setQuickPage(kind);
                         setLink(null);
                         goTo("quick");

@@ -12,6 +12,7 @@ mod updates;
 mod whats_new;
 mod camera;
 mod links;
+mod power_alerts;
 mod visualizer;
 mod volume;
 mod quick_settings;
@@ -406,6 +407,7 @@ pub fn run() {
             visualizer::start(app.handle().clone());
             camera::start(app.handle().clone());
             links::start(app.handle().clone());
+            power_alerts::start(app.handle().clone());
             visibility::start(app.handle().clone());
             updates::start(app.handle().clone());
             start_taskbar_takeover(app.handle());

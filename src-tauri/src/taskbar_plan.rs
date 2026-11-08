@@ -133,6 +133,33 @@ pub fn run_value(exe: &str) -> String {
     format!("\"{exe}\"")
 }
 
+fn xml_escape(s: &str) -> String {
+    s.replace('&', "&amp;").replace('<', "&lt;").replace('>', "&gt;").replace('"', "&quot;")
+}
+
+/// Scheduled task that starts the app the moment the user signs in. Unlike the registry Run entry, Windows
+/// does not hold a logon task back for the startup delay it gives Run entries, so the dock and island are there
+/// as soon as the desktop is.
+pub fn logon_task_xml(exe: &str, user: &str) -> String {
+    let (exe, user) = (xml_escape(exe), xml_escape(user));
+    format!(
+        r#"<?xml version="1.0" encoding="UTF-16"?>
+<Task version="1.2" xmlns="http://schemas.microsoft.com/windows/2004/02/task">
+  <Triggers><LogonTrigger><Enabled>true</Enabled><UserId>{user}</UserId></LogonTrigger></Triggers>
+  <Principals><Principal id="Author"><UserId>{user}</UserId><LogonType>InteractiveToken</LogonType><RunLevel>LeastPrivilege</RunLevel></Principal></Principals>
+  <Settings>
+    <MultipleInstancesPolicy>IgnoreNew</MultipleInstancesPolicy>
+    <DisallowStartIfOnBatteries>false</DisallowStartIfOnBatteries>
+    <StopIfGoingOnBatteries>false</StopIfGoingOnBatteries>
+    <ExecutionTimeLimit>PT0S</ExecutionTimeLimit>
+    <Priority>4</Priority>
+    <StartWhenAvailable>true</StartWhenAvailable>
+  </Settings>
+  <Actions Context="Author"><Exec><Command>{exe}</Command></Exec></Actions>
+</Task>"#
+    )
+}
+
 /// A guard may only undo the state that its own app wrote, so an old guard never undoes a newer instance.
 pub fn state_belongs_to(state: &TaskbarState, pid: u32) -> bool {
     state.app_pid == pid
@@ -351,6 +378,14 @@ mod tests {
         let enter_at = steps.iter().position(|s| matches!(s, KeyStep::Chord { win: false, key: 0x0D })).unwrap();
         assert!(home_at < enter_at, "Home comes before Enter");
         assert_eq!(*steps.last().unwrap(), KeyStep::Chord { win: false, key: 0x0D });
+    }
+
+    #[test]
+    fn the_logon_task_runs_the_exe_at_logon_without_a_delay() {
+        let xml = logon_task_xml(r"C:\A & B\macdows.exe", r"PC\ali");
+        assert!(xml.contains("<LogonTrigger>") && !xml.contains("<Delay>"));
+        assert!(xml.contains(r"<Command>C:\A &amp; B\macdows.exe</Command>"));
+        assert!(xml.contains(r"<UserId>PC\ali</UserId>"));
     }
 
     #[test]

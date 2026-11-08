@@ -489,18 +489,32 @@ pub fn set_autostart(on: bool) {
     if cfg!(debug_assertions) {
         return;
     }
+    use std::os::windows::process::CommandExt;
     use winreg::enums::{HKEY_CURRENT_USER, KEY_SET_VALUE};
     use winreg::RegKey;
-    let Ok(key) = RegKey::predef(HKEY_CURRENT_USER).open_subkey_with_flags(r"Software\Microsoft\Windows\CurrentVersion\Run", KEY_SET_VALUE) else {
-        return;
-    };
-    if on {
-        if let Ok(exe) = std::env::current_exe() {
-            let _ = key.set_value("MacDows", &crate::taskbar_plan::run_value(&exe.to_string_lossy()));
-        }
-    } else {
+    // The old Run entry is delayed by Windows after sign-in; it is replaced by a logon task (no delay).
+    if let Ok(key) = RegKey::predef(HKEY_CURRENT_USER).open_subkey_with_flags(r"Software\Microsoft\Windows\CurrentVersion\Run", KEY_SET_VALUE) {
         let _ = key.delete_value("MacDows");
     }
+    let exe = std::env::current_exe().ok();
+    std::thread::spawn(move || {
+        let mut cmd = std::process::Command::new("schtasks");
+        cmd.creation_flags(CREATE_NO_WINDOW);
+        if !on {
+            let _ = cmd.args(["/Delete", "/TN", "MacDows", "/F"]).output();
+            return;
+        }
+        let Some(exe) = exe else { return };
+        let user = format!("{}\\{}", std::env::var("USERDOMAIN").unwrap_or_default(), std::env::var("USERNAME").unwrap_or_default());
+        let xml = crate::taskbar_plan::logon_task_xml(&exe.to_string_lossy(), &user);
+        let path = std::env::temp_dir().join("macdows-logon-task.xml");
+        let mut bytes = vec![0xFF, 0xFE];
+        bytes.extend(xml.encode_utf16().flat_map(|u| u.to_le_bytes()));
+        if std::fs::write(&path, bytes).is_ok() {
+            let _ = cmd.args(["/Create", "/TN", "MacDows", "/F", "/XML"]).arg(&path).output();
+            let _ = std::fs::remove_file(&path);
+        }
+    });
 }
 
 /// A plain native message box (blocks until OK). Used for the one-time notice.
