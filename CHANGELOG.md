@@ -5,36 +5,38 @@ Format: [Keep a Changelog](https://keepachangelog.com/), versioning: [SemVer](ht
 
 ## [Unreleased]
 
-## [0.2.9] - 2026-11-08
+## [0.3.0] - 2026-11-08
 
 ### Added
-- The color mode, the style and the accent of the theme are chosen on tiles with a small picture of each option (Settings > Appearance > Theme), in three cards that open and close: color mode, style (with the opacity) and accent (with the Start menu tint).
+- Battery notices on the island, shown like the Wi-Fi and Bluetooth ones: the charger was plugged in, the charger was pulled out, the battery is full and the battery is low (the limit is the low battery setting of the status widgets). A battery held at its charge limit by battery protection (80%, for example) counts as full. A notice waits a moment so that a screen that blanks when the charger is pulled out does not hide it.
 - When the update server does not answer (for example an error status from GitHub) the check says so ("the update server is not answering right now") instead of blaming your connection.
 
 ### Changed
-- The glass styles no longer paint a blurred copy of the wallpaper behind the island and dock (it showed the wallpaper instead of the window behind); they are a translucent fill that shows what is really there.
-- Frosted glass is clear, lightly tinted glass with a bright top sheen and rim, in the manner of Apple's Liquid Glass.
+- Settings has one Appearance page with a switch at the top for the Dynamic Island and the Dock. The theme they share (color mode and style) sits above the settings of the one you chose. The Dynamic Island page is no longer called Appearance, and "Size" is now "Island size".
+- "Start with Windows" now uses a task that runs when you sign in. Windows holds back programs started from the usual startup entry for a few seconds, which made the dock and the island appear late; the task is not held back. The old startup entry is removed.
+- The surface styles are Solid and Material. The glass styles (Frosted and Liquid glass) and the opacity setting are gone; each style has its own fixed opacity.
+- The color mode is Follow Windows, Light or Dark. The "Windows accent color" mode and the accent setting are gone (highlights are monochrome), and the Start menu is always painted in the theme color.
 - The light theme contrast setting is shown only when the theme is light (the light mode, or following Windows while Windows is light).
 - An update check that gets no answer ends after 20 seconds instead of waiting; a download has no such limit.
 
 ### Fixed
 - Joining a Wi-Fi network with a typed password always failed with "wrong password" when the network name has a letter outside plain English (for example the Turkish "ı" in a phone hotspot named "... adlı kişiye ait ..."). The profile now carries the exact bytes of the network name, so Windows looks for the right network.
-- The dock had no background with the Frosted and Liquid glass styles; it is painted by the glass fill layer too.
 
 ### Türkçe
 ### Eklendi
-- Temanın renk modu, stili ve vurgu rengi her seçeneğin küçük bir resmini gösteren kutucuklarla seçilir (Ayarlar > Görünüm > Tema); üç kart açılıp kapanır: renk modu, stil (opaklıkla birlikte) ve vurgu rengi (Başlat menüsü tonuyla birlikte).
+- Adada, Wi-Fi ve Bluetooth bildirimleri gibi gösterilen pil bildirimleri: şarj takıldı, şarj çıkarıldı, pil doldu ve pil azaldı (sınır, durum widget'larındaki düşük pil ayarıdır). Pil korumasının şarjı tuttuğu sınırda (örneğin %80) bekleyen pil dolu sayılır. Bildirim, şarj çıkarılınca kararan bir ekran yüzünden kaçmasın diye kısa bir süre bekler.
 - Güncelleme sunucusu yanıt vermediğinde (örneğin GitHub'dan bir hata durumu geldiğinde) denetim, bağlantını suçlamak yerine "güncelleme sunucusu şu an yanıt vermiyor" der.
 
 ### Değişti
-- Cam stilleri artık ada ve dock'un arkasına duvar kağıdının bulanık bir kopyasını çizmez (arkadaki pencere yerine duvar kağıdını gösteriyordu); gerçekten arkada olanı gösteren yarı saydam bir dolgudur.
-- Buzlu cam, Apple'ın Liquid Glass tarzında, parlak bir üst yansıması ve kenar çizgisi olan, berrak ve hafif renkli bir camdır.
+- Ayarlar'da tek bir Görünüm sayfası var; üstündeki anahtarla Dinamik Ada ya da Dock seçilir. İkisinin ortak teması (renk modu ve stil) seçtiğin ayarların üstünde durur. Dinamik Ada sayfasının adı artık Görünüm değil, "Boyut" ayarı da "Ada boyutu".
+- "Windows ile başlat" artık oturum açınca çalışan bir görev kullanır. Windows, olağan başlangıç girdisinden başlayan programları birkaç saniye bekletir; dock ve ada bu yüzden geç görünüyordu. Görev bekletilmez. Eski başlangıç girdisi silinir.
+- Yüzey stilleri Solid ve Material'dir. Cam stilleri (Buzlu ve Sıvı cam) ile saydamlık ayarı kalktı; her stilin kendi sabit saydamlığı var.
+- Renk modu Windows'u izle, Açık ya da Koyu'dur. "Windows vurgu rengi" modu ve vurgu rengi ayarı kalktı (vurgular tek renklidir), Başlat menüsü her zaman tema renginde boyanır.
 - Açık tema kontrastı ayarı yalnızca tema açıkken gösterilir (açık mod ya da Windows açıkken Windows'u izleme).
 - Yanıt alamayan bir güncelleme denetimi beklemek yerine 20 saniye sonra biter; indirmede böyle bir sınır yoktur.
 
 ### Düzeltildi
 - Yazılan parolayla Wi-Fi ağına katılmak, ağ adında düz İngilizce dışında bir harf varsa (örneğin "... adlı kişiye ait ..." adlı bir telefon hotspot'undaki Türkçe "ı") her zaman "yanlış parola" ile başarısız oluyordu. Profil artık ağ adının tam baytlarını taşıyor, böylece Windows doğru ağı arıyor.
-- Buzlu ve Liquid glass stillerinde dock'un arka planı yoktu; artık cam dolgu katmanıyla çizilir.
 
 ## [0.2.8] - 2026-11-08
 
