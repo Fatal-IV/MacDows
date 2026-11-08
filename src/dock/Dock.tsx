@@ -7,6 +7,7 @@ import { droppedOutside, sameOrder } from "./dockDrag";
 import { useSettings, useT } from "../i18n";
 import { initTheme } from "../appearance/theme";
 import { dockBox, type Box } from "../hitBox";
+import { SurfaceShape } from "../appearance/SurfaceShape";
 import { useHitRegion } from "../hitRegion";
 import { shellAction, useSystemStatus, type ShellAction } from "../system";
 import "./Dock.css";
@@ -235,6 +236,8 @@ export default function Dock() {
       }}
     >
       <motion.div className="dock" layout ref={dockRef}>
+        {/* The glass styles paint the dock through this layer (the CSS clears the dock's own background then): the silhouette with the flares into the screen edge, as on the island. */}
+        <SurfaceShape edge="bottom" flare={22} radius={22} />
         {system?.taskbar_hidden && (
           <>
             <SystemButton action="start" label={t("system.start")} icon={START} />
