@@ -1,7 +1,6 @@
 // Adapted from Nectar (https://github.com/kua8/Nectar, GPL-3.0).
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
-import { applyBackdrop, enableBackdrop, usesBackdrop } from "./backdrop";
 
 // Convert a hex color string to rgba with a specified alpha
 function hexToRgba(hex: string, alpha: number): string {
@@ -351,7 +350,6 @@ export async function applyTheme(
       style === "material" ? { op, opExpanded, opPanel, fallback: isHex(customColor) ? customColor : DEFAULT_ACCENT_COLOR } : null,
       legacy
     ),
-    applyBackdrop(root, style),
   ]);
 
   // Windows's own Start and Search take their colors from the personalization settings: hand them the surface color.
@@ -360,7 +358,6 @@ export async function applyTheme(
   }
 }
 
-// `backdrop`: this window draws the notch or dock, which show the wallpaper in the glass styles.
 // Light theme contrast (Settings > Appearance > Theme): which way the island stands out against a white window.
 const LIGHT_VARIANTS = ['outline', 'gray'];
 function applyLightVariant() {
@@ -368,8 +365,7 @@ function applyLightVariant() {
   for (const name of LIGHT_VARIANTS) document.documentElement.classList.toggle(`light-v-${name}`, v === name);
 }
 
-export function initTheme(options: { backdrop?: boolean; syncSystem?: boolean } = {}) {
-  if (options.backdrop) enableBackdrop();
+export function initTheme(options: { syncSystem?: boolean } = {}) {
   if (options.syncSystem) syncSystemTheme = true;
   const syncMode = localStorage.getItem('nectar-theme-mode') || 'auto';
   const syncColor = localStorage.getItem('nectar-theme-color') || '#007aff';
@@ -421,16 +417,10 @@ export function initTheme(options: { backdrop?: boolean; syncSystem?: boolean } 
       currentMode === 'adaptive' ||
       currentMode === 'auto' ||
       localStorage.getItem('nectar-theme-accent') === 'system' ||
-      localStorage.getItem('nectar-theme-style') === 'material' ||
-      usesBackdrop(localStorage.getItem('nectar-theme-style'))
+      localStorage.getItem('nectar-theme-style') === 'material'
     ) {
       applyThemeFromStorage();
     }
-  });
-
-  // The wallpaper backdrop is lined up with the window's place on its monitor
-  const monitorsPromise = listen('monitors-changed', () => {
-    if (usesBackdrop(localStorage.getItem('nectar-theme-style'))) applyThemeFromStorage();
   });
 
   // Follow Windows light/dark in auto mode
@@ -442,7 +432,6 @@ export function initTheme(options: { backdrop?: boolean; syncSystem?: boolean } 
   return () => {
     window.removeEventListener('storage', onStorage);
     accentPromise.then(f => f());
-    monitorsPromise.then(f => f());
     darkScheme?.removeEventListener('change', onSchemeChange);
   };
 }

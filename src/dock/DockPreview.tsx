@@ -9,7 +9,7 @@ const COLUMNS = 5;
 export default function DockPreview() {
   const [items, setItems] = useState<PreviewItem[]>([]);
 
-  useEffect(() => initTheme({ backdrop: true }), []);
+  useEffect(() => initTheme(), []);
 
   useEffect(() => {
     const load = () => previewItems().then(setItems).catch(() => setItems([]));

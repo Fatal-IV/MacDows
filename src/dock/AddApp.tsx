@@ -16,7 +16,7 @@ export default function AddApp() {
   const [busy, setBusy] = useState<string | null>(null);
   const input = useRef<HTMLInputElement>(null);
 
-  useEffect(() => initTheme({ backdrop: true }), []);
+  useEffect(() => initTheme(), []);
 
   const load = () => getCatalog().then(setApps).catch(() => setApps([]));
   useEffect(() => {

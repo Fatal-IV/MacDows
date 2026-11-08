@@ -575,8 +575,8 @@ export default function Notch() {
     return () => document.removeEventListener("contextmenu", block);
   }, []);
 
-  // Theme (colors, glass style, wallpaper backdrop) and UI scale come from the settings window.
-  useEffect(() => initTheme({ backdrop: true, syncSystem: true }), []);
+  // Theme (colors, glass style) and UI scale come from the settings window.
+  useEffect(() => initTheme({ syncSystem: true }), []);
   const [scale, setScale] = useState(readScale);
   useEffect(() => {
     const onStorage = (e: StorageEvent) => {

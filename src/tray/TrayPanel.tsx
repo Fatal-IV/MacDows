@@ -18,7 +18,7 @@ const BLUR_GRACE_MS = 400;
 export default function TrayPanel() {
   const [items, setItems] = useState<TrayItem[]>([]);
 
-  useEffect(() => initTheme({ backdrop: true }), []);
+  useEffect(() => initTheme(), []);
   useEffect(() => {
     invoke<TrayItem[]>("get_tray_items").then(setItems).catch(() => setItems([]));
   }, []);

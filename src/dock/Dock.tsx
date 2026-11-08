@@ -34,7 +34,7 @@ export default function Dock() {
   const [customIcons, setCustomIcons] = useState<Record<string, string>>({});
   const iconsKey = JSON.stringify(settings?.dock?.custom_icons ?? {});
 
-  useEffect(() => initTheme({ backdrop: true }), []);
+  useEffect(() => initTheme(), []);
 
   // The browser's own right-click menu ("Save image as", "Inspect"...) makes no sense on a dock.
   useEffect(() => {

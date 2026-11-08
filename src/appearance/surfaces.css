@@ -3,9 +3,8 @@
  */
 /* Surface styles from Settings > Appearance > Style, applied as a class on <html> by theme.ts.
    The notch, dock and overlays sit in transparent windows, so CSS cannot blur what is behind them.
-   The glass styles draw a blurred copy of the wallpaper (backdrop.ts) behind the notch and dock
-   instead, and a haze, grain and sheen over the theme fill everywhere else (overlays, or a solid
-   color wallpaper).
+   The glass styles are a translucent fill with a haze, grain and sheen: what is really behind the
+   window (an app, or the wallpaper) shows through, unblurred.
 
    Each surface is painted by SurfaceShape.tsx: one silhouette path, flares included, that clips a
    single fill layer (.surface-fill) and is stroked as the outline (.edge-outline). The flares are
@@ -109,11 +108,6 @@
 
 .nectar > .surface-fill {
     --surface-color: var(--notch-bg, var(--nectar-bg, rgba(0, 0, 0, 0.8)));
-    --backdrop-y: var(--backdrop-top);
-}
-
-.dock > .surface-fill {
-    --backdrop-y: var(--backdrop-bottom);
 }
 
 /* Frosted: milky haze and fine grain */
@@ -144,58 +138,6 @@
     background-image:
         radial-gradient(120% 140% at 50% -15%, rgba(255, 255, 255, 0.18), rgba(255, 255, 255, 0) 55%),
         linear-gradient(0deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0) 45%);
-}
-
-/* ── Wallpaper backdrop (Frosted and Liquid on the notch and dock) ──
-   backdrop.ts loads a pre-blurred copy of the wallpaper and sets --backdrop-*; it is drawn inside
-   the fill layer, lined up with the screen, so the glass shows what is actually behind it. The
-   x position is relative to the centre, so the flares leave it unchanged. */
-
-:root.has-backdrop:is(.style-frosted, .style-liquid) :is(.nectar, .dock) {
-    --glass-tint: color-mix(in srgb, var(--notch-bg, var(--nectar-bg, rgba(0, 0, 0, 0.8))) 62%, transparent);
-}
-
-:root.has-backdrop:is(.style-frosted, .style-liquid) .dock {
-    --glass-tint: color-mix(in srgb, var(--nectar-bg, rgba(0, 0, 0, 0.8)) 62%, transparent);
-}
-
-:root.has-backdrop:is(.style-frosted, .style-liquid) :is(.nectar, .dock) > .surface-fill {
-    background-color: transparent;
-    background-size: auto, auto, auto, var(--backdrop-size);
-    background-repeat: repeat, no-repeat, no-repeat, no-repeat;
-    background-position: 0 0, 0 0, 0 0, var(--backdrop-x) var(--backdrop-y);
-}
-
-:root.has-backdrop.style-frosted :is(.nectar, .dock) > .surface-fill {
-    background-image:
-        var(--surface-grain),
-        linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.03)),
-        linear-gradient(var(--glass-tint), var(--glass-tint)),
-        var(--backdrop-image);
-}
-
-:root.has-backdrop.style-frosted.light-mode :is(.nectar, .dock) > .surface-fill {
-    background-image:
-        var(--surface-grain),
-        linear-gradient(180deg, rgba(255, 255, 255, 0.25), rgba(255, 255, 255, 0.12)),
-        linear-gradient(var(--glass-tint), var(--glass-tint)),
-        var(--backdrop-image);
-}
-
-:root.has-backdrop.style-liquid .nectar > .surface-fill {
-    background-image:
-        linear-gradient(0deg, rgba(255, 255, 255, 0.14), rgba(255, 255, 255, 0) 22px),
-        linear-gradient(180deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0) 40px),
-        linear-gradient(var(--glass-tint), var(--glass-tint)),
-        var(--backdrop-image);
-}
-
-:root.has-backdrop.style-liquid .dock > .surface-fill {
-    background-image:
-        linear-gradient(180deg, rgba(255, 255, 255, 0.14), rgba(255, 255, 255, 0) 22px),
-        linear-gradient(0deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0) 30px),
-        linear-gradient(var(--glass-tint), var(--glass-tint)),
-        var(--backdrop-image);
 }
 
 /* The album glow fades into the glass instead of into a solid dark edge */

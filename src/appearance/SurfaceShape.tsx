@@ -16,7 +16,7 @@ interface Props {
 const INSET = 0.5;
 
 // The surface's whole silhouette, flares included, as one path. It is both the clip of the fill
-// layer (glass, texture, wallpaper) and the line drawn around it, so the flares can never differ
+// layer (glass, texture) and the line drawn around it, so the flares can never differ
 // from the body. Coordinates are the surface's own box; (ox, oy) shifts them into the fill layer,
 // which reaches `flare` px past the box on the flare sides.
 function silhouette(edge: SurfaceEdge, w: number, h: number, f: number, r: number, er: number, i: number, ox: number, oy: number): { d: string; closed: boolean } {
