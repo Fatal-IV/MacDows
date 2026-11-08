@@ -110,14 +110,30 @@
     --surface-color: var(--notch-bg, var(--nectar-bg, rgba(0, 0, 0, 0.8)));
 }
 
-/* Frosted: milky haze and fine grain */
+/* Frosted: clear, lightly tinted glass in the manner of Apple's Liquid Glass: half of the theme fill (what is behind shows through),
+   a bright sheen at the top edge, a soft diagonal light across the body and a thin bright rim. */
+:root.style-frosted {
+    --surface-outline: rgba(255, 255, 255, 0.36);
+}
+
+:root.style-frosted.light-mode {
+    --surface-outline: rgba(0, 0, 0, 0.16);
+}
+
 :root.style-frosted .surface-fill {
-    background-image: var(--surface-grain), linear-gradient(180deg, rgba(255, 255, 255, 0.17), rgba(255, 255, 255, 0.1));
-    background-repeat: repeat, no-repeat;
+    background-color: color-mix(in srgb, var(--surface-color, var(--nectar-bg, rgba(0, 0, 0, 0.8))) 50%, transparent);
+    background-image:
+        var(--surface-grain),
+        linear-gradient(180deg, rgba(255, 255, 255, 0.3) 0, rgba(255, 255, 255, 0) 14px),
+        linear-gradient(135deg, rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0.06) 60%, rgba(255, 255, 255, 0.1));
+    background-repeat: repeat, no-repeat, no-repeat;
 }
 
 :root.style-frosted.light-mode .surface-fill {
-    background-image: var(--surface-grain), linear-gradient(180deg, rgba(255, 255, 255, 0.45), rgba(255, 255, 255, 0.22));
+    background-image:
+        var(--surface-grain),
+        linear-gradient(180deg, rgba(255, 255, 255, 0.7) 0, rgba(255, 255, 255, 0) 14px),
+        linear-gradient(135deg, rgba(255, 255, 255, 0.55), rgba(255, 255, 255, 0.25));
 }
 
 /* Liquid: clear body, sheen and depth. The notch hangs from the top edge and the dock sits on the
