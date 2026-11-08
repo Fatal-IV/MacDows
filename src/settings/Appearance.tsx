@@ -1,6 +1,8 @@
+import { useEffect, useState } from "react";
 import { STYLE_OPACITY, THEME_STYLES } from "../appearance/theme";
 import { useT } from "../i18n";
 import { Row, Select, Slider, Toggle } from "../ui/controls";
+import { isLightTheme } from "../appearance/lightMode";
 import { FoldCard } from "./FoldCard";
 import { ThemeTiles } from "./ThemeTiles";
 import { useStored } from "./useStored";
@@ -19,13 +21,25 @@ export default function Appearance() {
   // How the island stands out on a light theme (white windows behind a dark island).
   const [lightVariant, setLightVariant] = useStored("macdows-light-variant", "none");
 
+  // Whether Windows itself is dark right now ("follow Windows" is light only while Windows is light).
+  const [systemDark, setSystemDark] = useState(() => !!window.matchMedia?.("(prefers-color-scheme: dark)").matches);
+  useEffect(() => {
+    const query = window.matchMedia?.("(prefers-color-scheme: dark)");
+    if (!query) return;
+    const onChange = () => setSystemDark(query.matches);
+    query.addEventListener("change", onChange);
+    return () => query.removeEventListener("change", onChange);
+  }, []);
+
   return (
     <>
       <FoldCard title={t("appearance.mode")}>
         <ThemeTiles title={t("appearance.mode")} value={mode} onChange={setMode} columns={4} options={MODES.map((m) => ({ value: m, label: t(`appearance.mode.${m}`), look: m }))} />
-        <Row title={t("appearance.lightContrast")} description={t("appearance.lightContrastHelp")}>
-          <Select label={t("appearance.lightContrast")} value={lightVariant} onChange={setLightVariant} options={LIGHT_CONTRASTS.map((c) => ({ value: c, label: t(`appearance.lightContrast.${c}`) }))} />
-        </Row>
+        {isLightTheme(mode, systemDark) && (
+          <Row title={t("appearance.lightContrast")} description={t("appearance.lightContrastHelp")}>
+            <Select label={t("appearance.lightContrast")} value={lightVariant} onChange={setLightVariant} options={LIGHT_CONTRASTS.map((c) => ({ value: c, label: t(`appearance.lightContrast.${c}`) }))} />
+          </Row>
+        )}
       </FoldCard>
       <FoldCard title={t("appearance.style")}>
         <ThemeTiles
