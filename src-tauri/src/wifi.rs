@@ -71,6 +71,8 @@ fn xml_escape(s: &str) -> String {
 /// The WLAN profile XML Windows wants for `WlanSetProfile`.
 pub fn profile_xml(ssid: &str, auth: Auth, password: Option<&str>, hidden: bool) -> String {
     let name = xml_escape(ssid);
+    // The exact bytes of the SSID: a name alone can be read through the local code page and name another network.
+    let hex: String = ssid.bytes().map(|b| format!("{b:02X}")).collect();
     let (authentication, encryption) = match auth {
         Auth::Open => ("open", "none"),
         Auth::Wpa2Personal => ("WPA2PSK", "AES"),
@@ -86,7 +88,7 @@ pub fn profile_xml(ssid: &str, auth: Auth, password: Option<&str>, hidden: bool)
     };
     format!(
         "<?xml version=\"1.0\"?><WLANProfile xmlns=\"http://www.microsoft.com/networking/WLAN/profile/v1\"><name>{name}</name>\
-<SSIDConfig><SSID><name>{name}</name></SSID>{non_broadcast}</SSIDConfig><connectionType>ESS</connectionType><connectionMode>auto</connectionMode>\
+<SSIDConfig><SSID><hex>{hex}</hex><name>{name}</name></SSID>{non_broadcast}</SSIDConfig><connectionType>ESS</connectionType><connectionMode>auto</connectionMode>\
 <MSM><security><authEncryption><authentication>{authentication}</authentication><encryption>{encryption}</encryption><useOneX>false</useOneX></authEncryption>{key}</security></MSM></WLANProfile>"
     )
 }
@@ -552,6 +554,14 @@ mod tests {
     }
 
     #[test]
+    fn the_ssid_is_written_as_its_exact_utf8_bytes() {
+        // "ı" is C4 B1 in UTF-8; a name-only SSID can be read through the local code page and name another network.
+        let xml = profile_xml("adlı", Auth::Wpa2Personal, Some("secret123"), false);
+        assert!(xml.contains("<SSID><hex>61646C C4B1</hex>".replace(' ', "").as_str()), "{xml}");
+        assert!(xml.contains("<name>adlı</name>"));
+    }
+
+    #[test]
     fn open_profile_has_no_key() {
         let xml = profile_xml("TestNet", Auth::Open, Some("ignored"), false);
         assert!(xml.contains("open") && !xml.contains("sharedKey") && !xml.contains("ignored"));
@@ -606,6 +616,30 @@ mod tests {
         assert_eq!(parse_auth("wpa2"), Some(Auth::Wpa2Personal));
         assert_eq!(parse_auth("wpa3"), Some(Auth::Wpa3Personal));
         assert_eq!(parse_auth("wep"), None);
+    }
+
+    /// Live probe (disconnects, then reconnects through the app's own saved-profile path): `MACDOWS_WIFI_PROBE=<ssid>`.
+    #[test]
+    #[ignore]
+    fn live_saved_profile_connect() {
+        let ssid = std::env::var("MACDOWS_WIFI_PROBE").expect("set MACDOWS_WIFI_PROBE");
+        disconnect_blocking();
+        std::thread::sleep(std::time::Duration::from_secs(2));
+        let started = std::time::Instant::now();
+        let result = connect_blocking(&ssid);
+        println!("result={result:?} after {:?}", started.elapsed());
+    }
+
+    /// Live probe of the typed-password path: `MACDOWS_WIFI_PROBE=<ssid>`, optional `MACDOWS_WIFI_PW=<password>`
+    /// (a wrong one is used when unset). The password is never printed.
+    #[test]
+    #[ignore]
+    fn live_typed_password_connect() {
+        let ssid = std::env::var("MACDOWS_WIFI_PROBE").expect("set MACDOWS_WIFI_PROBE");
+        let password = std::env::var("MACDOWS_WIFI_PW").unwrap_or_else(|_| "definitely-wrong-123".into());
+        let started = std::time::Instant::now();
+        let result = connect_new_blocking(&ssid, Some(&password), "wpa2", false);
+        println!("result={result:?} after {:?}", started.elapsed());
     }
 
     #[test]

@@ -43,6 +43,7 @@
   "update.auto": "Güncellemeleri otomatik denetle",
   "update.notes": "Yenilikler",
   "update.error.check_failed": "Güncellemeler denetlenemedi. Bağlantınızı kontrol edip yeniden deneyin.",
+  "update.error.server_unavailable": "Güncelleme sunucusu şu an yanıt vermiyor. Bağlantınız çalışıyor; biraz sonra yeniden deneyin.",
   "update.error.download_failed": "Güncelleme indirilemedi.",
   "update.error.verify_failed": "Güncelleme doğrulanamadı ve kurulmadı.",
   "update.error.install_failed": "Güncelleme kurulamadı.",

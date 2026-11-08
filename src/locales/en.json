@@ -43,6 +43,7 @@
   "update.auto": "Check for updates automatically",
   "update.notes": "What is new",
   "update.error.check_failed": "Could not check for updates. Check your connection and try again.",
+  "update.error.server_unavailable": "The update server is not answering right now. Your connection works; try again in a little while.",
   "update.error.download_failed": "The update could not be downloaded.",
   "update.error.verify_failed": "The update could not be verified and was not installed.",
   "update.error.install_failed": "Installing the update failed.",

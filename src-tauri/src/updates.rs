@@ -123,6 +123,15 @@ pub fn classify_install_error(error: &tauri_plugin_updater::Error) -> &'static s
     }
 }
 
+/// The code shown for a failed check. The plugin reports "no endpoint gave a manifest" when the server (or something on
+/// the way to it) answered with an error status such as 504: the connection works, the update server does not.
+pub fn classify_check_error(error: &tauri_plugin_updater::Error) -> &'static str {
+    match error {
+        tauri_plugin_updater::Error::ReleaseNotFound => "server_unavailable",
+        _ => "check_failed",
+    }
+}
+
 fn now_secs() -> u64 {
     SystemTime::now().duration_since(UNIX_EPOCH).map(|d| d.as_secs()).unwrap_or(0)
 }
@@ -143,9 +152,15 @@ fn publish(app: &AppHandle, status: UpdateStatus) -> UpdateStatus {
     status
 }
 
-fn build_updater(app: &AppHandle) -> Result<tauri_plugin_updater::Updater, String> {
+/// A check that gets no answer must end instead of hanging; a download has no limit (an installer is large).
+const CHECK_TIMEOUT_SECS: u64 = 20;
+
+fn build_updater(app: &AppHandle, timeout: Option<Duration>) -> Result<tauri_plugin_updater::Updater, String> {
     #[allow(unused_mut)]
     let mut builder = app.updater_builder();
+    if let Some(timeout) = timeout {
+        builder = builder.timeout(timeout);
+    }
     // Debug builds only: point the check at a local fake release (the plugin refuses http in release builds anyway).
     #[cfg(debug_assertions)]
     if let Ok(endpoint) = std::env::var("MACDOWS_UPDATE_ENDPOINT") {
@@ -171,7 +186,7 @@ pub async fn run_check(app: &AppHandle, user_initiated: bool) -> UpdateStatus {
         return previous;
     }
     let _ = app.emit("update-status", UpdateStatus::Checking);
-    let outcome = match build_updater(app) {
+    let outcome = match build_updater(app, Some(Duration::from_secs(CHECK_TIMEOUT_SECS))) {
         Err(e) => {
             log(&format!("check: could not build the updater: {e}"));
             CheckOutcome::Failed("check_failed".into())
@@ -183,8 +198,8 @@ pub async fn run_check(app: &AppHandle, user_initiated: bool) -> UpdateStatus {
             }
             Ok(None) => CheckOutcome::UpToDate,
             Err(e) => {
-                log(&format!("check failed: {e}"));
-                CheckOutcome::Failed("check_failed".into())
+                log(&format!("check failed: {e} ({e:?})"));
+                CheckOutcome::Failed(classify_check_error(&e).into())
             }
         },
     };
@@ -196,7 +211,7 @@ pub async fn run_check(app: &AppHandle, user_initiated: bool) -> UpdateStatus {
 }
 
 async fn download_and_install(app: &AppHandle) -> Result<(), &'static str> {
-    let updater = build_updater(app).map_err(|e| {
+    let updater = build_updater(app, Some(Duration::from_secs(CHECK_TIMEOUT_SECS))).map_err(|e| {
         log(&format!("install: could not build the updater: {e}"));
         "check_failed"
     })?;
@@ -204,8 +219,8 @@ async fn download_and_install(app: &AppHandle) -> Result<(), &'static str> {
         Ok(Some(update)) => update,
         Ok(None) => return Err("no_update"),
         Err(e) => {
-            log(&format!("install: re-check failed: {e}"));
-            return Err("check_failed");
+            log(&format!("install: re-check failed: {e} ({e:?})"));
+            return Err(classify_check_error(&e));
         }
     };
     let mut downloaded: u64 = 0;
@@ -400,6 +415,14 @@ mod effect_tests {
         let installing = Mutex::new(UpdateStatus::Installing { percent: Some(5) });
         assert!(!begin_check(&installing));
         assert_eq!(*installing.lock().unwrap(), UpdateStatus::Installing { percent: Some(5) });
+    }
+
+    #[test]
+    fn check_errors_tell_a_server_that_would_not_answer_from_a_missing_connection() {
+        // The server (or the network path to it) answered with an error status: not the user's connection.
+        assert_eq!(classify_check_error(&Error::ReleaseNotFound), "server_unavailable");
+        assert_eq!(classify_check_error(&Error::Network("x".into())), "check_failed");
+        assert_eq!(classify_check_error(&Error::EmptyEndpoints), "check_failed");
     }
 
     #[test]
