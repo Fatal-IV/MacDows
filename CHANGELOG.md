@@ -5,12 +5,36 @@ Format: [Keep a Changelog](https://keepachangelog.com/), versioning: [SemVer](ht
 
 ## [Unreleased]
 
+## [0.2.9] - 2026-11-08
+
 ### Added
-- The color mode, the style and the accent of the theme are chosen on tiles with a small picture of each option (Settings > Appearance > Theme).
+- The color mode, the style and the accent of the theme are chosen on tiles with a small picture of each option (Settings > Appearance > Theme), in three cards that open and close: color mode, style (with the opacity) and accent (with the Start menu tint).
+- When the update server does not answer (for example an error status from GitHub) the check says so ("the update server is not answering right now") instead of blaming your connection.
+
+### Changed
+- The glass styles no longer paint a blurred copy of the wallpaper behind the island and dock (it showed the wallpaper instead of the window behind); they are a translucent fill that shows what is really there.
+- Frosted glass is clear, lightly tinted glass with a bright top sheen and rim, in the manner of Apple's Liquid Glass.
+- The light theme contrast setting is shown only when the theme is light (the light mode, or following Windows while Windows is light).
+- An update check that gets no answer ends after 20 seconds instead of waiting; a download has no such limit.
+
+### Fixed
+- Joining a Wi-Fi network with a typed password always failed with "wrong password" when the network name has a letter outside plain English (for example the Turkish "ı" in a phone hotspot named "... adlı kişiye ait ..."). The profile now carries the exact bytes of the network name, so Windows looks for the right network.
+- The dock had no background with the Frosted and Liquid glass styles; it is painted by the glass fill layer too.
 
 ### Türkçe
 ### Eklendi
-- Temanın renk modu, stili ve vurgu rengi her seçeneğin küçük bir resmini gösteren kutucuklarla seçilir (Ayarlar > Görünüm > Tema).
+- Temanın renk modu, stili ve vurgu rengi her seçeneğin küçük bir resmini gösteren kutucuklarla seçilir (Ayarlar > Görünüm > Tema); üç kart açılıp kapanır: renk modu, stil (opaklıkla birlikte) ve vurgu rengi (Başlat menüsü tonuyla birlikte).
+- Güncelleme sunucusu yanıt vermediğinde (örneğin GitHub'dan bir hata durumu geldiğinde) denetim, bağlantını suçlamak yerine "güncelleme sunucusu şu an yanıt vermiyor" der.
+
+### Değişti
+- Cam stilleri artık ada ve dock'un arkasına duvar kağıdının bulanık bir kopyasını çizmez (arkadaki pencere yerine duvar kağıdını gösteriyordu); gerçekten arkada olanı gösteren yarı saydam bir dolgudur.
+- Buzlu cam, Apple'ın Liquid Glass tarzında, parlak bir üst yansıması ve kenar çizgisi olan, berrak ve hafif renkli bir camdır.
+- Açık tema kontrastı ayarı yalnızca tema açıkken gösterilir (açık mod ya da Windows açıkken Windows'u izleme).
+- Yanıt alamayan bir güncelleme denetimi beklemek yerine 20 saniye sonra biter; indirmede böyle bir sınır yoktur.
+
+### Düzeltildi
+- Yazılan parolayla Wi-Fi ağına katılmak, ağ adında düz İngilizce dışında bir harf varsa (örneğin "... adlı kişiye ait ..." adlı bir telefon hotspot'undaki Türkçe "ı") her zaman "yanlış parola" ile başarısız oluyordu. Profil artık ağ adının tam baytlarını taşıyor, böylece Windows doğru ağı arıyor.
+- Buzlu ve Liquid glass stillerinde dock'un arka planı yoktu; artık cam dolgu katmanıyla çizilir.
 
 ## [0.2.8] - 2026-11-08
 
