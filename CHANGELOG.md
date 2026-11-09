@@ -5,6 +5,15 @@ Format: [Keep a Changelog](https://keepachangelog.com/), versioning: [SemVer](ht
 
 ## [Unreleased]
 
+## [0.3.1] - 2026-11-10
+
+### Fixed
+- "Start with Windows" did not work in 0.3.0: Windows refused the sign-in task, so the app did not start with it. The task is now created correctly, and the old startup entry is removed only after the task exists, so a failure never leaves the app without an autostart.
+
+### Türkçe
+### Düzeltildi
+- 0.3.0'da "Windows ile başlat" çalışmıyordu: Windows oturum açma görevini reddediyordu, bu yüzden uygulama açılışta başlamıyordu. Görev artık doğru oluşturuluyor; eski başlangıç girdisi de yalnızca görev gerçekten oluştuktan sonra siliniyor, böylece bir hata uygulamayı başlangıçsız bırakmıyor.
+
 ## [0.3.0] - 2026-11-08
 
 ### Added

@@ -144,7 +144,7 @@ pub fn logon_task_xml(exe: &str, user: &str) -> String {
     let (exe, user) = (xml_escape(exe), xml_escape(user));
     format!(
         r#"<?xml version="1.0" encoding="UTF-16"?>
-<Task version="1.2" xmlns="http://schemas.microsoft.com/windows/2004/02/task">
+<Task version="1.2" xmlns="http://schemas.microsoft.com/windows/2004/02/mit/task">
   <Triggers><LogonTrigger><Enabled>true</Enabled><UserId>{user}</UserId></LogonTrigger></Triggers>
   <Principals><Principal id="Author"><UserId>{user}</UserId><LogonType>InteractiveToken</LogonType><RunLevel>LeastPrivilege</RunLevel></Principal></Principals>
   <Settings>
@@ -383,6 +383,8 @@ mod tests {
     #[test]
     fn the_logon_task_runs_the_exe_at_logon_without_a_delay() {
         let xml = logon_task_xml(r"C:\A & B\macdows.exe", r"PC\ali");
+        // Task Scheduler refuses any other namespace ("unexpected namespace"), which once left no autostart at all.
+        assert!(xml.contains(r#"xmlns="http://schemas.microsoft.com/windows/2004/02/mit/task""#));
         assert!(xml.contains("<LogonTrigger>") && !xml.contains("<Delay>"));
         assert!(xml.contains(r"<Command>C:\A &amp; B\macdows.exe</Command>"));
         assert!(xml.contains(r"<UserId>PC\ali</UserId>"));

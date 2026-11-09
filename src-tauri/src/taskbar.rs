@@ -492,27 +492,40 @@ pub fn set_autostart(on: bool) {
     use std::os::windows::process::CommandExt;
     use winreg::enums::{HKEY_CURRENT_USER, KEY_SET_VALUE};
     use winreg::RegKey;
-    // The old Run entry is delayed by Windows after sign-in; it is replaced by a logon task (no delay).
-    if let Ok(key) = RegKey::predef(HKEY_CURRENT_USER).open_subkey_with_flags(r"Software\Microsoft\Windows\CurrentVersion\Run", KEY_SET_VALUE) {
-        let _ = key.delete_value("MacDows");
-    }
+    let run_key = || RegKey::predef(HKEY_CURRENT_USER).open_subkey_with_flags(r"Software\Microsoft\Windows\CurrentVersion\Run", KEY_SET_VALUE).ok();
     let exe = std::env::current_exe().ok();
     std::thread::spawn(move || {
-        let mut cmd = std::process::Command::new("schtasks");
-        cmd.creation_flags(CREATE_NO_WINDOW);
+        let schtasks = |args: &[&str], file: Option<&std::path::Path>| {
+            let mut cmd = std::process::Command::new("schtasks");
+            cmd.creation_flags(CREATE_NO_WINDOW).args(args);
+            if let Some(f) = file {
+                cmd.arg(f);
+            }
+            cmd.output().map_or(false, |o| o.status.success())
+        };
         if !on {
-            let _ = cmd.args(["/Delete", "/TN", "MacDows", "/F"]).output();
+            schtasks(&["/Delete", "/TN", "MacDows", "/F"], None);
+            if let Some(key) = run_key() {
+                let _ = key.delete_value("MacDows");
+            }
             return;
         }
         let Some(exe) = exe else { return };
+        // A sign-in task is not held back by Windows the way the Run entry is. The Run entry stays as the fallback
+        // and goes away only once the task really exists, so a failed task never leaves the app without an autostart.
         let user = format!("{}\\{}", std::env::var("USERDOMAIN").unwrap_or_default(), std::env::var("USERNAME").unwrap_or_default());
         let xml = crate::taskbar_plan::logon_task_xml(&exe.to_string_lossy(), &user);
         let path = std::env::temp_dir().join("macdows-logon-task.xml");
         let mut bytes = vec![0xFF, 0xFE];
         bytes.extend(xml.encode_utf16().flat_map(|u| u.to_le_bytes()));
-        if std::fs::write(&path, bytes).is_ok() {
-            let _ = cmd.args(["/Create", "/TN", "MacDows", "/F", "/XML"]).arg(&path).output();
-            let _ = std::fs::remove_file(&path);
+        let created = std::fs::write(&path, bytes).is_ok() && schtasks(&["/Create", "/TN", "MacDows", "/F", "/XML"], Some(&path));
+        let _ = std::fs::remove_file(&path);
+        if let Some(key) = run_key() {
+            if created {
+                let _ = key.delete_value("MacDows");
+            } else {
+                let _ = key.set_value("MacDows", &crate::taskbar_plan::run_value(&exe.to_string_lossy()));
+            }
         }
     });
 }
