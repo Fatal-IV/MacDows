@@ -23,13 +23,7 @@ Notes:
 
 MacDows checks for a new release a little after it starts and then every 12 hours. When there is one, a small blue dot appears on the Dynamic Island and **Settings → Updates** shows what is new. Nothing is installed until you press **Update and restart**. Updates are verified with the MacDows signing key. You can turn the automatic check off in the same card.
 
-## Develop
 
-```
-bun install
-bun run tauri dev
-```
-
-Build the installer: `node scripts/build-installer.mjs` (needs `TAURI_SIGNING_PRIVATE_KEY`). Regenerate the icons from `branding/*.svg`: `bun run icons`.
+This repository holds the releases and the update feed (`latest.json`). The source code is kept in a private repository.
 
 License: [GPL-3.0](LICENSE). Third-party credits are in [NOTICE](NOTICE).
