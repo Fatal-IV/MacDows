@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MacDows Privacy Policy</title>
+<meta name="description" content="What MacDows reads on your PC and what it sends over the internet.">
+<style>
+  :root { --bg:#ffffff; --fg:#1c1c1e; --muted:#5f6368; --card:#f4f5f7; --line:#dfe1e5; --accent:#0a6ed1; }
+  @media (prefers-color-scheme: dark) { :root { --bg:#111214; --fg:#f2f2f4; --muted:#a0a4ab; --card:#1b1d21; --line:#2b2e34; --accent:#64a8ff; } }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--bg); color:var(--fg); font:16px/1.6 "Segoe UI", system-ui, -apple-system, sans-serif; }
+  main { max-width: 760px; margin: 0 auto; padding: 40px 20px 80px; }
+  header { display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; margin-bottom: 8px; }
+  h1 { font-size: 2rem; margin: 0; letter-spacing: -0.02em; }
+  h2 { font-size: 1.2rem; margin: 2rem 0 .5rem; }
+  .muted { color: var(--muted); font-size: .9rem; }
+  .lead { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 14px 18px; }
+  .lang button { font: inherit; background: var(--card); color: var(--fg); border: 1px solid var(--line); padding: 6px 14px; cursor: pointer; }
+  .lang button:first-child { border-radius: 8px 0 0 8px; }
+  .lang button:last-child { border-radius: 0 8px 8px 0; border-left: 0; }
+  .lang button[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: #fff; }
+  table { width: 100%; border-collapse: collapse; font-size: .95rem; margin: .5rem 0; }
+  th, td { text-align: left; vertical-align: top; padding: 10px 12px; border-bottom: 1px solid var(--line); }
+  th { color: var(--muted); font-weight: 600; font-size: .85rem; }
+  a { color: var(--accent); }
+  code { background: var(--card); padding: 1px 6px; border-radius: 6px; font-size: .88em; }
+  nav { margin-bottom: 1.2rem; font-size: .95rem; }
+  [hidden] { display: none !important; }
+  @media (max-width: 560px) { th, td { display: block; border-bottom: 0; padding: 4px 0; } tr { display: block; border-bottom: 1px solid var(--line); padding: 8px 0; } tr:first-child { display: none; } }
+</style>
+</head>
+<body>
+<main>
+  <nav><a href="../">&larr; MacDows</a></nav>
+  <header>
+    <h1 id="title">MacDows Privacy Policy</h1>
+    <div class="lang" role="group" aria-label="Language">
+      <button type="button" data-l="en" aria-pressed="true">English</button><button type="button" data-l="tr" aria-pressed="false">Türkçe</button>
+    </div>
+  </header>
+
+  <section id="en" lang="en">
+    <p class="muted">Last updated: 16 November 2026 &middot; Publisher: Fatal IV</p>
+    <p class="lead"><strong>In short:</strong> MacDows works on your PC. It has no account, no advertising and no analytics, and it does not send what it reads to the developer. The only thing it can send over the internet is the city you choose for the weather widget, which is off until you choose one.</p>
+
+    <h2>What MacDows reads on your PC</h2>
+    <table>
+      <tr><th>Information</th><th>Why</th><th>Where it goes</th></tr>
+      <tr><td><strong>Windows notifications</strong> (the app that sent it, the title and the text)</td><td>To show them in the island and in its notification history</td><td>Stays on your PC. The history is kept in <code>%APPDATA%\MacDows</code>, encrypted with the Windows Data Protection API (DPAPI): it can only be read again by the same Windows user on the same PC, and MacDows keeps no key of its own. You can clear it in the app.</td></tr>
+      <tr><td><strong>Now playing media</strong> (title, artist, cover, progress)</td><td>To show the player in the island</td><td>Stays on your PC. A short plain-text log of what played is kept in <code>%APPDATA%\MacDows\logs</code>.</td></tr>
+      <tr><td><strong>Open windows and programs</strong> (titles, icons)</td><td>To fill the dock and the previews</td><td>Stays on your PC.</td></tr>
+      <tr><td><strong>System state</strong> (volume, brightness, Wi-Fi networks, Bluetooth devices, battery, VPN connections)</td><td>To show and change them in the Control Center</td><td>Stays on your PC.</td></tr>
+      <tr><td>A <strong>Wi-Fi password</strong> you type to join a network</td><td>To join the network</td><td>Held in memory only and handed to Windows. MacDows does not store it.</td></tr>
+    </table>
+
+    <h2>What MacDows sends over the internet</h2>
+    <ul>
+      <li><strong>Weather widget (optional, off until you choose a city).</strong> When you search for a city, the name you type is sent to Open-Meteo (<code>geocoding-api.open-meteo.com</code>). To show the weather, the latitude and longitude of the city you chose are sent to Open-Meteo (<code>api.open-meteo.com</code>). MacDows does not use your device location. Open-Meteo's own privacy policy applies to these requests.</li>
+      <li><strong>Updates.</strong> The Microsoft Store build is updated by the Microsoft Store. The version downloaded from GitHub checks <code>github.com/Fatal-IV/MacDows</code> for a new release; GitHub receives the usual information of a web request, such as your IP address.</li>
+    </ul>
+    <p>MacDows does not sell or share your information, and it does not send your notifications, media, windows or settings anywhere.</p>
+
+    <h2>Your choices</h2>
+    <ul>
+      <li>Clear the notification history inside the app, or delete the folder <code>%APPDATA%\MacDows</code>.</li>
+      <li>Turn the weather off: drag the weather widget out of the island into the widget tray in the island's widget settings. Nothing is sent to Open-Meteo after that.</li>
+      <li>Deny or withdraw MacDows' access to notifications in Windows Settings &rarr; System &rarr; Notifications.</li>
+      <li>Uninstalling MacDows removes the app; delete <code>%APPDATA%\MacDows</code> to remove what it saved.</li>
+    </ul>
+
+    <h2>Children</h2>
+    <p>MacDows does not collect personal information from anyone, including children.</p>
+
+    <h2>Changes and contact</h2>
+    <p>If this policy changes, the new version and its date will be published on this page. Questions: contact the publisher through <a href="https://github.com/Fatal-IV">github.com/Fatal-IV</a>.</p>
+  </section>
+
+  <section id="tr" lang="tr" hidden>
+    <p class="muted">Son güncelleme: 16 Kasım 2026 &middot; Yayıncı: Fatal IV</p>
+    <p class="lead"><strong>Kısaca:</strong> MacDows bilgisayarınızda çalışır. Hesap, reklam ve analiz yoktur; okuduklarını geliştiriciye göndermez. İnternete gönderebildiği tek şey, hava durumu bileşeni için seçtiğiniz şehirdir; siz bir şehir seçene kadar bu kapalıdır.</p>
+
+    <h2>MacDows bilgisayarınızda ne okur</h2>
+    <table>
+      <tr><th>Bilgi</th><th>Neden</th><th>Nereye gider</th></tr>
+      <tr><td><strong>Windows bildirimleri</strong> (gönderen uygulama, başlık ve metin)</td><td>Adada ve bildirim geçmişinde göstermek için</td><td>Bilgisayarınızda kalır. Geçmiş <code>%APPDATA%\MacDows</code> içinde, Windows Veri Koruma API'si (DPAPI) ile şifrelenmiş olarak tutulur: yalnızca aynı bilgisayarda aynı Windows kullanıcısı tarafından yeniden okunabilir ve MacDows'un kendi anahtarı yoktur. Uygulamadan temizleyebilirsiniz.</td></tr>
+      <tr><td><strong>Çalan medya</strong> (başlık, sanatçı, kapak, ilerleme)</td><td>Oynatıcıyı adada göstermek için</td><td>Bilgisayarınızda kalır. Çalanların kısa, düz metin bir günlüğü <code>%APPDATA%\MacDows\logs</code> içinde tutulur.</td></tr>
+      <tr><td><strong>Açık pencereler ve programlar</strong> (başlıklar, simgeler)</td><td>Dock'u ve önizlemeleri doldurmak için</td><td>Bilgisayarınızda kalır.</td></tr>
+      <tr><td><strong>Sistem durumu</strong> (ses, parlaklık, Wi-Fi ağları, Bluetooth cihazları, pil, VPN bağlantıları)</td><td>Denetim Merkezi'nde göstermek ve değiştirmek için</td><td>Bilgisayarınızda kalır.</td></tr>
+      <tr><td>Bir ağa bağlanmak için yazdığınız <strong>Wi-Fi şifresi</strong></td><td>Ağa bağlanmak için</td><td>Yalnızca bellekte tutulur ve Windows'a verilir. MacDows saklamaz.</td></tr>
+    </table>
+
+    <h2>MacDows internete ne gönderir</h2>
+    <ul>
+      <li><strong>Hava durumu bileşeni (isteğe bağlı, şehir seçene kadar kapalı).</strong> Bir şehir aradığınızda yazdığınız ad Open-Meteo'ya (<code>geocoding-api.open-meteo.com</code>) gönderilir. Hava durumunu göstermek için seçtiğiniz şehrin enlem ve boylamı Open-Meteo'ya (<code>api.open-meteo.com</code>) gönderilir. MacDows cihazınızın konumunu kullanmaz. Bu istekler için Open-Meteo'nun kendi gizlilik politikası geçerlidir.</li>
+      <li><strong>Güncellemeler.</strong> Microsoft Store sürümünü Microsoft Store günceller. GitHub'dan indirilen sürüm, yeni sürüm için <code>github.com/Fatal-IV/MacDows</code> adresine bakar; GitHub, bir web isteğinin olağan bilgilerini (örneğin IP adresinizi) alır.</li>
+    </ul>
+    <p>MacDows bilgilerinizi satmaz veya paylaşmaz; bildirimlerinizi, medyanızı, pencerelerinizi veya ayarlarınızı hiçbir yere göndermez.</p>
+
+    <h2>Seçenekleriniz</h2>
+    <ul>
+      <li>Bildirim geçmişini uygulamadan temizleyin veya <code>%APPDATA%\MacDows</code> klasörünü silin.</li>
+      <li>Hava durumunu kapatın: adanın widget ayarlarında hava durumu widget'ını adadan widget tepsisine sürükleyin. Bundan sonra Open-Meteo'ya hiçbir şey gönderilmez.</li>
+      <li>MacDows'un bildirimlere erişimini Windows Ayarlar &rarr; Sistem &rarr; Bildirimler'den reddedin veya geri alın.</li>
+      <li>MacDows'u kaldırmak uygulamayı siler; kaydettiklerini silmek için <code>%APPDATA%\MacDows</code> klasörünü silin.</li>
+    </ul>
+
+    <h2>Çocuklar</h2>
+    <p>MacDows, çocuklar dahil hiç kimseden kişisel bilgi toplamaz.</p>
+
+    <h2>Değişiklikler ve iletişim</h2>
+    <p>Bu politika değişirse yeni sürümü ve tarihi bu sayfada yayımlanır. Sorular için <a href="https://github.com/Fatal-IV">github.com/Fatal-IV</a> üzerinden yayıncıya ulaşabilirsiniz.</p>
+  </section>
+</main>
+<script>
+  (function () {
+    var titles = { en: "MacDows Privacy Policy", tr: "MacDows Gizlilik Politikası" };
+    function show(l) {
+      document.getElementById("en").hidden = l !== "en";
+      document.getElementById("tr").hidden = l !== "tr";
+      document.getElementById("title").textContent = titles[l];
+      document.documentElement.lang = l;
+      document.title = titles[l];
+      document.querySelectorAll(".lang button").forEach(function (b) { b.setAttribute("aria-pressed", String(b.dataset.l === l)); });
+    }
+    document.querySelectorAll(".lang button").forEach(function (b) { b.addEventListener("click", function () { show(b.dataset.l); }); });
+    var wanted = (location.hash === "#tr" || location.hash === "#en") ? location.hash.slice(1) : ((navigator.language || "en").toLowerCase().indexOf("tr") === 0 ? "tr" : "en");
+    show(wanted);
+  })();
+</script>
+</body>
+</html>
