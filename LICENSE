@@ -12,7 +12,7 @@ Copyright (c) 2026 Fatal-IV (IK Software). All rights reserved.
    restriction), sublicense it, or sell it.
 4. No warranty. MacDows is provided "as is", without warranty of any kind.
    The author is not liable for any damage or loss arising from its use.
-5. Third-party components remain under their own licenses (see NOTICE).
+5. Third-party components remain under their own licenses.
 6. Scope. This license applies to version 0.5.0 and later. Versions 0.3.1 and
    earlier were published under GPL-3.0 and stay under GPL-3.0 for those who
    received them.
@@ -34,7 +34,7 @@ Telif Hakkı (c) 2026 Fatal-IV (IK Software). Tüm hakları saklıdır.
    veremez veya satamazsınız.
 4. Garanti yok. MacDows "olduğu gibi" sunulur, hiçbir garanti verilmez.
    Yazar, kullanımdan doğan zarar veya kayıplardan sorumlu değildir.
-5. Üçüncü taraf bileşenler kendi lisansları altında kalır (bkz. NOTICE).
+5. Üçüncü taraf bileşenler kendi lisansları altında kalır.
 6. Kapsam. Bu lisans 0.5.0 ve sonraki sürümler için geçerlidir. GPL-3.0
    altında yayımlanan 0.3.1 ve önceki sürümler, onları edinenler için
    GPL-3.0 altında kalır.

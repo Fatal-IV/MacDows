@@ -111,7 +111,7 @@ See the [changelog](CHANGELOG.md) for what changed in each version.
 
 ## License
 
-MacDows is **free to use**, for personal and commercial purposes. It may not be modified or redistributed. The full terms are in [LICENSE](LICENSE) and third-party credits in [NOTICE](NOTICE).
+MacDows is **free to use**, for personal and commercial purposes. It may not be modified or redistributed. The full terms are in [LICENSE](LICENSE).
 
 <br>
 
